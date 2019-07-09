@@ -1,5 +1,5 @@
 # Requisiti di progetto e analisi
-
+ 
 ## Server
 Deve essere in grado di gestire identificativi di:
 - utenti: (username, password) info standard per autentucazione e accesso ai file, 

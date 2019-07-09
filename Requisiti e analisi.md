@@ -1,5 +1,9 @@
 # Requisiti di progetto e analisi
 
+## Sicurezza 
+Protocollo (TCP o UDP?) criptato con OpenSSL?
+Messaggi in formato prorpietario?
+
 
 ## Server
 Deve essere in grado di gestire identificativi di:
@@ -9,9 +13,9 @@ Deve essere in grado di gestire identificativi di:
 
 ### Database
 Dati e relazioni tra utenti e documenti gestiti con database MYSQL con tabelle:
- - Utenti
- - Documenti
- - Relazioni
+ - Utenti (username, encripted password, nickname)
+ - Documenti (idDoc, pathToFileSystem, hashToLink)
+ - Relazioni (username, idDoc, altro)
 
 ### File System manager
 File System gestito come cartella all'inteno del server con sottocartella con username dell'utente (creata alla registrazione) e file creati dallo stesso definiti da nome univoco (possible per user vedere directory?).

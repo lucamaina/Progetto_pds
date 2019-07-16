@@ -3,6 +3,7 @@
 ## Sicurezza 
 Protocollo (TCP o UDP?) criptato con OpenSSL?
 Messaggi in formato prorpietario?
+
 ??? XML per scambio dati ???
 
 ## Server

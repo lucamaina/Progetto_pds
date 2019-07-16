@@ -8,7 +8,8 @@
 
 #include "utente.h"
 
-utente::utente(QObject *parent) : QObject(parent)
+utente::utente(QString username, QString password, QObject *parent)
+    : QObject(parent), username(username), password(password)
 {
 
 }

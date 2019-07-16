@@ -5,6 +5,7 @@
 #include <QThread>
 #include <QTcpSocket>
 #include <QDebug>
+#include "utente/utente.h"
 
 class s_thread : public QThread
 {
@@ -21,6 +22,8 @@ public slots:
 private:
     int sockID;
     QTcpSocket *socket;
+    utente *user;
+
 
 
 

@@ -20,4 +20,6 @@ void s_thread::readyRead()
 {
     QByteArray out = this->socket->readAll();
     qDebug() << out;
+
+
 }

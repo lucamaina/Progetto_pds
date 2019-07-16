@@ -25,7 +25,12 @@ Salvataggio file automatico (ogni tot secondi?).
 Programma multiprocesso con padre in attesa di nuove connessioni e 1 figlio per ogni documento.
 
 
-aqwesd
+aqwesdawuierhauiwea
+weraw
+raeasefas.
+aerasdfea
+
+asfdasfasd
 
 
 ## Client 

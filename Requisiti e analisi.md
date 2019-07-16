@@ -25,6 +25,9 @@ Salvataggio file automatico (ogni tot secondi?).
 Programma multiprocesso con padre in attesa di nuove connessioni e 1 figlio per ogni documento.
 
 
+aqwesd
+
+
 ## Client 
 All'avvio richiede autenticazione dell'utente per accesso alla sua cartella (e/o disponibili).
 (Viene mostrata Directory proprietaria e docuemnti recenti?) 

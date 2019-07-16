@@ -3,15 +3,20 @@
 
 #include <QObject>
 #include <database/db.h>
+#include "server/server.h"
 
 class server_main : public QObject
 {
     Q_OBJECT
-public:
-    explicit server_main(QObject *parent = nullptr);
 
 private:
     db* mydb;
+    server *myServer;
+
+public:
+    explicit server_main(QObject *parent = nullptr);
+
+
 
 signals:
 

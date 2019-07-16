@@ -1,5 +1,7 @@
 QT -= gui
 QT += sql
+QT += network
+QT += core
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -18,7 +20,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         database/db.cpp \
         main.cpp \
-        server_main.cpp
+        server/s_thread.cpp \
+        server/server.cpp \
+        server_main.cpp \
+        utente/utente.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -31,4 +36,7 @@ DISTFILES += \
 
 HEADERS += \
     database/db.h \
-    server_main.h
+    server/s_thread.h \
+    server/server.h \
+    server_main.h \
+    utente/utente.h

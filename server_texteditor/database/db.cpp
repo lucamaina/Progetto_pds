@@ -1,3 +1,10 @@
+/*
+ * Classe per gestione delle connessioni al database MYSQL in localhost.
+ * Ogni thread figlio deve gestire la sua connessione.
+ *
+ *
+ */
+
 #include "db.h"
 
 db::db(QObject *parent) : QObject(parent)

@@ -6,6 +6,9 @@
 #include <QTcpSocket>
 #include <QDebug>
 #include "utente/utente.h"
+#include "database/db.h"
+
+#include <QXmlStreamWriter>
 
 class s_thread : public QThread
 {
@@ -17,14 +20,16 @@ public:
 
 public slots:
     void readyRead();
-    //void disconnected();
+    void disconnected();
 
 private:
     int sockID;
     QTcpSocket *socket;
     utente *user;
+    QBuffer buffer;
 
-
+    bool scriviXML();
+    void leggiXML(uint dim);
 
 
 };

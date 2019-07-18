@@ -12,6 +12,7 @@ void server::startServer()
     } else {
         qDebug() << "Listening...";
     }
+
 }
 
 void server::incomingConnection(int socketID)
@@ -19,6 +20,6 @@ void server::incomingConnection(int socketID)
     qDebug() << "Connecting from "
              << socketID;
     s_thread *newThread = new s_thread(socketID);
-    connect(newThread, SIGNAL(finished()), newThread, SLOT(deleteLater()));
+    connect(newThread, SIGNAL(finished()), this, SLOT(deleteLater()), Qt::ConnectionType::DirectConnection);
     newThread->run();
 }

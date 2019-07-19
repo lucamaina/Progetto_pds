@@ -31,3 +31,5 @@ Salvataggio file automatico (ogni tot secondi?).
 All'avvio richiede autenticazione dell'utente per accesso alla sua cartella (e/o disponibili).
 (Viene mostrata Directory proprietaria e docuemnti recenti?) 
 
+
+## Formato comandi

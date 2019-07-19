@@ -100,9 +100,5 @@ bool s_thread::scriviXML()  // @TODO scrivere xml
 }
 
 /**
-    00000080<?xml version="1.0" encoding="UTF-16"?><_elemento_ attr="val"/>
-    000000d4<?xml version="1.0" encoding="UTF-16"?><_elemento_ attr1="val1" attr2="val2"/><_elemento2_ attr3="val3"/>
-    000000f4<?xml version="1.0" encoding="UTF-16"?>
-        <_nome_ attr1="val1" attr2="val2"/>
-        <n1:nome2 xmlns:n1="_elemento2_" attr3="val3"/>
+
 **/

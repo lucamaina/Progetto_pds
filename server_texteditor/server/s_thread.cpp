@@ -77,14 +77,15 @@ bool s_thread::scriviXML()  // @TODO scrivere xml
     stream.setAutoFormatting(false);
     stream.setCodec("UTF-16");
     stream.writeStartDocument();
+    stream.writeStartElement("asdf");
 
-    stream.writeStartElement("", "_nome_");
-    stream.writeAttribute("attr1", "val1");
-    stream.writeAttribute("attr2", "val2");
+    stream.writeStartElement("_nome_");
+    stream.writeTextElement("attr1", "val1");
+    stream.writeTextElement("attr2", "val2");
     stream.writeEndElement();
 
     stream.writeStartElement("_elemento2_", "nome2");
-    stream.writeAttribute("attr3", "val3");
+    stream.writeTextElement("attr3", "val3");
     stream.writeEndElement();
     stream.writeEndDocument();
 

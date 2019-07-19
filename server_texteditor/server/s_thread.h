@@ -27,6 +27,7 @@ private:
     QTcpSocket *socket;
     utente *user;
     QBuffer buffer;
+    db *conn;
 
     bool scriviXML();
     void leggiXML(uint dim);

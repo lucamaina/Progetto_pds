@@ -13,3 +13,14 @@ utente::utente(QString username, QString password, QObject *parent)
 {
 
 }
+
+QString utente::getUsername(){   return "'"+this->username+"'";}
+
+QString utente::getNick(){  return "'"+this->nickname+"'";}
+
+QString utente::getPass(){  return "'"+this->password+"'";}
+
+void utente::setNick(QString nick)
+{
+    this->nickname = nick;
+}

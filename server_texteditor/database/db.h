@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QtSql>
+#include "utente/utente.h"
 
 class db : public QObject
 {
@@ -10,14 +11,19 @@ class db : public QObject
 public:
     explicit db(QObject *parent = nullptr);
     bool conn();
-    void query(QString querySrc);
+    QSqlQuery query(QString querySrc);
+    bool userLogin(utente &user);
+    bool userReg(utente &user);
 
-private:
-    QSqlDatabase myDb;
 
 signals:
 
 public slots:
+
+private:
+    QSqlDatabase myDb;
+
+
 };
 
 #endif // DB_H

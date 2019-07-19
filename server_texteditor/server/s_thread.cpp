@@ -16,7 +16,15 @@ void s_thread::run()
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
     qDebug() << "Client connesso";
 
-    this->buffer.open(QIODevice::ReadWrite);
+    this->conn = new db();
+
+    this->user = new utente("user1@asd.it", "0");
+    this->conn->userLogin(*user);
+    qDebug() << "nick: " << user->getNick();
+
+    user = new utente("asd", "1");
+    user->setNick("nico");
+    this->conn->userReg(*user);
     /** scrivo xml ############# **/
     scriviXML();
 }
@@ -35,7 +43,7 @@ void s_thread::readyRead()
     QByteArray out;
     if (this->socket->bytesAvailable() >= 8){
         out = this->socket->read(8);
-        uint dim = out.toInt(nullptr, 16);   // dim in decimale
+        uint dim = out.toUInt(nullptr, 16);   // dim in decimale
         qDebug() << "char: " << out << "int: " << dim;
         leggiXML(dim);
     }
@@ -47,10 +55,10 @@ void s_thread::leggiXML(uint dim)
 
     disconnect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));   // tolgo collegamento allo slot
     socket->waitForReadyRead();
-    uint nbite = this->socket->bytesAvailable();
+    uint nbite = static_cast<uint>( this->socket->bytesAvailable() );
     while (nbite < dim/2-1){
         socket->waitForReadyRead();
-        nbite = this->socket->bytesAvailable();
+        nbite = static_cast<uint>( this->socket->bytesAvailable() );
     }
 
     QByteArray qb = this->socket->read(dim);

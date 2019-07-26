@@ -11,15 +11,9 @@ qtHaveModule(printsupport): QT += printsupport
 TEMPLATE        = app
 TARGET          = textedit
 
-HEADERS         = textedit.h \
-    message.h \
-    sharededitor.h \
-    symbol.h
+HEADERS         = textedit.h
 SOURCES         = textedit.cpp \
-                  main.cpp \
-                  message.cpp \
-                  sharededitor.cpp \
-                  symbol.cpp
+                  main.cpp
 
 RESOURCES += textedit.qrc
 build_all:!build_pass {

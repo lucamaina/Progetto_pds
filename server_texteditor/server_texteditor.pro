@@ -3,6 +3,7 @@ QT += sql
 QT += network
 QT += core
 
+
 CONFIG += c++11 console
 CONFIG -= app_bundle
 
@@ -19,6 +20,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         database/db.cpp \
+        logger/logger.cpp \
         main.cpp \
         server/s_thread.cpp \
         server/server.cpp \
@@ -36,6 +38,7 @@ DISTFILES += \
 
 HEADERS += \
     database/db.h \
+    logger/logger.h \
     server/s_thread.h \
     server/server.h \
     server_main.h \

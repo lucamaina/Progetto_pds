@@ -6,11 +6,15 @@
 
 
 #include "server_main.h"
+#include "logger/logger.h"
 
 server_main::server_main(QObject *parent) : QObject(parent)
 {
     this->myServer = new server();
     myServer->startServer();
+    Logger *log = new Logger(this, "asd");
+    log->write("qweqweretqr");
+
     //mydb = new db();
 }
 

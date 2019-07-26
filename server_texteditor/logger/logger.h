@@ -5,23 +5,30 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDateTime>
+#include <mutex>
 
 class Logger : public QObject
 {
- Q_OBJECT
+    Q_OBJECT
+    Q_ENUMS(logType)
+
 public:
- explicit Logger(QObject *parent, QString fileName);
- ~Logger();
- void setShowDateTime(bool value);
+    enum logType {Info, Error};
+    explicit Logger(QObject *parent, QString fileName);
+    ~Logger();
+    void setShowDateTime(bool value);
 
 private:
- QFile *file;
- bool m_showDate;
+    QFile *file;
+    bool m_showDate;
+    std::mutex lock;
+
 
 signals:
 
 public slots:
- void write(const QString &value);
+    void write(const QString &value);
+    void write(logType log, const QString &text);
 
 };
 

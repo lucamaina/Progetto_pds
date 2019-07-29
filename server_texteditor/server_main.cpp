@@ -13,7 +13,7 @@ server_main::server_main(QObject *parent) : QObject(parent)
     this->myServer = new server();
     myServer->startServer();
     Logger *log = new Logger(this, "logger.log");
-    log->write("Start new logger process");s
+    log->write("Start new logger process");
     //mydb = new db();
 }
 

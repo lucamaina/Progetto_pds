@@ -16,7 +16,7 @@ void s_thread::run()
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
     qDebug() << "Client connesso";
 
-    this->conn = new db();
+/*    this->conn = new db();
 
     this->user = new utente("user1@asd.it", "0");
     this->conn->userLogin(*user);
@@ -25,8 +25,7 @@ void s_thread::run()
     user = new utente("asd", "1");
     user->setNick("nico");
     this->conn->userReg(*user);
-    /** scrivo xml ############# **/
-    scriviXML();
+    */
 }
 
 void s_thread::disconnected()
@@ -56,7 +55,7 @@ void s_thread::leggiXML(uint dim)
     disconnect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));   // tolgo collegamento allo slot
     socket->waitForReadyRead();
     uint nbite = static_cast<uint>( this->socket->bytesAvailable() );
-    while (nbite < dim/2-1){
+    while (nbite < dim){
         socket->waitForReadyRead();
         nbite = static_cast<uint>( this->socket->bytesAvailable() );
     }
@@ -72,41 +71,16 @@ void s_thread::leggiXML(uint dim)
         }
         // qDebug() << token << " - " << stream.readElementText();
         if (token == QXmlStreamReader::StartElement){
-            qDebug() << "start elem: " << token << " - " << stream.readElementText();
+            qDebug() << "start elem: " << stream.name();
+            QString cmd = stream.name().toString();
+            if (cmd == LOGIN){
+                // chiama metodo login
+            }else if (cmd == REG) {
+                // chiama metodo
+            }
         }
+
     }
     qDebug() << "finito lettura xml " << stream.errorString();
 }
 
-bool s_thread::scriviXML()  // @TODO scrivere xml
-{
-    QByteArray xml;
-    QXmlStreamWriter stream(&xml);
-    stream.setAutoFormatting(false);
-    stream.setCodec("UTF-16");
-    stream.writeStartDocument();
-    stream.writeStartElement("asdf");
-
-    stream.writeStartElement("_nome_");
-    stream.writeTextElement("attr1", "val1");
-    stream.writeTextElement("attr2", "val2");
-    stream.writeEndElement();
-
-    stream.writeStartElement("_elemento2_", "nome2");
-    stream.writeTextElement("attr3", "val3");
-    stream.writeEndElement();
-    stream.writeEndDocument();
-
-    QByteArray str = "00000000";
-    QByteArray dim = QByteArray::number(xml.size(), 16);
-    str.replace(8-dim.size(), dim.size(), dim);
-
-    xml.prepend(str);
-    qDebug() << str;
-    this->socket->write(xml);
-    return false;
-}
-
-/**
-
-**/

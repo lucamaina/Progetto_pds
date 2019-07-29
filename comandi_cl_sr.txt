@@ -1,0 +1,8 @@
+// effettua Log in dell'utente
+
+<?xml version="1.0" encoding="UTF-8"?>
+<LOG-IN>
+    <username>val1</username>
+    <password>val2</password>
+</LOG-IN>
+

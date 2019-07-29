@@ -39,6 +39,7 @@ DISTFILES += \
 HEADERS += \
     database/db.h \
     logger/logger.h \
+    server/cmdstring.h \
     server/s_thread.h \
     server/server.h \
     server_main.h \

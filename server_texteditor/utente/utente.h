@@ -22,6 +22,7 @@ private:
     QString username;
     QString nickname;
     QString password;
+    bool isConnect = false;
 
 };
 

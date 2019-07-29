@@ -7,6 +7,7 @@
 #include <QDebug>
 #include "utente/utente.h"
 #include "database/db.h"
+#include "cmdstring.h"
 
 #include <QXmlStreamWriter>
 

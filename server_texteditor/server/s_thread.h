@@ -5,8 +5,12 @@
 #include <QThread>
 #include <QTcpSocket>
 #include <QDebug>
+#include <QMap>
+#include <QString>
+
 #include "utente/utente.h"
 #include "database/db.h"
+#include "cmdstring.h"
 
 #include <QXmlStreamWriter>
 
@@ -31,6 +35,8 @@ private:
 
     bool scriviXML();
     void leggiXML(uint dim);
+    void dispatchCmd(QMap<QString, QString> cmd);
+    void connectDB();
 
 };
 

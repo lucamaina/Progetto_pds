@@ -28,14 +28,100 @@ void s_thread::run()
     */
 }
 
-void s_thread::disconnected()
+/**
+ * @brief s_thread::leggiXML
+ * @param dim
+ * metodo di lettura del file XML. Gli elementi del file vengono mappati su una map di key, value
+ * e quindi mandati a una funzione che esegue distinzione tra i comandi
+ */
+void s_thread::leggiXML(uint dim)
 {
-    qDebug() << "client disconnesso "
-             << this->sockID;
-    this->socket->deleteLater();
-    exit(0);
+    qDebug() << "Leggo XML";
+    QMap<QString, QString> command;
+
+    disconnect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));   // tolgo collegamento allo slot per leggere tutti i caratteri
+    socket->waitForReadyRead();
+
+    uint nbite = static_cast<uint>( this->socket->bytesAvailable() );
+    while (nbite < dim){
+        socket->waitForReadyRead();
+        nbite = static_cast<uint>( this->socket->bytesAvailable() );
+    }
+
+    QByteArray qb = this->socket->read(dim);
+    if (static_cast<uint>(qb.size()) < dim){
+        // @TODO rileggo o exception
+    }
+    qDebug() << qb;
+    QXmlStreamReader stream(qb);
+
+    while (!stream.atEnd() && !stream.hasError() ){
+        QXmlStreamReader::TokenType token = stream.readNext();
+        // leggo start document
+        if (token == QXmlStreamReader::StartDocument){
+            qDebug() << "start doc: " << token << " - " << stream.readElementText();
+        }
+        token = stream.readNext();
+        // leggo elemento con nome del comando
+        if (token == QXmlStreamReader::StartElement){
+            qDebug() << "comando: " << stream.name();
+            QString cmd = stream.name().toString();
+            command.insert("cmd", cmd);
+        }
+        token = stream.readNext();
+        // leggo elemnto variabile
+        while ( token == QXmlStreamReader::StartElement ){
+            qDebug() << "start elem: " << stream.name();
+            qDebug() << "val elem: " << stream.readElementText();
+            QString name = stream.name().toString(), text = stream.readElementText();
+            command.insert(name, text);
+            token = stream.readNext();
+        }
+    }
+    qDebug() << "finito lettura xml " << stream.errorString();
+    connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));  // ripristino connessione allo slot
+    this->dispatchCmd(command);
 }
 
+/**
+ * @brief s_thread::dispatchCmd
+ * @param cmd
+ * legge nella mappa il nome del comando e richiama le funzioni corrette
+ */
+void s_thread::dispatchCmd(QMap<QString, QString> cmd){
+    auto comando = cmd.find("cmd");
+    if (comando.value() == CONN) {
+        this->connectDB();
+    } else if (comando.value() == LOGIN) {
+
+    } else if (comando.value() == REG) {
+
+    } else if (comando.value() == REM_IN) {
+
+    } else if (comando.value() == REM_DEL) {
+
+    } else if (comando.value() == DISC) {
+
+    } else if (comando.value() == FILE) {
+
+    }
+}
+
+void s_thread::connectDB(){
+    this->conn = new db();
+}
+
+
+
+/*********************************************************************************************************
+ ************************ public slots *******************************************************************
+ *********************************************************************************************************/
+
+/**
+ * @brief s_thread::readyRead
+ * metodo chiamato se il socket ha un buffer da leggere, quando riconosce un intero lo usa come dimensione del
+ * file xml da leggere e chiama il metodo per la lettura.
+ */
 void s_thread::readyRead()
 {
     // leggo 4 byte di intero iniziale in hex
@@ -48,39 +134,14 @@ void s_thread::readyRead()
     }
 }
 
-void s_thread::leggiXML(uint dim)
+/**
+ * @brief s_thread::disconnected
+ * metodo chiamato quando viene disconesso il socket dal client.
+ */
+void s_thread::disconnected()
 {
-    qDebug() << "Leggo XML";
-
-    disconnect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));   // tolgo collegamento allo slot
-    socket->waitForReadyRead();
-    uint nbite = static_cast<uint>( this->socket->bytesAvailable() );
-    while (nbite < dim){
-        socket->waitForReadyRead();
-        nbite = static_cast<uint>( this->socket->bytesAvailable() );
-    }
-
-    QByteArray qb = this->socket->read(dim);
-    qDebug() << qb;
-    QXmlStreamReader stream(qb);
-
-    while (!stream.atEnd() && !stream.hasError() ){
-        QXmlStreamReader::TokenType token = stream.readNext();
-        if (token == QXmlStreamReader::StartDocument){
-            qDebug() << "start doc: " << token << " - " << stream.readElementText();
-        }
-        // qDebug() << token << " - " << stream.readElementText();
-        if (token == QXmlStreamReader::StartElement){
-            qDebug() << "start elem: " << stream.name();
-            QString cmd = stream.name().toString();
-            if (cmd == LOGIN){
-                // chiama metodo login
-            }else if (cmd == REG) {
-                // chiama metodo
-            }
-        }
-
-    }
-    qDebug() << "finito lettura xml " << stream.errorString();
+    qDebug() << "client disconnesso "
+             << this->sockID;
+    this->socket->deleteLater();
+    exit(0);
 }
-

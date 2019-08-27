@@ -6,3 +6,21 @@
     <password>val2</password>
 </LOG-IN>
 
+
+<?xml version="1.0" encoding="UTF-8"?>
+<REGISTER>
+    <username>val1</username>
+	<nickname>val1</nickname>
+    <password>val2</password>
+</REGISTER>
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<REMOTE-INSERT>
+   
+</REMOTE-INSERT>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<REMOTE-DELETE>
+   
+</REMOTE-DELETE>

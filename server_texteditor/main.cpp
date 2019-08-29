@@ -24,13 +24,14 @@ bool asdscriviXML(void)  // @TODO scrivere xml
     stream.setAutoFormatting(false);
     stream.setCodec("UTF-8");
     stream.writeStartDocument();
+    /*
     stream.writeStartElement("LOG-IN");
-
     stream.writeTextElement("username", "val1");
     stream.writeTextElement("password", "val2");
+    */
 
+    stream.writeTextElement("CONNECT", "");
 
-    stream.writeEndElement();
     f->close();
     QByteArray str = "00000000";
     QByteArray dim = QByteArray::number(xml.size(), 16);

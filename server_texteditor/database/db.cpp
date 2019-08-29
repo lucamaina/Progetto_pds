@@ -7,6 +7,10 @@
 
 #include "db.h"
 
+/**
+ * @brief db::db
+ * @param parent
+ */
 db::db(QObject *parent) : QObject(parent)
 {
     this->myDb = QSqlDatabase::addDatabase("QMYSQL");
@@ -14,14 +18,21 @@ db::db(QObject *parent) : QObject(parent)
     myDb.setDatabaseName("web_editor");
     myDb.setUserName("serverUser");
     myDb.setPassword("pass");
-    bool ok = myDb.open();
-    qDebug() << "database opened:" << ok;
+    /* spostato in conn
+     * {    bool ok = myDb.open();
+            qDebug() << "database opened:" << ok;   }
+     */
 }
 
+/**
+ * @brief db::conn
+ * @return
+ */
 bool db::conn()
 {
-    //TODO
-    return false;
+    bool ok = myDb.open();
+    qDebug() << "database opened:" << ok;
+    return ok;
 }
 
 QSqlQuery db::query(QString querySrc)

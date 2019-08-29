@@ -30,13 +30,24 @@ private:
     int sockID;
     QTcpSocket *socket;
     utente *user;
-    QBuffer buffer;
+    QByteArray buffer;
     db *conn;
 
-    bool scriviXML();
-    void leggiXML(uint dim);
+    /****************************************************************************
+     * metodi controllo dei comandi ricevuti ************************************/
+    void leggiXML(QByteArray data);
     void dispatchCmd(QMap<QString, QString> cmd);
+
+    /****************************************************************************
+     * metodi controllo dei messaggi inviati ************************************/
+    bool scriviXML();
+    bool sendMSG(QByteArray data);
+
+    /****************************************************************************
+     * metodi accesso a database *************************************************/
     void connectDB();
+    void loginDB();
+    void registerDB();
 
 };
 

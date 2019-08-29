@@ -34,24 +34,11 @@ void s_thread::run()
  * metodo di lettura del file XML. Gli elementi del file vengono mappati su una map di key, value
  * e quindi mandati a una funzione che esegue distinzione tra i comandi
  */
-void s_thread::leggiXML(uint dim)
+void s_thread::leggiXML(QByteArray qb)
 {
     qDebug() << "Leggo XML";
     QMap<QString, QString> command;
 
-    disconnect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));   // tolgo collegamento allo slot per leggere tutti i caratteri
-    socket->waitForReadyRead();
-
-    uint nbite = static_cast<uint>( this->socket->bytesAvailable() );
-    while (nbite < dim){
-        socket->waitForReadyRead();
-        nbite = static_cast<uint>( this->socket->bytesAvailable() );
-    }
-
-    QByteArray qb = this->socket->read(dim);
-    if (static_cast<uint>(qb.size()) < dim){
-        // @TODO rileggo o exception
-    }
     qDebug() << qb;
     QXmlStreamReader stream(qb);
 
@@ -78,9 +65,15 @@ void s_thread::leggiXML(uint dim)
             token = stream.readNext();
         }
     }
-    qDebug() << "finito lettura xml " << stream.errorString();
-    connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));  // ripristino connessione allo slot
-    this->dispatchCmd(command);
+
+    // verifica correttezza xml
+    // TODO in caso di messaggio non corretto riparti da stato corretto
+    if (stream.hasError()){
+        qDebug() << "finito lettura xml con errore" << stream.errorString();
+    } else {
+        qDebug() << "finito lettura xml no errori " << stream.errorString();
+        this->dispatchCmd(command);
+    }
 }
 
 /**
@@ -109,8 +102,25 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
 
 void s_thread::connectDB(){
     this->conn = new db();
+    if (conn->conn() == false){
+        // ritorna messaggio al client di fallimento
+        sendMSG("impossibile connettersi al db");
+    } else {
+        // messaggio di successo al client
+        sendMSG("connessione al db riuscita");
+    }
 }
 
+
+bool s_thread::sendMSG(QByteArray data){
+    if (socket->isOpen() && socket->isWritable()){
+        if (this->socket->write(data, data.size()) == -1){
+            // errore
+            qDebug() << "errore scrittura verso client";
+        }
+    }
+    return false;
+}
 
 
 /*********************************************************************************************************
@@ -121,17 +131,63 @@ void s_thread::connectDB(){
  * @brief s_thread::readyRead
  * metodo chiamato se il socket ha un buffer da leggere, quando riconosce un intero lo usa come dimensione del
  * file xml da leggere e chiama il metodo per la lettura.
+ *
+ * |buffer| usato come contenitore sporco,
+ * |out|
  */
 void s_thread::readyRead()
 {
-    // leggo 4 byte di intero iniziale in hex
+    disconnect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));  // disconnetto lo slot cosi da non avere più chiamate nello stesso
+
     QByteArray out;
-    if (this->socket->bytesAvailable() >= 8){
-        out = this->socket->read(8);
-        uint dim = out.toUInt(nullptr, 16);   // dim in decimale
-        qDebug() << "char: " << out << "int: " << dim;
-        leggiXML(dim);
+    QByteArray tmp;
+    uint dim;
+
+    //buffer.resize(4096);
+    out.resize(1024);
+    tmp.resize(16);
+
+    while (socket->bytesAvailable() > 0){
+        buffer.append(socket->readAll());
+        qDebug() << buffer;
+
+        if (buffer.contains(INIT)){
+            // presente token iniziale del messaggio
+            int idx =buffer.indexOf(INIT, 0);
+            if ( idx >= 0){
+                buffer.remove(0, idx);
+                out = buffer;       // |out| contiene token <INIT> e quello che viene ricevuto subito dopo
+                buffer.clear();     // elimino rimananze
+                out.remove(0, INIT_DIM);       // rimuovo <INIT> da |out|
+
+                while (out.size() < LEN_NUM){             // ricevo la dimensione del messaggio
+                    socket->waitForReadyRead(100);
+                    out.append(socket->read(LEN_NUM - static_cast<uint>(out.size())));
+                }
+                qDebug() << "out: " << out;
+                tmp = out.left(LEN_NUM);                  // in |tmp| copio 8 byte che descrivono la dimensione del messaggio
+                out.remove(0,LEN_NUM);
+                dim = tmp.toUInt(nullptr, 16); // |dim| ha dimensione di tmp in decimale
+                qDebug() << dim;
+
+                uint rimane = dim - static_cast<uint>(out.size());
+                while (rimane > 0){
+                    uint i = dim - static_cast<uint>(out.size());
+                    socket->waitForReadyRead(100);      // finisco di leggere il resto del messaggio
+                    out.append(socket->read(i));
+                    rimane = dim - static_cast<uint>(out.size());
+                }
+                qDebug() << "bene qui";
+
+                leggiXML(out);
+                // finito di leggere i byte del messaggio ritorno al ciclo iniziale
+            } else {
+                // token nonn trovato
+            }
+        }
+        // in |buffer| non c'è il token <INIT>, continuo a ricevere
     }
+    connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));  // ripristino connessione allo slot
 }
 
 /**

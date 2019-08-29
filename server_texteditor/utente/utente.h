@@ -1,17 +1,21 @@
-#ifndef UTENTE_H
-#define UTENTE_H
+#ifndef utente_H
+#define utente_H
 
 #include <QObject>
+#include <QMap>
+#include "../server/cmdstring.h"
 
 class utente : public QObject
 {
     Q_OBJECT
 public:
     explicit utente(QString username, QString password, QObject *parent = nullptr);
+    utente(){}
     QString getUsername();
     QString getNick();
     QString getPass();
     void setNick(QString nick);
+    bool prepareUtente(QMap<QString, QString> map);
 
 signals:
 
@@ -26,7 +30,7 @@ private:
 
 };
 
-#endif // UTENTE_H
+#endif // utente_H
 
 
 

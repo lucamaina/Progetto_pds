@@ -45,8 +45,8 @@ private:
 
     /****************************************************************************
      * metodi accesso a database *************************************************/
-    void connectDB();
-    void loginDB();
+    void connectDB(QMap<QString, QString> comando);
+    void loginDB(QMap<QString, QString> comando);
     void registerDB();
 
 };

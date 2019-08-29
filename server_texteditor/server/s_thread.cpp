@@ -84,7 +84,7 @@ void s_thread::leggiXML(QByteArray qb)
 void s_thread::dispatchCmd(QMap<QString, QString> cmd){
     auto comando = cmd.find("cmd");
     if (comando.value() == CONN) {
-        this->connectDB();
+        this->connectDB(cmd);
     } else if (comando.value() == LOGIN) {
 
     } else if (comando.value() == REG) {
@@ -95,22 +95,10 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
 
     } else if (comando.value() == DISC) {
 
-    } else if (comando.value() == FILE) {
+    } else if (comando.value() == FILES) {
 
     }
 }
-
-void s_thread::connectDB(){
-    this->conn = new db();
-    if (conn->conn() == false){
-        // ritorna messaggio al client di fallimento
-        sendMSG("impossibile connettersi al db");
-    } else {
-        // messaggio di successo al client
-        sendMSG("connessione al db riuscita");
-    }
-}
-
 
 bool s_thread::sendMSG(QByteArray data){
     if (socket->isOpen() && socket->isWritable()){
@@ -121,6 +109,37 @@ bool s_thread::sendMSG(QByteArray data){
     }
     return false;
 }
+
+
+/*********************************************************************************************************
+ ************************ metodi di accesso al db ********************************************************
+ *********************************************************************************************************/
+
+void s_thread::connectDB(QMap<QString, QString> comando){
+    this->conn = new db();
+    // praparo classe |utente|
+    if (this->user == nullptr){
+        this->user = new utente();
+        this->user->prepareUtente(comando);
+    }
+    if (conn->conn() == false){
+        // ritorna messaggio al client di fallimento
+        sendMSG("impossibile connettersi al db");
+    } else {
+        // messaggio di successo al client
+        sendMSG("connessione al db riuscita");
+    }
+}
+
+void s_thread::loginDB(QMap<QString, QString> comando){
+    if (!this->conn->isOpen()){
+        // open db
+    }
+    // preparo stringa per query
+    QString query;
+
+}
+
 
 
 /*********************************************************************************************************

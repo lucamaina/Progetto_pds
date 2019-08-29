@@ -16,12 +16,14 @@ db::db(QObject *parent) : QObject(parent)
     this->myDb = QSqlDatabase::addDatabase("QMYSQL");
     myDb.setHostName("localhost");
     myDb.setDatabaseName("web_editor");
-    myDb.setUserName("serverUser");
-    myDb.setPassword("pass");
-    /* spostato in conn
-     * {    bool ok = myDb.open();
-            qDebug() << "database opened:" << ok;   }
-     */
+/* spostato in conn
+    {
+        myDb.setUserName("serverUser");
+        myDb.setPassword("pass");
+        bool ok = myDb.open();
+        qDebug() << "database opened:" << ok;
+    }
+*/
 }
 
 /**
@@ -30,10 +32,19 @@ db::db(QObject *parent) : QObject(parent)
  */
 bool db::conn()
 {
+    myDb.setUserName("serverUser");
+    myDb.setPassword("pass");
     bool ok = myDb.open();
     qDebug() << "database opened:" << ok;
     return ok;
 }
+
+/**
+ * @brief db::conn
+ * @param utente
+ * @return
+ */
+
 
 QSqlQuery db::query(QString querySrc)
 {
@@ -45,7 +56,7 @@ QSqlQuery db::query(QString querySrc)
     return query;
 }
 
-bool db::userLogin(utente &user)
+bool db::userLogin(class utente user)
 {
     QString SQLquery;
     SQLquery = "SELECT NickName FROM utenti WHERE UserName = " + user.getUsername() + " AND Password = " + user.getPass();
@@ -59,7 +70,7 @@ bool db::userLogin(utente &user)
     return false;
 }
 
-bool db::userReg(utente &user)
+bool db::userReg(class utente user)
 {
     // @TODO transazione
     QString SQLquery;
@@ -83,4 +94,8 @@ bool db::userReg(utente &user)
         }
     }
     return false;
+}
+
+bool db::isOpen(){
+    return this->myDb.isOpen();
 }

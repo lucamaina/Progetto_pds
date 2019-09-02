@@ -1,13 +1,28 @@
 #include "logger.h"
 #include <QtDebug>
 
-Logger::Logger(QObject *parent, QString fileName) : QObject(parent) {
+/**
+ * @brief Logger::Logger
+ * @param parent
+ * @param fileName  nome del file di log
+ * se la creazione del file non va a buon fine non posso continuare esecuzione del programma
+ */
+Logger::Logger(QString fileName){
      m_showDate = true;
-     if (!fileName.isEmpty()) {
-          file = new QFile;
-          file->setFileName(fileName);
-          file->open(QIODevice::Append | QIODevice::Text);
+     if (fileName.isEmpty()) {
+         fileName = "log_default.log";
      }
+     file = new QFile;
+     file->setFileName(fileName);
+     bool open = file->open(QIODevice::Append | QIODevice::Text);
+     if (open == false){
+         qDebug() << "Errore apertura file di log";
+     }
+}
+
+Logger & Logger::getLog(){
+    static std::unique_ptr<Logger> p (new Logger("logger.log"));
+    return *p;
 }
 
 void Logger::write(const QString &value) {

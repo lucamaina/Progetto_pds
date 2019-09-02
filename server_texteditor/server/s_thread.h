@@ -28,8 +28,8 @@ public slots:
 
 private:
     int sockID;
-    QTcpSocket *socket;
-    utente *user;
+    QTcpSocket *socket = nullptr;
+    utente *user = nullptr;
     QByteArray buffer;
     db *conn;
 

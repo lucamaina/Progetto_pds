@@ -21,6 +21,8 @@ public slots:
 private:
     void incomingConnection(int socketID);
 
+    Logger *log;
+
 };
 
 #endif // SERVER_H

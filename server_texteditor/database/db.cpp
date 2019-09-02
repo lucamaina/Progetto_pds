@@ -11,11 +11,13 @@
  * @brief db::db
  * @param parent
  */
-db::db(QObject *parent) : QObject(parent)
+db::db(int connName, QObject *parent) : QObject(parent)
 {
-    this->myDb = QSqlDatabase::addDatabase("QMYSQL");
+    this->myDb = QSqlDatabase::addDatabase("QMYSQL", QString::number(connName));
     myDb.setHostName("localhost");
     myDb.setDatabaseName("web_editor");
+    Logger::getLog().write("Nuova connessione di nome " + QString::number(connName));
+
 /* spostato in conn
     {
         myDb.setUserName("serverUser");
@@ -35,20 +37,20 @@ bool db::conn()
     myDb.setUserName("serverUser");
     myDb.setPassword("pass");
     bool ok = myDb.open();
-    qDebug() << "database opened:" << ok;
+
+    qDebug() << "database opened:" << ok << " connectionName: " << QString(myDb.connectionName());
+    // TODO aggiungere log
     return ok;
 }
 
-/**
- * @brief db::conn
- * @param utente
- * @return
- */
-
-
 QSqlQuery db::query(QString querySrc)
 {
-    QSqlQuery query;
+    qDebug() << QSqlDatabase::drivers();
+
+    QSqlQuery query(this->myDb);
+    if (myDb.isOpen()){
+        qDebug() << "db aperto prima di exec";
+    }
     if (query.exec(querySrc) == false){
         QSqlError err = query.lastError();
         qDebug() << err.text();
@@ -56,10 +58,26 @@ QSqlQuery db::query(QString querySrc)
     return query;
 }
 
-bool db::userLogin(class utente user)
+
+bool db::conn(utente & user){
+    myDb.setUserName(user.getUsername());
+    myDb.setPassword(user.getPass());
+    bool ok = myDb.open();
+    qDebug() << "database opened:" << ok << " connectionName: " << QString(myDb.connectionName());
+    Logger::getLog().write("Nuova connessione da utente" + QString(myDb.userName()));
+    return ok;
+}
+
+
+bool db::userLogin(utente &user)
 {
+    QString s = user.getUsername();
+
+
     QString SQLquery;
-    SQLquery = "SELECT NickName FROM utenti WHERE UserName = " + user.getUsername() + " AND Password = " + user.getPass();
+    // SQLquery = "SELECT NickName FROM utenti WHERE UserName = " + user.getUsername() + " AND Password = " + user.getPass();
+    SQLquery = "SELECT NickName FROM utenti WHERE UserName = 'asd' AND Password = '1'";
+
     QSqlQuery res = this->query(SQLquery);
 
     while (res.next()){
@@ -70,7 +88,7 @@ bool db::userLogin(class utente user)
     return false;
 }
 
-bool db::userReg(class utente user)
+bool db::userReg(utente &user)
 {
     // @TODO transazione
     QString SQLquery;

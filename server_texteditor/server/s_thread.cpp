@@ -8,8 +8,8 @@ s_thread::s_thread(int ID, QObject *parent) : QThread(parent)
 
 void s_thread::run()
 {
-    qDebug() << "Thread running, ID: "
-             << this->sockID;
+    Logger::getLog().write("Nuovo thread in esecuzione, ID = "+ QString::number(this->sockID) );
+    qDebug() << "Thread running, ID: " << this->sockID;
     this->socket = new QTcpSocket();
     socket->setSocketDescriptor(sockID);
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
@@ -58,15 +58,14 @@ void s_thread::leggiXML(QByteArray qb)
         token = stream.readNext();
         // leggo elemnto variabile
         while ( token == QXmlStreamReader::StartElement ){
-            qDebug() << "start elem: " << stream.name();
-            qDebug() << "val elem: " << stream.readElementText();
             QString name = stream.name().toString(), text = stream.readElementText();
             command.insert(name, text);
+            qDebug() << "start elem: " << name;
+            qDebug() << "val elem: " << text;
             token = stream.readNext();
         }
     }
 
-    // verifica correttezza xml
     // TODO in caso di messaggio non corretto riparti da stato corretto
     if (stream.hasError()){
         qDebug() << "finito lettura xml con errore" << stream.errorString();
@@ -86,7 +85,7 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
     if (comando.value() == CONN) {
         this->connectDB(cmd);
     } else if (comando.value() == LOGIN) {
-
+        this->loginDB(cmd);
     } else if (comando.value() == REG) {
 
     } else if (comando.value() == REM_IN) {
@@ -116,9 +115,9 @@ bool s_thread::sendMSG(QByteArray data){
  *********************************************************************************************************/
 
 void s_thread::connectDB(QMap<QString, QString> comando){
-    this->conn = new db();
+    this->conn = new db(sockID);
     // praparo classe |utente|
-    if (this->user == nullptr){
+    if (this->user == nullptr || !this->user->isConnected() ){
         this->user = new utente();
         this->user->prepareUtente(comando);
     }
@@ -135,8 +134,12 @@ void s_thread::loginDB(QMap<QString, QString> comando){
     if (!this->conn->isOpen()){
         // open db
     }
+    if (this->user == nullptr || !this->user->isConnected() ){
+        this->user = new utente();
+        this->user->prepareUtente(comando);
+    }
     // preparo stringa per query
-    QString query;
+    this->conn->userLogin(*user);
 
 }
 
@@ -168,7 +171,6 @@ void s_thread::readyRead()
 
     while (socket->bytesAvailable() > 0){
         buffer.append(socket->readAll());
-        qDebug() << buffer;
 
         if (buffer.contains(INIT)){
             // presente token iniziale del messaggio
@@ -183,11 +185,10 @@ void s_thread::readyRead()
                     socket->waitForReadyRead(100);
                     out.append(socket->read(LEN_NUM - static_cast<uint>(out.size())));
                 }
-                qDebug() << "out: " << out;
+
                 tmp = out.left(LEN_NUM);                  // in |tmp| copio 8 byte che descrivono la dimensione del messaggio
                 out.remove(0,LEN_NUM);
                 dim = tmp.toUInt(nullptr, 16); // |dim| ha dimensione di tmp in decimale
-                qDebug() << dim;
 
                 uint rimane = dim - static_cast<uint>(out.size());
                 while (rimane > 0){
@@ -196,7 +197,6 @@ void s_thread::readyRead()
                     out.append(socket->read(i));
                     rimane = dim - static_cast<uint>(out.size());
                 }
-                qDebug() << "bene qui";
 
                 leggiXML(out);
                 // finito di leggere i byte del messaggio ritorno al ciclo iniziale

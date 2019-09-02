@@ -2,7 +2,9 @@
 
 server::server(QObject *parent) : QTcpServer (parent)
 {
-
+    Logger &lg = Logger::getLog();
+    this->log = &lg;
+    log->write("Costruttore server");
 }
 
 void server::startServer()

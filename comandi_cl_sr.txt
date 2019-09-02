@@ -30,4 +30,4 @@
 
 
 <INIT>00000039<?xml version="1.0" encoding="UTF-8"?><CONNECT></CONNECT>
-<INIT>00000069<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>val1</username><password>val2</password></LOG-IN>
+<INIT>00000065<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>asd</username><password>1</password></LOG-IN>

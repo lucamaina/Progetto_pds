@@ -4,17 +4,19 @@
 #include <QObject>
 #include <QtSql>
 #include "../utente/utente.h"
+#include "../logger/logger.h"
 
 class db : public QObject
 {
     Q_OBJECT
 public:
     explicit db(QObject *parent = nullptr);
+    explicit db(int connName, QObject *parent = nullptr);
     bool conn();
-    bool conn(utente user);
+    bool conn(utente & user);
     QSqlQuery query(QString querySrc);
-    bool userLogin(utente user);
-    bool userReg(utente user);
+    bool userLogin(utente & user);
+    bool userReg(utente & user);
     bool isOpen();
 
 signals:
@@ -23,8 +25,8 @@ public slots:
 
 private:
     QSqlDatabase myDb;
-    utente utente;
-
+    utente user;
+    Logger *log;
 };
 
 #endif // DB_H

@@ -16,7 +16,7 @@ public:
     QString getPass();
     void setNick(QString nick);
     bool prepareUtente(QMap<QString, QString> map);
-
+    bool isConnected(){ return this->isConnect; }
 signals:
 
 

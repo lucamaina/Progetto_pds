@@ -16,4 +16,9 @@
 #define UNAME "username"
 #define NICK "nickname"
 #define PASS "password"
+
+#define queryLOGIN "SELECT Count(*) FROM utenti WHERE UserName = :UserName AND Password = :Password;"
+
+
+
 #endif // CMDSTRING_H

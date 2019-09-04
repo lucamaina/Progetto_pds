@@ -18,7 +18,7 @@
 #define PASS "password"
 
 #define queryLOGIN "SELECT Count(*) FROM utenti WHERE UserName = :UserName AND Password = :Password;"
-
+#define queryREG "INSERT INTO utenti(UserName, NickName, Password) VALUE (:UserName, :NickName, :Password);"
 
 
 #endif // CMDSTRING_H

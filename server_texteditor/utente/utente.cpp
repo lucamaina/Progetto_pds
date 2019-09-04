@@ -47,3 +47,7 @@ void utente::setNick(QString nick)
     this->nickname = nick;
 }
 
+void utente::setConn(bool setConn){
+    this->isConnect = setConn;
+}
+

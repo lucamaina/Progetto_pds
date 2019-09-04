@@ -28,6 +28,36 @@ db::db(int connName, QObject *parent) : QObject(parent)
 */
 }
 
+QSqlQuery db::query(QString querySrc)
+{
+    QSqlQuery query(this->myDb);
+    if (myDb.isOpen()){
+        qDebug() << "db aperto prima di exec";
+    }
+    if (query.exec(querySrc) == false){
+        QSqlError err = query.lastError();
+        qDebug() << err.text();
+    }
+    return query;
+}
+
+QSqlQuery db::query(QString querySrc, QVector<QString> values)
+{
+    QSqlQuery query(this->myDb);
+    if (myDb.isOpen()){
+        qDebug() << "db aperto prima di exec";
+    }
+    query.prepare(querySrc);
+    for (int idx = 0; idx < values.length(); idx++){
+        query.bindValue(idx, values[idx]);
+    }
+    if (query.exec() == false){
+        QSqlError err = query.lastError();
+        qDebug() << err.text();
+    }
+    return query;
+}
+
 /**
  * @brief db::conn
  * @return
@@ -43,21 +73,6 @@ bool db::conn()
     return ok;
 }
 
-QSqlQuery db::query(QString querySrc)
-{
-    qDebug() << QSqlDatabase::drivers();
-
-    QSqlQuery query(this->myDb);
-    if (myDb.isOpen()){
-        qDebug() << "db aperto prima di exec";
-    }
-    if (query.exec(querySrc) == false){
-        QSqlError err = query.lastError();
-        qDebug() << err.text();
-    }
-    return query;
-}
-
 
 bool db::conn(utente & user){
     myDb.setUserName(user.getUsername());
@@ -65,6 +80,7 @@ bool db::conn(utente & user){
     bool ok = myDb.open();
     qDebug() << "database opened:" << ok << " connectionName: " << QString(myDb.connectionName());
     Logger::getLog().write("Nuova connessione da utente" + QString(myDb.userName()));
+    user.setConn(ok);
     return ok;
 }
 
@@ -75,7 +91,6 @@ bool db::userLogin(utente &user)
 
 
     QString SQLquery;
-    // SQLquery = "SELECT NickName FROM utenti WHERE UserName = " + user.getUsername() + " AND Password = " + user.getPass();
     SQLquery = "SELECT NickName FROM utenti WHERE UserName = 'asd' AND Password = '1'";
 
     QSqlQuery res = this->query(SQLquery);
@@ -91,26 +106,26 @@ bool db::userLogin(utente &user)
 bool db::userReg(utente &user)
 {
     // @TODO transazione
-    QString SQLquery;
-    SQLquery = "SELECT COUNT(*) FROM utenti WHERE UserName = " + user.getUsername();
+    this->myDb.transaction();       // start transaction
 
-    QSqlQuery res = this->query(SQLquery);
+    QVector<QString> values;
+    values.push_back(user.getUsername());
+    values.push_back(user.getPass());
+    QSqlQuery res = this->query(queryLOGIN, values);
 
-    while (res.next()){
-        QString presente = res.value(0).toString();
-        if (presente == "0") {
-            // posso registrare
-            SQLquery = "INSERT INTO utenti (UserName, NickName, Password) VALUES ("
-                    + user.getUsername() +", "
-                    + user.getNick() +", "
-                    +user.getPass() +")";
-            this->query(SQLquery);
-
-            return true;
-        } else {
-            return false;
-        }
+    res.next();
+    int count = res.value(0).toInt();
+    if (count != 0){
+        this->myDb.rollback();
+        return false;
     }
+    values.clear();
+    values.push_back(user.getUsername());
+    values.push_back(user.getNick());
+    values.push_back(user.getPass());
+    res = this->query(queryREG, values);
+    // verifica res
+    this->myDb.commit();
     return false;
 }
 

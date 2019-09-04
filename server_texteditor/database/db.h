@@ -15,6 +15,7 @@ public:
     bool conn();
     bool conn(utente & user);
     QSqlQuery query(QString querySrc);
+    QSqlQuery query(QString querySrc, QVector<QString> values);
     bool userLogin(utente & user);
     bool userReg(utente & user);
     bool isOpen();

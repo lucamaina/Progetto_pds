@@ -87,7 +87,7 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
     } else if (comando.value() == LOGIN) {
         this->loginDB(cmd);
     } else if (comando.value() == REG) {
-
+        this->registerDB(cmd);
     } else if (comando.value() == REM_IN) {
 
     } else if (comando.value() == REM_DEL) {
@@ -117,11 +117,11 @@ bool s_thread::sendMSG(QByteArray data){
 void s_thread::connectDB(QMap<QString, QString> comando){
     this->conn = new db(sockID);
     // praparo classe |utente|
-    if (this->user == nullptr || !this->user->isConnected() ){
+    if (this->user == nullptr){
         this->user = new utente();
         this->user->prepareUtente(comando);
     }
-    if (conn->conn() == false){
+    if (conn->conn(*user) == false){
         // ritorna messaggio al client di fallimento
         sendMSG("impossibile connettersi al db");
     } else {
@@ -132,18 +132,33 @@ void s_thread::connectDB(QMap<QString, QString> comando){
 
 void s_thread::loginDB(QMap<QString, QString> comando){
     if (!this->conn->isOpen()){
-        // open db
+        this->conn = new db(sockID);
     }
     if (this->user == nullptr || !this->user->isConnected() ){
-        this->user = new utente();
-        this->user->prepareUtente(comando);
+        connectDB(comando);         // preapara utente e connette al db
     }
     // preparo stringa per query
-    this->conn->userLogin(*user);
-
+    if (this->conn->userLogin(*user) ){
+        sendMSG("Login corretto");
+    } else {
+        sendMSG("Login fallito");
+    }
 }
 
-
+void s_thread::registerDB(QMap<QString, QString> comando){
+    if (!this->conn->isOpen()){
+        this->conn = new db(sockID);
+    }
+    if (this->user == nullptr || !this->user->isConnected() ){
+        connectDB(comando);         // preapara utente e connette al db
+    }
+    // preparo stringa per query
+    if (this->conn->userReg(*user) ){
+        sendMSG("Registrazione corretta");
+    } else {
+        sendMSG("Registrazione fallita");
+    }
+}
 
 /*********************************************************************************************************
  ************************ public slots *******************************************************************

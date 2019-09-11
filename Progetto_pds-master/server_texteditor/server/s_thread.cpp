@@ -1,4 +1,5 @@
 #include "s_thread.h"
+//commento
 
 s_thread::s_thread(int ID, QObject *parent) : QThread(parent)
 {

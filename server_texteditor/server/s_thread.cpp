@@ -93,7 +93,7 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
     } else if (comando.value() == REM_DEL) {
 
     } else if (comando.value() == DISC) {
-
+        this->disconnectDB(cmd);
     } else if (comando.value() == FILES) {
 
     }
@@ -109,6 +109,30 @@ bool s_thread::sendMSG(QByteArray data){
     return false;
 }
 
+bool s_thread::sendMSG(QMap<QString, QString> comando){
+    QByteArray ba;
+    QXmlStreamWriter wr(&ba);
+    wr.writeStartDocument();
+    wr.writeStartElement(comando.value(CMD));
+    comando.remove(CMD);
+    foreach (QString key, comando.keys()) {
+        wr.writeTextElement(key, comando.value(key));
+    }
+    wr.writeEndElement();
+    wr.writeEndDocument();
+
+    int dim = ba.size();
+    QByteArray len;
+    len = QByteArray::number(dim, 16);
+    len.prepend(8 - len.size(), '0');
+
+    ba.prepend(len);
+    ba.prepend(INIT);
+    qDebug() << QString(ba);
+
+    return sendMSG(ba);
+}
+
 
 /*********************************************************************************************************
  ************************ metodi di accesso al db ********************************************************
@@ -121,13 +145,17 @@ void s_thread::connectDB(QMap<QString, QString> comando){
         this->user = new utente();
         this->user->prepareUtente(comando);
     }
+    QString logStr;
     if (conn->conn(*user) == false){
         // ritorna messaggio al client di fallimento
         sendMSG("impossibile connettersi al db");
+        logStr = QString::number(this->sockID) + " connesso a db con utente: " + user->getUsername();
     } else {
         // messaggio di successo al client
         sendMSG("connessione al db riuscita");
+        logStr = QString::number(this->sockID) + " non connesso a db con utente: " + user->getUsername();
     }
+    Logger::getLog().write(logStr);
 }
 
 void s_thread::loginDB(QMap<QString, QString> comando){
@@ -137,12 +165,16 @@ void s_thread::loginDB(QMap<QString, QString> comando){
     if (this->user == nullptr || !this->user->isConnected() ){
         connectDB(comando);         // preapara utente e connette al db
     }
+    QString logStr;
     // preparo stringa per query
     if (this->conn->userLogin(*user) ){
         sendMSG("Login corretto");
+        logStr = QString::number(this->sockID) + " loggato a db con utente: " + user->getUsername();
     } else {
         sendMSG("Login fallito");
+        logStr = QString::number(this->sockID) + " non loggato a db con utente: " + user->getUsername();
     }
+    Logger::getLog().write(logStr);
 }
 
 void s_thread::registerDB(QMap<QString, QString> comando){
@@ -152,13 +184,42 @@ void s_thread::registerDB(QMap<QString, QString> comando){
     if (this->user == nullptr || !this->user->isConnected() ){
         connectDB(comando);         // preapara utente e connette al db
     }
+    QString logStr;
     // preparo stringa per query
     if (this->conn->userReg(*user) ){
         sendMSG("Registrazione corretta");
+        logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + user->getUsername();
     } else {
         sendMSG("Registrazione fallita");
+        logStr = QString::number(this->sockID) + " non viene registrato a db con utente: " + user->getUsername();
     }
+    Logger::getLog().write(logStr);
 }
+
+/**
+ * @brief s_thread::disconnectDB
+ * @param comando
+ */
+void s_thread::disconnectDB(QMap<QString, QString> comando)
+{
+    if (!this->conn->isOpen()){
+        this->conn = new db(sockID);
+    }
+    if (this->user == nullptr || !this->user->isConnected() ){
+        connectDB(comando);         // preapara utente e connette al db
+    }
+    QString logStr;
+    // preparo stringa per query
+    if (this->conn->disconn(*user) ){
+        sendMSG("Registrazione corretta");
+        logStr = QString::number(this->sockID) + " disconnesso a db con utente: " + user->getUsername();
+    } else {
+        sendMSG("Registrazione fallita");
+        logStr = QString::number(this->sockID) + " errore nella disconessione a db con utente: " + user->getUsername();
+    }
+    Logger::getLog().write(logStr);
+}
+
 
 /*********************************************************************************************************
  ************************ public slots *******************************************************************

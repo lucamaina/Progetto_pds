@@ -9,6 +9,7 @@
 #define REM_DEL "REMOTE_DELETE"
 #define DISC "DISCONNETC"
 #define FILES "FILE"
+#define CMD "CMD"
 
 #define INIT_DIM 6
 #define LEN_NUM 8

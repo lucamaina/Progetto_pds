@@ -129,6 +129,15 @@ bool db::userReg(utente &user)
     return false;
 }
 
-bool db::isOpen(){
-    return this->myDb.isOpen();
+/**
+ * @brief db::disconn
+ * @param user
+ * @return
+ * Segna l'user come non loggato e chiude connessione al db
+ */
+bool db::disconn(utente &user){
+    user.setConn(false);
+    if ( !this->myDb.isOpen() ){    return false;   }
+    this->myDb.close();
+    return true;
 }

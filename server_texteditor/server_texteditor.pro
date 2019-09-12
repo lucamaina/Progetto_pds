@@ -25,6 +25,10 @@ SOURCES += \
         server/s_thread.cpp \
         server/server.cpp \
         server_main.cpp \
+        shared_editor/editor.cpp \
+        shared_editor/message.cpp \
+        shared_editor/network.cpp \
+        shared_editor/symbol.cpp \
         utente/utente.cpp
 
 # Default rules for deployment.
@@ -43,4 +47,8 @@ HEADERS += \
     server/s_thread.h \
     server/server.h \
     server_main.h \
+    shared_editor/editor.h \
+    shared_editor/message.h \
+    shared_editor/network.h \
+    shared_editor/symbol.h \
     utente/utente.h

@@ -15,17 +15,7 @@ void s_thread::run()
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
     qDebug() << "Client connesso";
-
-/*    this->conn = new db();
-
-    this->user = new utente("user1@asd.it", "0");
-    this->conn->userLogin(*user);
-    qDebug() << "nick: " << user->getNick();
-
-    user = new utente("asd", "1");
-    user->setNick("nico");
-    this->conn->userReg(*user);
-    */
+    this->user = new utente();
 }
 
 /**
@@ -83,19 +73,20 @@ void s_thread::leggiXML(QByteArray qb)
 void s_thread::dispatchCmd(QMap<QString, QString> cmd){
     auto comando = cmd.find("cmd");
     if (comando.value() == CONN) {
-        this->connectDB(cmd);
+        this->connectDB();
     } else if (comando.value() == LOGIN) {
         this->loginDB(cmd);
     } else if (comando.value() == REG) {
         this->registerDB(cmd);
-    } else if (comando.value() == REM_IN) {
-
-    } else if (comando.value() == REM_DEL) {
-
+    } else if (comando.value() == REM_IN || comando.value() == REM_DEL) {
+        Message msg = Message();
+        msg.prepareMsg(cmd);
+        Network &net = Network::getNetwork();
+        net.send(msg);
     } else if (comando.value() == DISC) {
-        this->disconnectDB(cmd);
+        this->disconnectDB();
     } else if (comando.value() == FILES) {
-
+        Editor* ed = new Editor("file.txt");
     }
 }
 
@@ -138,35 +129,32 @@ bool s_thread::sendMSG(QMap<QString, QString> comando){
  ************************ metodi di accesso al db ********************************************************
  *********************************************************************************************************/
 
-void s_thread::connectDB(QMap<QString, QString> comando){
-    this->conn = new db(sockID);
-    // praparo classe |utente|
-    if (this->user == nullptr){
-        this->user = new utente();
-        this->user->prepareUtente(comando);
+void s_thread::connectDB()
+{
+    this->conn = new db(this->sockID);
+    if (!this->conn->isOpen()){
+        QString logStr;
+        if (conn->conn() == false){
+            // ritorna messaggio al client di fallimento
+            sendMSG("impossibile connettersi al db");
+            logStr = QString::number(this->sockID) + "non connesso a db con utente: ";
+        } else {
+            // messaggio di successo al client
+            sendMSG("connessione al db riuscita");
+            logStr = QString::number(this->sockID) + " connesso a db con utente: ";
+        }
+        Logger::getLog().write(logStr);
     }
-    QString logStr;
-    if (conn->conn(*user) == false){
-        // ritorna messaggio al client di fallimento
-        sendMSG("impossibile connettersi al db");
-        logStr = QString::number(this->sockID) + " connesso a db con utente: " + user->getUsername();
-    } else {
-        // messaggio di successo al client
-        sendMSG("connessione al db riuscita");
-        logStr = QString::number(this->sockID) + " non connesso a db con utente: " + user->getUsername();
-    }
-    Logger::getLog().write(logStr);
 }
 
 void s_thread::loginDB(QMap<QString, QString> comando){
     if (!this->conn->isOpen()){
-        this->conn = new db(sockID);
+        qDebug() <<"connessione non aperta: " << conn->isOpen();
+        this->connectDB();
     }
-    if (this->user == nullptr || !this->user->isConnected() ){
-        connectDB(comando);         // preapara utente e connette al db
-    }
+    this->user->prepareUtente(comando);
+
     QString logStr;
-    // preparo stringa per query
     if (this->conn->userLogin(*user) ){
         sendMSG("Login corretto");
         logStr = QString::number(this->sockID) + " loggato a db con utente: " + user->getUsername();
@@ -179,13 +167,11 @@ void s_thread::loginDB(QMap<QString, QString> comando){
 
 void s_thread::registerDB(QMap<QString, QString> comando){
     if (!this->conn->isOpen()){
-        this->conn = new db(sockID);
+        qDebug() <<"connessione non aperta: " << conn->isOpen();
+        this->connectDB();
     }
-    if (this->user == nullptr || !this->user->isConnected() ){
-        connectDB(comando);         // preapara utente e connette al db
-    }
+    this->user->prepareUtente(comando);
     QString logStr;
-    // preparo stringa per query
     if (this->conn->userReg(*user) ){
         sendMSG("Registrazione corretta");
         logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + user->getUsername();
@@ -200,24 +186,19 @@ void s_thread::registerDB(QMap<QString, QString> comando){
  * @brief s_thread::disconnectDB
  * @param comando
  */
-void s_thread::disconnectDB(QMap<QString, QString> comando)
+void s_thread::disconnectDB()
 {
-    if (!this->conn->isOpen()){
-        this->conn = new db(sockID);
+    if (this->conn->isOpen()){
+        QString logStr;
+        if (this->conn->disconn(*user) ){
+            sendMSG("Registrazione corretta");
+            logStr = QString::number(this->sockID) + " disconnesso a db con utente: " + user->getUsername();
+        } else {
+            sendMSG("Registrazione fallita");
+            logStr = QString::number(this->sockID) + " errore nella disconessione a db con utente: " + user->getUsername();
+        }
+        Logger::getLog().write(logStr);
     }
-    if (this->user == nullptr || !this->user->isConnected() ){
-        connectDB(comando);         // preapara utente e connette al db
-    }
-    QString logStr;
-    // preparo stringa per query
-    if (this->conn->disconn(*user) ){
-        sendMSG("Registrazione corretta");
-        logStr = QString::number(this->sockID) + " disconnesso a db con utente: " + user->getUsername();
-    } else {
-        sendMSG("Registrazione fallita");
-        logStr = QString::number(this->sockID) + " errore nella disconessione a db con utente: " + user->getUsername();
-    }
-    Logger::getLog().write(logStr);
 }
 
 
@@ -295,4 +276,9 @@ void s_thread::disconnected()
              << this->sockID;
     this->socket->deleteLater();
     exit(0);
+}
+
+s_thread::~s_thread()
+{
+    this->disconnectDB();
 }

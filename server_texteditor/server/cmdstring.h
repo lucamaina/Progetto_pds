@@ -9,6 +9,7 @@
 #define REM_DEL "REMOTE_DELETE"
 #define DISC "DISCONNETC"
 #define FILES "FILE"
+#define ADD_FILE "ADD_FILE"
 #define CMD "CMD"
 
 #define INIT_DIM 6
@@ -18,8 +19,12 @@
 #define NICK "nickname"
 #define PASS "password"
 
-#define queryLOGIN "SELECT Count(*) FROM utenti WHERE UserName = :UserName AND Password = :Password;"
+#define queryLOGIN "SELECT FOR UPDATE connesso FROM utenti WHERE UserName = :UserName AND Password = :Password;"
+#define queryUpdateLOGIN "UPDATE utenti SET connesso = '1' WHERE UserName = :UserName;"
+#define queryLOGOUT "UPDATE utenti SET connesso = '0' WHERE UserName = :UserName;"
 #define queryREG "INSERT INTO utenti(UserName, NickName, Password) VALUE (:UserName, :NickName, :Password);"
+#define queryPreReg "SELECT FOR UPDATE Count(*) FROM utenti WHERE UserName = :UserName AND Password = :Password;"
+
 
 
 #endif // CMDSTRING_H

@@ -32,3 +32,5 @@
 <INIT>00000039<?xml version="1.0" encoding="UTF-8"?><CONNECT></CONNECT>
 <INIT>00000065<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>asd</username><password>1</password></LOG-IN>
 <INIT>00000089<?xml version="1.0" encoding="UTF-8"?><REGISTER><username>user</username><nickname>nick_name</nickname><password>10</password></REGISTER>
+
+<INIT>00000033<?xml version="1.0" encoding="UTF-8"?><FILE></FILE>

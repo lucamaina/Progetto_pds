@@ -14,12 +14,17 @@
 
 #include <QXmlStreamWriter>
 
+#include "../shared_editor/editor.h"
+#include "../shared_editor/network.h"
+#include "../shared_editor/message.h"
+
 class s_thread : public QThread
 {
     Q_OBJECT
 
 public:
     s_thread(int ID, QObject *parent = nullptr);
+    ~s_thread();
     void run();
 
 public slots:
@@ -46,11 +51,14 @@ private:
 
     /****************************************************************************
      * metodi accesso a database *************************************************/
-    void connectDB(QMap<QString, QString> comando);
-    void disconnectDB(QMap<QString, QString> comando);
+    void connectDB();
+    void disconnectDB();
     void loginDB(QMap<QString, QString> comando);
     void registerDB(QMap<QString, QString> comando);
 
+    /****************************************************************************
+     * metodi accesso a netowrk *************************************************/
+    void sendMsg(QMap<QString, QString> comando);
 };
 
 #endif // S_THREAD_H

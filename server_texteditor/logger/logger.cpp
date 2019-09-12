@@ -1,3 +1,9 @@
+/*
+ * Classe che implementa file di log del server
+ * Usa pattern Singleton
+ *
+ */
+
 #include "logger.h"
 #include <QtDebug>
 

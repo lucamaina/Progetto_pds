@@ -27,11 +27,7 @@ void scriviXML(){
     QByteArray ba;
     QXmlStreamWriter wr(&ba);
     wr.writeStartDocument();
-    wr.writeStartElement(REG);
-    wr.writeTextElement(UNAME, "user");
-    wr.writeTextElement(NICK, "nick_name");
-    wr.writeTextElement(PASS, "10");
-    wr.writeEndElement();
+    wr.writeTextElement(FILES, "");
     wr.writeEndDocument();
 
     int dim = ba.size();

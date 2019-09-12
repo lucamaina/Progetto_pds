@@ -22,6 +22,7 @@ public:
     QSqlQuery query(QString querySrc);
     QSqlQuery query(QString querySrc, QVector<QString> values);
     bool userLogin(utente & user);
+    bool userLogOut(utente & user);
     bool userReg(utente & user);
     bool isOpen(){  return this->myDb.isOpen(); }
     bool disconn(utente& user);

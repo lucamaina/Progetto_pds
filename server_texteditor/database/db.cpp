@@ -69,7 +69,7 @@ bool db::conn()
     bool ok = myDb.open();
 
     qDebug() << "database opened:" << ok << " connectionName: " << QString(myDb.connectionName());
-    // TODO aggiungere log
+    Logger::getLog().write("Nuova connessione con connectionName: " + QString(myDb.connectionName()));
     return ok;
 }
 
@@ -88,19 +88,25 @@ bool db::conn(utente & user){
 bool db::userLogin(utente &user)
 {
     QString s = user.getUsername();
+    this->myDb.transaction();
 
+    QVector<QString> values;
+    values.push_back(user.getUsername());
+    values.push_back(user.getPass());
+    QSqlQuery res = this->query(queryLOGIN, values);
 
-    QString SQLquery;
-    SQLquery = "SELECT NickName FROM utenti WHERE UserName = 'asd' AND Password = '1'";
-
-    QSqlQuery res = this->query(SQLquery);
-
-    while (res.next()){
+    if (res.first()){
         QString nick = res.value(0).toString();
         user.setNick(nick);
+        values.clear();
+        values.push_back(user.getUsername());
+        QSqlQuery res = this->query(queryUpdateLOGIN, values);
         return true;
+    } else {
+        return false;
     }
-    return false;
+
+
 }
 
 bool db::userReg(utente &user)
@@ -111,7 +117,7 @@ bool db::userReg(utente &user)
     QVector<QString> values;
     values.push_back(user.getUsername());
     values.push_back(user.getPass());
-    QSqlQuery res = this->query(queryLOGIN, values);
+    QSqlQuery res = this->query(queryPreReg, values);
 
     res.next();
     int count = res.value(0).toInt();
@@ -129,6 +135,15 @@ bool db::userReg(utente &user)
     return false;
 }
 
+bool db::userLogOut(utente &user)
+{
+    QVector<QString> values;
+    values.push_back(user.getUsername());
+    values.push_back(user.getPass());
+    QSqlQuery res = this->query(queryLOGOUT, values);
+    return true;
+}
+
 /**
  * @brief db::disconn
  * @param user
@@ -136,7 +151,7 @@ bool db::userReg(utente &user)
  * Segna l'user come non loggato e chiude connessione al db
  */
 bool db::disconn(utente &user){
-    user.setConn(false);
+    this->userLogOut(user);
     if ( !this->myDb.isOpen() ){    return false;   }
     this->myDb.close();
     return true;

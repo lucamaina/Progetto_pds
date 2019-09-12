@@ -6,6 +6,7 @@
 #include <QTcpServer>
 #include <QDebug>
 #include "s_thread.h"
+#include "../shared_editor/network.h"
 
 class server : public QTcpServer
 {
@@ -21,7 +22,7 @@ public slots:
 private:
     void incomingConnection(int socketID);
 
-    Logger *log;
+    Logger *log;    
 
 };
 

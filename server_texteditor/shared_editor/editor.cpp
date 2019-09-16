@@ -1,6 +1,7 @@
 /*
  * Classe implementa l'editor condiviso
- *
+ * 
+ * prova di git
  */
 
 #include "editor.h"

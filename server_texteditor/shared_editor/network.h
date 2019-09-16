@@ -6,6 +6,7 @@
 #include <QQueue>
 #include <mutex>
 #include <memory>
+#include <exception>
 #include "editor.h"
 
 class Network : public QObject
@@ -13,7 +14,11 @@ class Network : public QObject
     Q_OBJECT
 public:
     static Network& getNetwork();
-    void send(Message &msg);
+    void push(Message &msg);
+    void msgRead(Message &msg);
+    void createEditor(QString nomeFile, utente& userName);
+    void createEditor(QMap<QString, QString> cmd);
+    void addUserToEditor(Editor& editor, utente& user); //
 
 signals:
     void sigSend();     // segnale

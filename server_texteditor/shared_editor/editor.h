@@ -20,6 +20,8 @@ public:
     bool remoteInsert(Symbol sym);
     bool remoteRemove(Symbol sym);
     bool process(Message& msg);
+    bool addUser(utente& nomeUser);     // utente& nomeUser
+    bool removeUser(QString nomeUser);  // utente& nomeUser
 
 private:
 
@@ -37,6 +39,7 @@ public:
     QString nomeFile;
     QFile *file;
     QVector<Symbol> *symVec;
+    QVector<QString> *userList;
 };
 
 #endif // EDITOR_H

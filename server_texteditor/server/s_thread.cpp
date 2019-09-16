@@ -82,11 +82,14 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
         Message msg = Message();
         msg.prepareMsg(cmd);
         Network &net = Network::getNetwork();
-        net.send(msg);
+        net.push(msg);
     } else if (comando.value() == DISC) {
         this->disconnectDB();
     } else if (comando.value() == FILES) {
         Editor* ed = new Editor("file.txt");
+    } else if (comando.value() == ADD_FILE) {
+        Network &net = Network::getNetwork();
+        net.createEditor(cmd.value("filename"), *user);
     }
 }
 

@@ -1,11 +1,5 @@
 #include "message.h"
 
-Message::Message()
-{
-
-}
-
-
 bool Message::prepareMsg(QMap<QString, QString> comando)
 {
     if (comando.isEmpty()){ return false;   }
@@ -38,4 +32,29 @@ bool Message::prepareMsg(QMap<QString, QString> comando)
     }
 
     return true;
+}
+
+Message::msgType Message::getTipo() const
+{
+    return tipo;
+}
+
+Symbol *Message::getSym() const
+{
+    return sym;
+}
+
+QString Message::getUser() const
+{
+    return user;
+}
+
+QString Message::getFile() const
+{
+    return file;
+}
+
+Message::Message()
+{
+
 }

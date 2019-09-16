@@ -19,11 +19,11 @@
 #define NICK "nickname"
 #define PASS "password"
 
-#define queryLOGIN "SELECT FOR UPDATE connesso FROM utenti WHERE UserName = :UserName AND Password = :Password;"
+#define queryLOGIN "SELECT connesso FROM utenti WHERE UserName = :UserName AND Password = :Password FOR UPDATE;"
 #define queryUpdateLOGIN "UPDATE utenti SET connesso = '1' WHERE UserName = :UserName;"
 #define queryLOGOUT "UPDATE utenti SET connesso = '0' WHERE UserName = :UserName;"
 #define queryREG "INSERT INTO utenti(UserName, NickName, Password) VALUE (:UserName, :NickName, :Password);"
-#define queryPreReg "SELECT FOR UPDATE Count(*) FROM utenti WHERE UserName = :UserName AND Password = :Password;"
+#define queryPreReg "SELECT Count(*) FROM utenti WHERE UserName = :UserName AND Password = :Password FOR UPDATE;"
 
 
 

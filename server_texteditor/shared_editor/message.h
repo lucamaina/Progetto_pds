@@ -9,12 +9,6 @@
 
 class Message
 {
-
-public:
-    explicit Message();
-    bool prepareMsg(QMap<QString, QString> comando);
-
-
 private:
     enum msgType {Rem_In, Rem_Del, Add_File, Remove_File};
     msgType tipo;
@@ -22,6 +16,13 @@ private:
     QString user;
     QString file;
 
+public:
+    explicit Message();
+    bool prepareMsg(QMap<QString, QString> comando);
+    msgType getTipo() const;
+    Symbol *getSym() const;
+    QString getUser() const;
+    QString getFile() const;
 };
 
 #endif // MESSAGE_H

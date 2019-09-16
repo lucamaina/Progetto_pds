@@ -21,3 +21,8 @@ Editor::Editor(QString nomeFile)
     file->write("asd");
     file->close();
 }
+
+bool Editor::addUser(utente &nomeUser)
+{
+    this->userList->append(nomeUser.getUsername());
+}

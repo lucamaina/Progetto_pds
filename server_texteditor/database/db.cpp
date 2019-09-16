@@ -95,6 +95,7 @@ bool db::userLogin(utente &user)
     values.push_back(user.getPass());
     QSqlQuery res = this->query(queryLOGIN, values);
 
+    //
     if (res.first()){
         QString nick = res.value(0).toString();
         user.setNick(nick);

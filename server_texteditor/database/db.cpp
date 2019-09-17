@@ -38,6 +38,7 @@ QSqlQuery db::query(QString querySrc)
         QSqlError err = query.lastError();
         qDebug() << err.text();
     }
+    qDebug() << "last query" << query.executedQuery();
     return query;
 }
 
@@ -51,10 +52,12 @@ QSqlQuery db::query(QString querySrc, QVector<QString> values)
     for (int idx = 0; idx < values.length(); idx++){
         query.bindValue(idx, values[idx]);
     }
+
     if (query.exec() == false){
         QSqlError err = query.lastError();
         qDebug() << err.text();
     }
+    qDebug() << "last query" << query.executedQuery();
     return query;
 }
 
@@ -87,27 +90,30 @@ bool db::conn(utente & user){
 
 bool db::userLogin(utente &user)
 {
-    QString s = user.getUsername();
-    this->myDb.transaction();
+    this->myDb.transaction();   // apro transazione
 
     QVector<QString> values;
     values.push_back(user.getUsername());
     values.push_back(user.getPass());
+    qDebug() << values;
     QSqlQuery res = this->query(queryLOGIN, values);
 
-    //
     if (res.first()){
-        QString nick = res.value(0).toString();
-        user.setNick(nick);
-        values.clear();
-        values.push_back(user.getUsername());
-        QSqlQuery res = this->query(queryUpdateLOGIN, values);
-        return true;
-    } else {
-        return false;
+        QString s = res.value(1).toString();
+        bool connesso = res.value(0).toBool();
+        qDebug() <<"res: "<< connesso << " s: "<<s;
+        if (connesso == false){
+            values.clear();
+            values.push_back(user.getUsername());
+            QSqlQuery res = this->query(queryUpdateLOGIN, values);
+            user.setNick(s);
+            this->myDb.commit();    // chiudo connessione con commit
+            return true;
+        }
+
     }
-
-
+    this->myDb.rollback();      // chiudo transazione con rollback
+    return false;
 }
 
 bool db::userReg(utente &user)

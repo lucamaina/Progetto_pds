@@ -16,6 +16,22 @@ void s_thread::run()
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
     qDebug() << "Client connesso";
     this->user = new utente();
+
+    this->conn = new db(this->sockID);
+    this->conn->conn();
+    QSqlQuery q ;//= conn->query(queryPROVA);
+
+    QVector<QString> cmd;
+
+    cmd.push_back("asd");
+    cmd.push_back("1");
+    qDebug() << cmd;
+    q = this->conn->query(queryLOGIN, cmd);
+
+    if (q.first()){
+        QString s = q.value(0).toString();
+        qDebug() << s;
+    }
 }
 
 /**

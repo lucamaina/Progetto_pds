@@ -36,11 +36,11 @@ bool utente::prepareUtente(QMap<QString, QString> map){
     return true;
 }
 
-QString utente::getUsername(){   return "'"+this->username+"'";}
+QString utente::getUsername(){   return this->username;}
 
-QString utente::getNick(){  return "'"+this->nickname+"'";}
+QString utente::getNick(){  return this->nickname;}
 
-QString utente::getPass(){  return "'"+this->password+"'";}
+QString utente::getPass(){  return this->password;}
 
 void utente::setNick(QString nick)
 {

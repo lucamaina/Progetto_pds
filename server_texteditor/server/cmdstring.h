@@ -18,6 +18,7 @@
 #define UNAME "username"
 #define NICK "nickname"
 #define PASS "password"
+#define FNAME "filename"
 
 #define queryLOGIN "SELECT connesso, NickName FROM utenti WHERE UserName = ? AND Password = ?;"
 #define queryUpdateLOGIN "UPDATE utenti SET connesso = '1' WHERE UserName = :UserName;"

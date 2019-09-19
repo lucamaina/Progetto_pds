@@ -35,7 +35,7 @@ void Network::msgRead(Message &msg)
     }
 }
 
-void Network::createEditor(QString nomeFile, utente &userName)
+void Network::createEditor(QString nomeFile, utente &user)
 {
     // verifica nome file non sia già presente
     if (this->editorMap.contains(nomeFile)){
@@ -43,13 +43,29 @@ void Network::createEditor(QString nomeFile, utente &userName)
         throw std::exception();
     }
     Editor *ed = new Editor(nomeFile);
-    ed->addUser(userName);
+    ed->addUser(user);
     this->editorMap.insert(nomeFile, ed);
 }
 
 void Network::createEditor(QMap<QString, QString> cmd)
 {
 
+}
+
+void Network::sendToEdit(Message &msg)
+{
+    // cerca editor e lo manda
+    if (!this->editorMap.contains(msg.getFile())){
+        // messaggio ignorato per mancanza di file
+        return;
+    }
+    Editor *ed = this->editorMap.value(msg.getFile());
+    if (ed->findUser(msg.getUser())){
+        ed->process(msg);
+    } else {
+        // utente non ha permesso di scrivere
+        return;
+    }
 }
 
 /**
@@ -63,6 +79,7 @@ void Network::dispatch()
         while (msgQueue.size() > 0){
             Message msg = msgQueue.dequeue();
             // leggo messaggio e lo consegno
+            sendToEdit(msg);
         }
     }
 }

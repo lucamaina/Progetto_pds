@@ -9,8 +9,10 @@
 
 class Message
 {
+public:
+    enum msgType {Rem_In, Rem_Del, Remove_File};
+
 private:
-    enum msgType {Rem_In, Rem_Del, Add_File, Remove_File};
     msgType tipo;
     Symbol* sym;
     QString user;

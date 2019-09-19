@@ -39,6 +39,11 @@
 
 <INIT>00000039<?xml version="1.0" encoding="UTF-8"?><CONNECT></CONNECT>
 <INIT>00000065<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>asd</username><password>1</password></LOG-IN>
+<INIT>00000071<?xml version="1.0" encoding="UTF-8"?><ADD_FILE><username>asd</username><filename>prova.txt</filename></ADD_FILE>
+
 <INIT>00000089<?xml version="1.0" encoding="UTF-8"?><REGISTER><username>user</username><nickname>nick_name</nickname><password>10</password></REGISTER>
 
-<INIT>0000006d<?xml version="1.0" encoding="UTF-8"?><ADD_FILE><username>val1</username><filename>val2</filename></ADD_FILE>
+
+
+- correttto ritorno da login
+- al distruttore di user fare logoff al db

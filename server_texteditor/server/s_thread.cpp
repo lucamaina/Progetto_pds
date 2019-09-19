@@ -105,7 +105,7 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
         Editor* ed = new Editor("file.txt");
     } else if (comando.value() == ADD_FILE) {
         Network &net = Network::getNetwork();
-        net.createEditor(cmd.value("filename"), *user);
+        net.createEditor(cmd.value(FNAME), *user);
     }
 }
 

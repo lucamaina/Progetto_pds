@@ -5,6 +5,8 @@
 #include <QFile>
 #include <QVector>
 #include <mutex>
+#include <QDebug>
+
 #include "message.h"
 #include "symbol.h"
 
@@ -14,21 +16,29 @@ class Editor : public QObject
 
 public:
     explicit Editor(QObject *parent = nullptr);
-    Editor (QString nomeFile);
+    explicit Editor (QString nome);
     static Editor& getFile();
-    ~Editor(){}
+    ~Editor();
+
+    /****************************************************************************
+     * metodi controllo utenti **************************************************/
+    bool addUser(utente& nomeUser);
+    bool removeUser(QString nomeUser);  // utente& nomeUser
+    bool findUser(QString nomeUser);
+
+    /****************************************************************************
+     * metodi di insert e delete ************************************************/
     bool remoteInsert(Symbol sym);
     bool remoteRemove(Symbol sym);
     bool process(Message& msg);
-    bool addUser(utente& nomeUser);     // utente& nomeUser
-    bool removeUser(QString nomeUser);  // utente& nomeUser
+
 
 private:
-
+    bool save();
 
     // metodi non definiti
-    Editor(const Editor & hold);
-    const Editor &operator=(const Editor & hold);
+    Editor(const Editor & hold) = delete;
+    const Editor &operator=(const Editor & hold) = delete;
 
 signals:
 

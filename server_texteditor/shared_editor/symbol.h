@@ -9,7 +9,7 @@ class Symbol
 public:
     explicit Symbol();
     explicit Symbol(QString user, QChar car, uint num, uint den, uint numR, uint denR) :  userName(user), car(car), num(num), den(den), numR(numR), denR(denR){}
-
+    QChar getChar(){return this->car;}
 
 private:
     QChar car;

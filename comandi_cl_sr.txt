@@ -6,6 +6,21 @@
     <password>val2</password>
 </LOG-IN>
 
+// richiesta client
+<?xml version="1.0" encoding="UTF-8"?>
+<BROWS>
+    <username>val1</username>
+    <password>val2</password>
+</BROWS>
+
+// risposta server
+<?xml version="1.0" encoding="UTF-8"?>
+<BROWS>
+    <nomefile>val1</nomefile>
+    <nomefile>val2</nomefile>
+	<nomefile>val3</nomefile>
+	<nomefile>val4</nomefile>
+</BROWS>
 
 <?xml version="1.0" encoding="UTF-8"?>
 <CONNECT>
@@ -36,6 +51,12 @@
 <username>val1</username>
 <filename>val2</filename>   
 </ADD_FILE>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<REMOVE_FILE>
+<username>val1</username>
+<filename>val2</filename>   
+</REMOVE_FILE>
 
 <INIT>00000039<?xml version="1.0" encoding="UTF-8"?><CONNECT></CONNECT>
 <INIT>00000065<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>asd</username><password>1</password></LOG-IN>

@@ -57,7 +57,6 @@ void s_thread::leggiXML(QByteArray qb)
         token = stream.readNext();
         // leggo elemento con nome del comando
         if (token == QXmlStreamReader::StartElement){
-            qDebug() << "comando: " << stream.name();
             QString cmd = stream.name().toString();
             command.insert("cmd", cmd);
         }
@@ -240,7 +239,6 @@ void s_thread::readyRead()
     QByteArray out;
     QByteArray tmp;
     uint dim;
-
     //buffer.resize(4096);
     out.resize(1024);
     tmp.resize(16);

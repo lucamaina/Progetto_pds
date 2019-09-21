@@ -19,6 +19,7 @@ public:
     void createEditor(QString nomeFile, utente& userName);
     void createEditor(QMap<QString, QString> cmd);
     void addUserToEditor(Editor& editor, utente& user); //
+    void sendToEdit(Message &msg);
 
 signals:
     void sigSend();     // segnale

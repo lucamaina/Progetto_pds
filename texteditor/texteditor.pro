@@ -5,15 +5,24 @@
 #-------------------------------------------------
 
 QT += widgets
+QT += network
 requires(qtConfig(filedialog))
 qtHaveModule(printsupport): QT += printsupport
 
 TEMPLATE        = app
 TARGET          = textedit
 
-HEADERS         = textedit.h
+HEADERS         = textedit.h \
+                  Client/client.h \ \
+    Client/cmdstring.h \
+    Highlighter/highlighter.h \
+    LoginDialog/logindialog.h
+
 SOURCES         = textedit.cpp \
-                  main.cpp
+                  Highlighter/highlighter.cpp \
+                  LoginDialog/logindialog.cpp \
+                  main.cpp \
+                  Client/client.cpp
 
 RESOURCES += textedit.qrc
 build_all:!build_pass {

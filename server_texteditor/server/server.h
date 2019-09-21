@@ -18,9 +18,8 @@ public:
 signals:
 
 public slots:
-
-private:
-    void incomingConnection(int socketID);
+protected:
+    void incomingConnection(qintptr socketDescriptor) override;
 
     Logger *log;    
 

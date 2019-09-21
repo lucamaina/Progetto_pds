@@ -116,6 +116,9 @@ TextEdit::TextEdit(QWidget *parent)
             this, &TextEdit::cursorPositionChanged);
     setCentralWidget(textEdit);
 
+    Evidenziatore = new Highlighter(textEdit->document());
+
+
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
     setupFileActions();
     setupEditActions();
@@ -170,6 +173,9 @@ TextEdit::TextEdit(QWidget *parent)
 
     setupStatusBar();
     this->textEdit->installEventFilter(this);       // importante
+
+    this->client= new Client();
+
 }
 
 /*******************************************************************
@@ -219,17 +225,11 @@ void TextEdit::setupFileActions()
     QToolBar *tb = addToolBar(tr("File Actions"));
     QMenu *menu = menuBar()->addMenu(tr("&File"));
 
-    /**
-     *  Prova menu
-     */
-    QAction *asd = menu->addAction(tr("&asd"), this, &TextEdit::slot_asd);
-    asd->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
-    connect(asd, SIGNAL(sig_asd()), this, SLOT(slot_asd()));
+    //aggiungere aggiungere
 
-    /**
-     *
-     */
-
+    const QIcon loginIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
+    QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
+    login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
 
     const QIcon newIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/filenew.png"));
     QAction *a = menu->addAction(newIcon,  tr("&New"), this, &TextEdit::fileNew);
@@ -495,6 +495,14 @@ void TextEdit::setCurrentFileName(const QString &fileName)
     setWindowTitle(tr("%1[*] - %2").arg(shownName, QCoreApplication::applicationName()));
     setWindowModified(false);
 }
+
+void TextEdit::LoginDialog()
+{
+    class LoginDialog* loginDialog = new class LoginDialog( this );
+    connect( loginDialog, SIGNAL (acceptLogin(QString&,QString&)), this->client, SLOT (handleLogin(QString&,QString&)) );
+    loginDialog->exec();
+}
+
 
 void TextEdit::fileNew()
 {

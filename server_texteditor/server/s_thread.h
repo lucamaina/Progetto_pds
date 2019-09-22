@@ -46,14 +46,15 @@ private:
     /****************************************************************************
      * metodi controllo dei messaggi inviati ************************************/
     bool scriviXML();
-    bool sendMSG(QByteArray data);
-    bool sendMSG(QMap<QString, QString> comando);
+    bool clientMsg(QByteArray data);
+    bool clientMsg(QMap<QString, QString> comando);
 
     /****************************************************************************
      * metodi accesso a database *************************************************/
     void connectDB();
     void disconnectDB();
     void loginDB(QMap<QString, QString> comando);
+    void logoffDB(QMap<QString, QString> comando);
     void registerDB(QMap<QString, QString> comando);
 
     /****************************************************************************

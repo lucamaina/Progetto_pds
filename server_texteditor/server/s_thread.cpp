@@ -92,16 +92,19 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
         this->connectDB();
     } else if (comando.value() == LOGIN) {
         this->loginDB(cmd);
+    } else if (comando.value() == LOGOFF) {
+        this->logoffDB(cmd);
     } else if (comando.value() == REG) {
         this->registerDB(cmd);
     } else if (comando.value() == REM_IN || comando.value() == REM_DEL) {
-        Message msg = Message();
+      /*  Message msg = Message();
         msg.prepareMsg(cmd);
         Network &net = Network::getNetwork();
-        net.push(msg);
+        net.push(msg);  */
+        this->sendMsg(cmd);
     } else if (comando.value() == DISC) {
         this->disconnectDB();
-    } else if (comando.value() == FILES) {
+    } else if (comando.value() == FILE) {
         Editor* ed = new Editor("file.txt");
     } else if (comando.value() == ADD_FILE) {
         Network &net = Network::getNetwork();
@@ -109,7 +112,7 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
     }
 }
 
-bool s_thread::sendMSG(QByteArray data){
+bool s_thread::clientMsg(QByteArray data){
     if (socket->isOpen() && socket->isWritable()){
         if (this->socket->write(data, data.size()) == -1){
             // errore
@@ -119,7 +122,7 @@ bool s_thread::sendMSG(QByteArray data){
     return false;
 }
 
-bool s_thread::sendMSG(QMap<QString, QString> comando){
+bool s_thread::clientMsg(QMap<QString, QString> comando){
     QByteArray ba;
     QXmlStreamWriter wr(&ba);
     wr.writeStartDocument();
@@ -140,7 +143,7 @@ bool s_thread::sendMSG(QMap<QString, QString> comando){
     ba.prepend(INIT);
     qDebug() << QString(ba);
 
-    return sendMSG(ba);
+    return clientMsg(ba);
 }
 
 
@@ -155,11 +158,11 @@ void s_thread::connectDB()
         QString logStr;
         if (conn->conn() == false){
             // ritorna messaggio al client di fallimento
-            sendMSG("impossibile connettersi al db");
+            clientMsg("impossibile connettersi al db");
             logStr = QString::number(this->sockID) + "non connesso a db con utente: ";
         } else {
             // messaggio di successo al client
-            sendMSG("connessione al db riuscita");
+            clientMsg("connessione al db riuscita");
             logStr = QString::number(this->sockID) + " connesso a db con utente: ";
         }
         Logger::getLog().write(logStr);
@@ -175,10 +178,10 @@ void s_thread::loginDB(QMap<QString, QString> comando){
 
     QString logStr;
     if (this->conn->userLogin(*user) ){
-        sendMSG("Login corretto");
+        clientMsg("Login corretto");
         logStr = QString::number(this->sockID) + " loggato a db con utente: " + user->getUsername();
     } else {
-        sendMSG("Login fallito");
+        clientMsg("Login fallito");
         logStr = QString::number(this->sockID) + " non loggato a db con utente: " + user->getUsername();
     }
     Logger::getLog().write(logStr);
@@ -192,14 +195,15 @@ void s_thread::registerDB(QMap<QString, QString> comando){
     this->user->prepareUtente(comando);
     QString logStr;
     if (this->conn->userReg(*user) ){
-        sendMSG("Registrazione corretta");
+        clientMsg("Registrazione corretta");
         logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + user->getUsername();
     } else {
-        sendMSG("Registrazione fallita");
+        clientMsg("Registrazione fallita");
         logStr = QString::number(this->sockID) + " non viene registrato a db con utente: " + user->getUsername();
     }
     Logger::getLog().write(logStr);
 }
+
 
 /**
  * @brief s_thread::disconnectDB
@@ -210,14 +214,28 @@ void s_thread::disconnectDB()
     if (this->conn->isOpen()){
         QString logStr;
         if (this->conn->disconn(*user) ){
-            sendMSG("Registrazione corretta");
+            clientMsg("Registrazione corretta");
             logStr = QString::number(this->sockID) + " disconnesso a db con utente: " + user->getUsername();
         } else {
-            sendMSG("Registrazione fallita");
+            clientMsg("Registrazione fallita");
             logStr = QString::number(this->sockID) + " errore nella disconessione a db con utente: " + user->getUsername();
         }
         Logger::getLog().write(logStr);
     }
+}
+
+/*********************************************************************************************************
+ ************************ metodi di accesso a Network ********************************************************
+ *********************************************************************************************************/
+
+
+void s_thread::sendMsg(QMap<QString, QString> comando)
+{
+
+    Message msg = Message();
+    msg.prepareMsg(comando);
+    Network &net = Network::getNetwork();
+    net.push(msg);
 }
 
 

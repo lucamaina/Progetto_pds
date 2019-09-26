@@ -11,11 +11,12 @@
 #define REM_IN "REMOTE_INSERT"
 #define REM_DEL "REMOTE_DELETE"
 #define DISC "DISCONNETC"
-#define FILE "FILE"
+#define FILES "FILE"
 #define ADD_FILE "ADD_FILE"
 #define REMOVE_FILE "REMOVE_FILE"
 #define CMD "CMD"
 #define BROWS "BROWS"
+
 
 /****************************************************************************
  * dimensioni messaggi definiti *********************************************/

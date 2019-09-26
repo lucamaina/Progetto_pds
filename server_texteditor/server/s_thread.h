@@ -54,7 +54,7 @@ private:
     void connectDB();
     void disconnectDB();
     void loginDB(QMap<QString, QString> comando);
-    void logoffDB(QMap<QString, QString> comando);
+    void logoffDB(QMap<QString, QString> comando){}
     void registerDB(QMap<QString, QString> comando);
 
     /****************************************************************************

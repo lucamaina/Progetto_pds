@@ -36,15 +36,15 @@ Formato messaggi ricevuti dal server.
 // creazione nuovo file
 <?xml version="1.0" encoding="UTF-8"?>
 <ADD_FILE>
-<username>val1</username>
-<filename>val2</filename>   
+	<username>val1</username>
+	<filename>val2</filename>   
 </ADD_FILE>
 
 // eliminazione file dal file system
 <?xml version="1.0" encoding="UTF-8"?>
 <REMOVE_FILE>
-<username>val1</username>
-<filename>val2</filename>   
+	<username>val1</username>
+	<filename>val2</filename>   
 </REMOVE_FILE>
 
 // richiesta client file disponibili
@@ -70,13 +70,19 @@ Formato messaggi ricevuti dal server.
 // messaggio di inserimento di carattere
 <?xml version="1.0" encoding="UTF-8"?>
 <REMOTE-INSERT>
-   
+	<char>a</char>
+	<index>11</index>
+	<username>val1</username>
+	<nomefile>val2</nomefile>
 </REMOTE-INSERT>
 
 // messaggio di eeliminazione di carattere
 <?xml version="1.0" encoding="UTF-8"?>
 <REMOTE-DELETE>
-   
+	<char>a</char>
+	<index>11</index>
+	<username>val1</username>
+	<nomefile>val2</nomefile>   
 </REMOTE-DELETE>
 
 
@@ -87,3 +93,5 @@ Formato messaggi ricevuti dal server.
 <INIT>00000071<?xml version="1.0" encoding="UTF-8"?><ADD_FILE><username>asd</username><filename>prova.txt</filename></ADD_FILE>
 
 <INIT>00000089<?xml version="1.0" encoding="UTF-8"?><REGISTER><username>user</username><nickname>nick_name</nickname><password>10</password></REGISTER>
+
+<INIT>00000072<?xml version="1.0" encoding="UTF-8"?><ADD_FILE><username>asd</username><filename>editor.txt</filename></ADD_FILE>

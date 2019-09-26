@@ -43,13 +43,19 @@ void Network::createEditor(QString nomeFile, utente &user)
         throw std::exception();
     }
     Editor *ed = new Editor(nomeFile);
-    ed->addUser(user);
+    ed->addUser(user.getUsername());
     this->editorMap.insert(nomeFile, ed);
 }
 
 void Network::createEditor(QMap<QString, QString> cmd)
 {
+    if (!cmd.contains(UNAME)){  return; }
+    if (!cmd.contains(FNAME)){  return; }
+    // verifica utente presente nel db
 
+    Editor* ed = new Editor(cmd.value(FNAME));
+    QString nome = cmd.value(UNAME);
+    ed->addUser(nome);
 }
 
 void Network::sendToEdit(Message &msg)

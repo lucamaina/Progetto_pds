@@ -16,7 +16,7 @@ void s_thread::run()
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
     qDebug() << "Client connesso";
     this->user = new utente();
-
+/**
     this->conn = new db(this->sockID);
     this->conn->conn();
     QSqlQuery q ;//= conn->query(queryPROVA);
@@ -32,6 +32,7 @@ void s_thread::run()
         QString s = q.value(0).toString();
         qDebug() << s;
     }
+    */
 }
 
 /**
@@ -97,14 +98,10 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
     } else if (comando.value() == REG) {
         this->registerDB(cmd);
     } else if (comando.value() == REM_IN || comando.value() == REM_DEL) {
-      /*  Message msg = Message();
-        msg.prepareMsg(cmd);
-        Network &net = Network::getNetwork();
-        net.push(msg);  */
         this->sendMsg(cmd);
     } else if (comando.value() == DISC) {
         this->disconnectDB();
-    } else if (comando.value() == FILE) {
+    } else if (comando.value() == FILES) {
         Editor* ed = new Editor("file.txt");
     } else if (comando.value() == ADD_FILE) {
         Network &net = Network::getNetwork();
@@ -228,10 +225,13 @@ void s_thread::disconnectDB()
  ************************ metodi di accesso a Network ********************************************************
  *********************************************************************************************************/
 
-
+/**
+ * @brief s_thread::sendMsg
+ * @param comando
+ * invia il messaggio alla coda del network
+ */
 void s_thread::sendMsg(QMap<QString, QString> comando)
 {
-
     Message msg = Message();
     msg.prepareMsg(comando);
     Network &net = Network::getNetwork();
@@ -318,4 +318,6 @@ void s_thread::disconnected()
 s_thread::~s_thread()
 {
     this->disconnectDB();
+    delete this->conn;
+    delete this->user;
 }

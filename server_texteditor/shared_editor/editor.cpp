@@ -51,20 +51,36 @@ bool Editor::process(Message &msg)
     return false;
 }
 
-bool Editor::addUser(utente &nomeUser)
+
+/*********************************************************************************************************
+ ************************ metodi di gestione di utentu ***************************************************
+ *********************************************************************************************************/
+
+bool Editor::addUser(const QString &nomeUser)
 {
-    if (userList->contains(nomeUser.getUsername())){
+    if (userList->contains(nomeUser)){
         return false;
     }
-    this->userList->append(nomeUser.getUsername());
+    this->userList->append(nomeUser);
     return true;
 }
 
-bool Editor::findUser(QString nomeUser)
+bool Editor::findUser(const QString &nomeUser)
 {
     if (this->userList->contains(nomeUser)){
         return true;
     }
+    return false;
+}
+
+
+/*********************************************************************************************************
+ ************************ metodi di gestione della mappa **************************************************
+ *********************************************************************************************************/
+
+bool Editor::localInsert(Symbol sym)
+{
+
     return false;
 }
 

@@ -16,18 +16,20 @@ class Editor : public QObject
 
 public:
     explicit Editor(QObject *parent = nullptr);
-    explicit Editor (QString nome);
+    explicit Editor(QString nome);
     static Editor& getFile();
     ~Editor();
 
     /****************************************************************************
      * metodi controllo utenti **************************************************/
-    bool addUser(utente& nomeUser);
-    bool removeUser(QString nomeUser);  // utente& nomeUser
-    bool findUser(QString nomeUser);
+    bool addUser(const QString& nomeUser);
+    bool removeUser(const QString& nomeUser);  // utente& nomeUser
+    bool findUser(const QString &nomeUser);
 
     /****************************************************************************
      * metodi di insert e delete ************************************************/
+    bool localInsert(Symbol sym);
+    bool localRemove(Symbol sym);
     bool remoteInsert(Symbol sym);
     bool remoteRemove(Symbol sym);
     bool process(Message& msg);

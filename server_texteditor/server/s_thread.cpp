@@ -35,6 +35,18 @@ void s_thread::run()
     */
 }
 
+
+s_thread::~s_thread()
+{
+    this->disconnectDB();
+    delete this->conn;
+    delete this->user;
+}
+\
+/*********************************************************************************************************
+ ************************ metodi di connessione con client ***********************************************
+ *********************************************************************************************************/
+
 /**
  * @brief s_thread::leggiXML
  * @param dim
@@ -102,13 +114,57 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
     } else if (comando.value() == DISC) {
         this->disconnectDB();
     } else if (comando.value() == FILES) {
-        Editor* ed = new Editor("file.txt");
+        //
     } else if (comando.value() == ADD_FILE) {
-        Network &net = Network::getNetwork();
-        net.createEditor(cmd.value(FNAME), *user);
+        this->addFileDB(cmd);
+    } else if (comando.value() == BROWS) {
+        this->browsFile(cmd);
     }
 }
 
+/**
+ * @brief s_thread::scriviXML
+ * @param comando
+ * @return
+ * trasforma il comando da mappa in XML inviabile al client
+ * legge coppia chiave - valore, la scrive in XML e la cancella dalla mappa
+ */
+bool s_thread::scriviXML(QMap<QString, QString> comando)
+{
+    if (!comando.contains(CMD)){ return false;   }
+    QByteArray ba;
+    QXmlStreamWriter wr(&ba);
+    wr.writeStartDocument();
+    wr.writeTextElement(comando.value(CMD), "");
+    comando.remove(CMD);
+
+    while (!comando.empty()){
+        QString elem, val;
+        elem = comando.firstKey();
+        val = comando.value(elem);
+        qDebug() << elem << " : " << val;
+        wr.writeTextElement(elem, val);
+        comando.remove(elem);
+    }
+    wr.writeEndDocument();
+
+    int dim = ba.size();
+    QByteArray len;
+    len = QByteArray::number(dim, 16);
+    len.prepend(8 - len.size(), '0');
+
+    ba.prepend(len);
+    ba.prepend(INIT);
+    qDebug() << QString(ba);
+    return false;
+}
+
+/**
+ * @brief s_thread::clientMsg
+ * @param data
+ * @return
+ * manda messaggio al client
+ */
 bool s_thread::clientMsg(QByteArray data){
     if (socket->isOpen() && socket->isWritable()){
         if (this->socket->write(data, data.size()) == -1){
@@ -119,6 +175,12 @@ bool s_thread::clientMsg(QByteArray data){
     return false;
 }
 
+/**
+ * @brief s_thread::clientMsg
+ * @param comando
+ * @return
+ * override per mandare messaggi al client
+ */
 bool s_thread::clientMsg(QMap<QString, QString> comando){
     QByteArray ba;
     QXmlStreamWriter wr(&ba);
@@ -166,7 +228,7 @@ void s_thread::connectDB()
     }
 }
 
-void s_thread::loginDB(QMap<QString, QString> comando){
+void s_thread::loginDB(QMap<QString, QString> &comando){
     if (!this->conn->isOpen()){
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();
@@ -184,7 +246,27 @@ void s_thread::loginDB(QMap<QString, QString> comando){
     Logger::getLog().write(logStr);
 }
 
-void s_thread::registerDB(QMap<QString, QString> comando){
+void s_thread::logoffDB(QMap<QString, QString> &comando)
+{
+    if (!this->conn->isOpen()){
+        qDebug() <<"connessione non aperta: " << conn->isOpen();
+        this->connectDB();
+    }
+    if (this->user == nullptr)
+        return;
+
+    QString logStr;
+    if (this->conn->userLogOut(*user) ){
+        clientMsg("LogOut corretto");
+        logStr = QString::number(this->sockID) + " log out a db con utente: " + user->getUsername();
+    } else {
+        clientMsg("LogOut fallito");
+        logStr = QString::number(this->sockID) + " non log out a db con utente: " + user->getUsername();
+    }
+    Logger::getLog().write(logStr);
+}
+
+void s_thread::registerDB(QMap<QString, QString> &comando){
     if (!this->conn->isOpen()){
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();
@@ -200,7 +282,6 @@ void s_thread::registerDB(QMap<QString, QString> comando){
     }
     Logger::getLog().write(logStr);
 }
-
 
 /**
  * @brief s_thread::disconnectDB
@@ -218,6 +299,74 @@ void s_thread::disconnectDB()
             logStr = QString::number(this->sockID) + " errore nella disconessione a db con utente: " + user->getUsername();
         }
         Logger::getLog().write(logStr);
+    }
+}
+
+
+void s_thread::addFileDB(QMap<QString, QString> &comando)
+{
+    if (!this->conn->isOpen()){
+        qDebug() <<"connessione non aperta: " << conn->isOpen();
+        this->connectDB();
+    }
+    QString logStr;
+    if (this->conn->addFile(*user, "asd") ){
+        clientMsg("Registrazione corretta");
+        logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + user->getUsername();
+    } else {
+        clientMsg("Registrazione fallita");
+        logStr = QString::number(this->sockID) + " non viene registrato a db con utente: " + user->getUsername();
+    }
+    Logger::getLog().write(logStr);
+    Network &net = Network::getNetwork();
+    net.createEditor(comando.value(DOCID), comando.value(FNAME), *user);
+}
+
+void s_thread::browsFile(QMap<QString, QString> &comando)
+{
+    if (!this->conn->isOpen()){
+        qDebug() <<"connessione non aperta: " << conn->isOpen();
+        this->connectDB();
+    }
+    QString logStr;
+    QMap<QString, QString> map = this->conn->browsFile(*user);
+
+        clientMsg("Browsing effettuato");
+        logStr = QString::number(this->sockID) + "Browsing con utente: " + user->getUsername();
+
+    Logger::getLog().write(logStr);
+    this->clientMsg(map);
+}
+
+/**
+ * @brief s_thread::openFile
+ * @param comando
+ * verifica sia presente l'editor in network
+ */
+void s_thread::openFile(QMap<QString, QString> &comando)
+{
+    if (!this->conn->isOpen()){
+        qDebug() <<"connessione non aperta: " << conn->isOpen();
+        this->connectDB();
+    }
+    QString logStr;
+    if (this->conn->openFile(*user, comando.value(DOCID)) ){
+        clientMsg("File apribile dallì'utente");
+        logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + user->getUsername();
+    } else {
+        clientMsg("File non apribile dallì'utente");
+        logStr = QString::number(this->sockID) + " File non apribile dallì'utente: " + user->getUsername();
+        Logger::getLog().write(logStr);
+        return;
+    }
+    Logger::getLog().write(logStr);
+    Network &net = Network::getNetwork();
+    if (!net.filePresent(comando.value(DOCID))){
+        // aggiungi file
+        net.createEditor(comando.value(DOCID), comando.value(FNAME), *user);
+    } else {
+        // aumenta contatore user attivi
+        net.addRefToEditor(comando.value(DOCID), comando.value(UNAME));
     }
 }
 
@@ -315,9 +464,3 @@ void s_thread::disconnected()
     exit(0);
 }
 
-s_thread::~s_thread()
-{
-    this->disconnectDB();
-    delete this->conn;
-    delete this->user;
-}

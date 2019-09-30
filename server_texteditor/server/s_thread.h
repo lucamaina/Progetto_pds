@@ -45,7 +45,7 @@ private:
 
     /****************************************************************************
      * metodi controllo dei messaggi inviati ************************************/
-    bool scriviXML();
+    bool scriviXML(QMap<QString, QString> comando);
     bool clientMsg(QByteArray data);
     bool clientMsg(QMap<QString, QString> comando);
 
@@ -53,13 +53,17 @@ private:
      * metodi accesso a database *************************************************/
     void connectDB();
     void disconnectDB();
-    void loginDB(QMap<QString, QString> comando);
-    void logoffDB(QMap<QString, QString> comando){}
-    void registerDB(QMap<QString, QString> comando);
+    void loginDB(QMap<QString, QString> &comando);
+    void logoffDB(QMap<QString, QString> &comando);
+    void registerDB(QMap<QString, QString> &comando);
+    void addFileDB(QMap<QString, QString> &comando);
+    void browsFile(QMap<QString, QString> &comando);
+    void openFile(QMap<QString, QString> &comando);
 
     /****************************************************************************
      * metodi accesso a netowrk *************************************************/
     void sendMsg(QMap<QString, QString> comando);
+
 };
 
 #endif // S_THREAD_H

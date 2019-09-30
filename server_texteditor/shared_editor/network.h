@@ -16,10 +16,11 @@ public:
     static Network& getNetwork();
     void push(Message &msg);
     void msgRead(Message &msg);
-    void createEditor(QString nomeFile, utente& userName);
+    void createEditor(QString fileID, QString nomeFile, utente& userName);
     void createEditor(QMap<QString, QString> cmd);
-    void addUserToEditor(Editor& editor, utente& user); //
     void sendToEdit(Message& msg);
+    bool filePresent(QString fileId);
+    bool addRefToEditor(QString fileId, QString user);
 
 signals:
     void sigSend();     // segnale
@@ -29,7 +30,8 @@ public slots:
 
 private:
     std::mutex mQueue;
-    QMap<QString, Editor*> editorMap;
+    // TODO usa sharedPointer
+    QMap<QString, Editor*> editorMap;   // chiave = DocId
     QQueue<Message> msgQueue;
 
 

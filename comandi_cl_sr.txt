@@ -47,11 +47,9 @@ Formato messaggi ricevuti dal server.
 	<filename>val2</filename>   
 </REMOVE_FILE>
 
-// richiesta client file disponibili
+// richiesta client file disponibili solo dall'utente loggato
 <?xml version="1.0" encoding="UTF-8"?>
 <BROWS>
-    <username>val1</username>
-    <password>val2</password>
 </BROWS>
 
 // risposta file disponibili
@@ -66,6 +64,13 @@ Formato messaggi ricevuti dal server.
 
 
 ## comandi relativi all'editor
+
+// messaggio di apertura di file già presente
+<?xml version="1.0" encoding="UTF-8"?>
+<OPEN-FILE>
+	<username>val1</username>
+	<nomefile>val2</nomefile>
+</OPEN-FILE>
 
 // messaggio di inserimento di carattere
 <?xml version="1.0" encoding="UTF-8"?>
@@ -95,3 +100,7 @@ Formato messaggi ricevuti dal server.
 <INIT>00000089<?xml version="1.0" encoding="UTF-8"?><REGISTER><username>user</username><nickname>nick_name</nickname><password>10</password></REGISTER>
 
 <INIT>00000072<?xml version="1.0" encoding="UTF-8"?><ADD_FILE><username>asd</username><filename>editor.txt</filename></ADD_FILE>
+
+<INIT>00000035<?xml version="1.0" encoding="UTF-8"?><BROWS></BROWS>
+
+<INIT>00000098<?xml version="1.0" encoding="UTF-8"?><REMOTE-INSERT><char>a</char><index>1</index><username>asd</username><nomefile>file.txt</nomefile></REMOTE-INSERT>

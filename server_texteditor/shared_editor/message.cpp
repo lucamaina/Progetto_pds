@@ -5,9 +5,9 @@ bool Message::prepareMsg(QMap<QString, QString> comando)
     if (comando.isEmpty()){ return false;   }
     QString nomecmd, nomeFile, utente;
     msgType  tipo;
-    if (comando.contains(CMD) && comando.contains(FILE) && comando.contains(UNAME)){
+    if (comando.contains(CMD) && comando.contains(FILES) && comando.contains(UNAME)){
         nomecmd = comando.value(CMD);
-        nomeFile = comando.value(FILE);
+        nomeFile = comando.value(FILES);
         utente = comando.value(UNAME);
     } else {    return false;   }
 

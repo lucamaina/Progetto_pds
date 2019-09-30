@@ -16,7 +16,7 @@ class Editor : public QObject
 
 public:
     explicit Editor(QObject *parent = nullptr);
-    explicit Editor(QString nome);
+    explicit Editor(QString Id, QString nome);
     static Editor& getFile();
     ~Editor();
 
@@ -49,7 +49,9 @@ public slots:
 public:
     // std::mutex m;
     QString nomeFile;
+    QString DocId;      // id usato nel db
     QFile *file;
+    int refCount;
     QVector<Symbol> *symVec;
     QVector<QString> *userList;
 };

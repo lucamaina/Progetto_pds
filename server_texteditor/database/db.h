@@ -26,6 +26,9 @@ public:
     bool userReg(utente & user);
     bool isOpen(){  return this->myDb.isOpen(); }
     bool disconn(utente& user);
+    bool addFile(utente & user, QString nomefile);
+    bool openFile(utente & user, QString nomefile);
+    QMap<QString, QString> browsFile(utente & user);
 
 signals:
 

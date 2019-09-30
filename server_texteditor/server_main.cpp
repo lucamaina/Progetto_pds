@@ -7,11 +7,13 @@
 
 #include "server_main.h"
 #include "logger/logger.h"
+#include "QMap"
 
 void scriviXML();
 
 server_main::server_main(QObject *parent) : QObject(parent)
 {
+
     scriviXML();
 
     this->myServer = new server();

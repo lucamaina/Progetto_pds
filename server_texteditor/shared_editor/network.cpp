@@ -35,14 +35,14 @@ void Network::msgRead(Message &msg)
     }
 }
 
-void Network::createEditor(QString nomeFile, utente &user)
+void Network::createEditor(QString fileId, QString nomeFile, utente &user)
 {
     // verifica nome file non sia già presente
-    if (this->editorMap.contains(nomeFile)){
+    if (this->editorMap.contains(fileId)){
         // file già presente, non posso crearlo
         throw std::exception();
     }
-    Editor *ed = new Editor(nomeFile);
+    Editor *ed = new Editor(fileId, nomeFile);
     ed->addUser(user.getUsername());
     this->editorMap.insert(nomeFile, ed);
 }
@@ -51,9 +51,10 @@ void Network::createEditor(QMap<QString, QString> cmd)
 {
     if (!cmd.contains(UNAME)){  return; }
     if (!cmd.contains(FNAME)){  return; }
+    if (!cmd.contains(DOCID)){  return; }
     // verifica utente presente nel db
 
-    Editor* ed = new Editor(cmd.value(FNAME));
+    Editor* ed = new Editor(cmd.value(DOCID), cmd.value(FNAME));
     QString nome = cmd.value(UNAME);
     ed->addUser(nome);
 }
@@ -71,6 +72,29 @@ void Network::sendToEdit(Message &msg)
     } else {
         // utente non ha permesso di scrivere
         return;
+    }
+}
+
+/**
+ * @brief Network::filePresent
+ * @param fileId
+ * @return true / false
+ * verifica presenza del file nella mappa degli editor
+ */
+bool Network::filePresent(QString fileId)
+{
+    if (this->editorMap.contains(fileId))
+        return true;
+    return false;
+}
+
+bool Network::addRefToEditor(QString fileId, QString user)
+{
+    if (this->editorMap.contains(fileId)){
+        editorMap.value(fileId)->addUser(user);
+        return true;
+    } else {
+        return false;
     }
 }
 

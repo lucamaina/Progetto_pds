@@ -12,11 +12,13 @@ Editor::Editor(QObject *parent) : QObject(parent)
     this->userList = new QVector<QString>();
 }
 
-Editor::Editor(QString nomeFile)
+Editor::Editor(QString Id, QString nomeFile)
 {
     this->symVec = new QVector<Symbol>();
     this->userList = new QVector<QString>();
     this->nomeFile = "files/"+nomeFile;
+    this->DocId = Id;
+    this->refCount = 1;
     this->file = new QFile(this->nomeFile);
     file->open(QIODevice::Append | QIODevice::Text);
     file->write("asd");
@@ -62,7 +64,20 @@ bool Editor::addUser(const QString &nomeUser)
         return false;
     }
     this->userList->append(nomeUser);
+    this->refCount++;
     return true;
+}
+
+bool Editor::removeUser(const QString &nomeUser)
+{
+    if (userList->contains(nomeUser)){
+        int idx = this->userList->indexOf(nomeUser);
+        this->userList->remove(idx);
+        this->refCount--;
+        return true;
+    }else {
+        return false;
+    }
 }
 
 bool Editor::findUser(const QString &nomeUser)

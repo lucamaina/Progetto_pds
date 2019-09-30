@@ -118,7 +118,6 @@ bool db::userLogin(utente &user)
 
 bool db::userReg(utente &user)
 {
-    // @TODO transazione
     this->myDb.transaction();       // start transaction
 
     QVector<QString> values;
@@ -162,4 +161,104 @@ bool db::disconn(utente &user){
     if ( !this->myDb.isOpen() ){    return false;   }
     this->myDb.close();
     return true;
+}
+
+/**
+ * @brief db::addFile
+ * @param user
+ * @param nomefile
+ * @return
+ * verifica presenza di user e assenza di file con stesso nome, aggiunge file e lo collega a user
+ */
+bool db::addFile(utente &user, QString nomefile)
+{
+    bool connesso;
+    this->myDb.transaction();
+    // verifica utente
+    QVector<QString> val;
+    val.push_back(user.getUsername());
+    val.push_back(user.getPass());
+    QSqlQuery res = this->query(queryLOGIN, val);
+    if (res.first()){
+        QString nick = res.value(1).toString();
+        connesso = res.value(0).toBool();
+        if (!connesso){
+            qDebug() << "utente non connesso " << user.getUsername();
+            this->myDb.rollback();
+            return false;
+        }
+    } else {
+        qDebug() << "utente non connesso " << user.getUsername();
+        this->myDb.rollback();
+        return false;
+    }
+    val.clear();
+
+    // verifica file
+    val.push_back(nomefile);
+    res = this->query(queryFILEexist, val);
+    if (res.first()){
+        int count = res.value(0).toInt();
+        if (count != 0){
+            qDebug() << "file già presente" << user.getUsername();
+            this->myDb.rollback();
+            return false;
+        } else {
+            qDebug() << "file aggiungibile" << user.getUsername();
+        }
+    }
+    val.clear();
+
+    // aggiunge file
+    val.push_back("files/"+nomefile);
+    val.push_back(nomefile);
+    res = this->query(queryFILEadd, val);
+    if (!res.isValid()){
+        this->myDb.rollback();
+        return false;
+    }
+    val.clear();
+
+    // collega file - utente
+
+
+    return true;
+}
+
+bool db::openFile(utente &user, QString FileId)
+{
+    QVector<QString> val;
+    val.push_back(user.getUsername());
+    val.push_back(FileId);
+    QSqlQuery res = this->query(queryOPEN, val);
+    if (res.first()){
+        int count = res.value(0).toInt();
+        if (count == 0)
+            return false;
+        else
+            return true;
+    }
+    return false;
+}
+
+QMap<QString, QString> db::browsFile(utente &user)
+{
+    int counter = 1;
+    QMap<QString, QString> risp;
+    risp.insert(CMD, BROWS);
+    QVector<QString> values;
+    values.push_back(user.getUsername());
+    qDebug() << values;
+    QSqlQuery res = this->query(queryBROWS, values);
+
+    while (res.next()){
+        QString DocId = res.value(0).toString();
+        QString FileSysPath = res.value(1).toString();
+        QString LinkPath = res.value(2).toString();
+        risp.insert(FNAME + QString::number(counter), FileSysPath);
+        risp.insert(DOCID + QString::number(counter), DocId);
+        counter++;
+        qDebug() <<"res: "<< DocId << ", "<<FileSysPath<<", "<<LinkPath;
+    }
+    return risp;
 }

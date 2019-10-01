@@ -11,6 +11,7 @@
 #define FILES "FILE"
 #define ADD_FILE "ADD_FILE"
 #define CMD "CMD"
+#define CRS "CURSOR"
 
 #define INIT_DIM 6
 #define LEN_NUM 8

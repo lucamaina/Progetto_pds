@@ -175,6 +175,7 @@ TextEdit::TextEdit(QWidget *parent)
     this->textEdit->installEventFilter(this);       // importante
 
     this->client= new Client();
+    connect(this, SIGNAL(cursorChanged(int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&)));
 
 }
 
@@ -201,8 +202,12 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
     if (obj == this->textEdit) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *e = static_cast<QKeyEvent*>(event);
+            if(e->text()==""){return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
             QString str;
             str = QString::number(e->key());
+            qDebug()<<e->text();
+            qDebug()<<e->nativeScanCode();
+
             this->statusBar()->showMessage(str, 1000);
         }
         return false;
@@ -230,6 +235,10 @@ void TextEdit::setupFileActions()
     const QIcon loginIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
     QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
     login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
+
+    const QIcon registerIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
+    QAction *registration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::RegisterDialog);
+    registration->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
 
     const QIcon newIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/filenew.png"));
     QAction *a = menu->addAction(newIcon,  tr("&New"), this, &TextEdit::fileNew);
@@ -502,6 +511,14 @@ void TextEdit::LoginDialog()
     connect( loginDialog, SIGNAL (acceptLogin(QString&,QString&)), this->client, SLOT (handleLogin(QString&,QString&)) );
     loginDialog->exec();
 }
+
+void TextEdit::RegisterDialog()
+{
+    class RegisterDialog* registerdialog = new class RegisterDialog( this );
+    connect( registerdialog, SIGNAL (acceptRegistration(QString&,QString&)), this->client, SLOT (handleRegistration(QString&,QString&)) );
+    registerdialog->exec();
+}
+
 
 
 void TextEdit::fileNew()
@@ -791,7 +808,10 @@ void TextEdit::cursorPositionChanged()
      */
     QTextCursor cursore = textEdit->textCursor();
     QString str = QString::number(cursore.position());
-
+    int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
+    int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
+    qDebug()<<"cursor at:"<<posx<<posy<<"\n";
+    emit cursorChanged(posx,posy);
     //statusBar()->showMessage(str, 0);
     /*
      *

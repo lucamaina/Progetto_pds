@@ -25,12 +25,12 @@ void s_thread::run()
 
     cmd.push_back("asd");
     cmd.push_back("1");
-    qDebug() << cmd;
+    qDebug() << cmd.length();
     q = this->conn->query(queryLOGIN, cmd);
 
     if (q.first()){
         QString s = q.value(0).toString();
-        qDebug() << s;
+        qDebug() << s+"lallaalalaal!\n";
     }
 }
 
@@ -52,7 +52,7 @@ void s_thread::leggiXML(QByteArray qb)
         QXmlStreamReader::TokenType token = stream.readNext();
         // leggo start document
         if (token == QXmlStreamReader::StartDocument){
-            qDebug() << "start doc: " << token << " - " << stream.readElementText();
+            //qDebug() << "start doc: " << token << " - " << stream.readElementText();
         }
         token = stream.readNext();
         // leggo elemento con nome del comando
@@ -65,8 +65,8 @@ void s_thread::leggiXML(QByteArray qb)
         while ( token == QXmlStreamReader::StartElement ){
             QString name = stream.name().toString(), text = stream.readElementText();
             command.insert(name, text);
-            qDebug() << "start elem: " << name;
-            qDebug() << "val elem: " << text;
+            //qDebug() << "start elem: " << name;
+            //qDebug() << "val elem: " << text;
             token = stream.readNext();
         }
     }

@@ -19,12 +19,15 @@ signals:
 
 public slots:
     void connected();
+    void disconnected();
     void handleLogin(QString& username, QString& password);
+    void handleRegistration(QString& username, QString& password);
     void readyRead();
+    void handleMyCursorChange(int& posX,int& posY);
 
 private:
-    QString username, password;
-    bool logged;
+    QString username;
+    bool logged,connesso;
     QTcpSocket* socket;
     QByteArray buffer;
 

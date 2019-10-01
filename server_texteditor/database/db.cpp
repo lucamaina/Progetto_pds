@@ -13,7 +13,7 @@
  */
 db::db(int connName, QObject *parent) : QObject(parent)
 {
-    this->myDb = QSqlDatabase::addDatabase("QMYSQL", QString::number(connName));
+    this->myDb = QSqlDatabase::addDatabase("QSQLITE", QString::number(connName));
     myDb.setHostName("localhost");
     myDb.setDatabaseName("web_editor");
     Logger::getLog().write("Nuova connessione di nome " + QString::number(connName));
@@ -48,12 +48,13 @@ QSqlQuery db::query(QString querySrc, QVector<QString> values)
     if (myDb.isOpen()){
         qDebug() << "db aperto prima di exec";
     }
+
     query.prepare(querySrc);
     for (int idx = 0; idx < values.length(); idx++){
         query.bindValue(idx, values[idx]);
     }
 
-    if (query.exec() == false){
+    if (query.exec(querySrc) == false){
         QSqlError err = query.lastError();
         qDebug() << err.text();
     }

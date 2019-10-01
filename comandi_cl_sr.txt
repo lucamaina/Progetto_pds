@@ -34,6 +34,12 @@
     <password>val2</password>
 </REGISTER>
 
+<?xml version="1.0" encoding="UTF-8"?>
+<CURSOR>
+  	<username>val1</username>
+	<posX>X</posX>
+    	<posY>Y</posY>
+</CURSOR>
 
 <?xml version="1.0" encoding="UTF-8"?>
 <REMOTE-INSERT>

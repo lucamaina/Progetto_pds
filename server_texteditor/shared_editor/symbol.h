@@ -2,39 +2,35 @@
 #define SYMBOL_H
 
 #include <QObject>
+#include <QMap>
+
+#include "../server/cmdstring.h"
 
 class Symbol
 {
+private:
+    QChar car;
+    double num, den;
+    double index;
+    QString userName;           // identifica utente che inserische il carattere
 
 public:
     explicit Symbol();
-    explicit Symbol(QString user, QChar car, uint num, uint den, uint numR, uint denR) :  userName(user), car(car), num(num), den(den), numR(numR), denR(denR){}
+    explicit Symbol(QString user, QChar car, uint num, uint den) :  userName(user), car(car), num(num), den(den){}
+    explicit Symbol(QString user, QChar car, double idx) :  userName(user), car(car), index(idx){}
     QChar getChar(){return this->car;}
+    QMap<QString, QString> toMap();
 
-
-    uint getNum() const;
-    void setNum(const uint &value);
-
-    uint getDen() const;
-    void setDen(const uint &value);
-
-    uint getNumR() const;
-    void setNumR(const uint &value);
-
-    uint getDenR() const;
-    void setDenR(const uint &value);
-
+    double getNum() const;
+    void setNum(const double &value);
+    double getDen() const;
+    void setDen(const double &value);
     QString getUserName() const;
     void setUserName(const QString &value);
+    double getIndex() const;
+    void setIndex(const double &value);
 
-    uint getIndex() const;
-    void setIndex(const uint &value);
-
-private:
-    QChar car;
-    uint num, den, numR, denR;
-    uint index;
-    QString userName;           // identifica utente che inserische il carattere
 };
+
 
 #endif // SYMBOL_H

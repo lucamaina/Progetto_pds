@@ -14,7 +14,7 @@ void scriviXML();
 server_main::server_main(QObject *parent) : QObject(parent)
 {
 
-    scriviXML();
+    //scriviXML();
 
     this->myServer = new server();
     myServer->startServer();

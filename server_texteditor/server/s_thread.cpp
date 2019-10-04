@@ -16,31 +16,19 @@ void s_thread::run()
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
     qDebug() << "Client connesso";
     this->user = new utente();
-/**
-    this->conn = new db(this->sockID);
-    this->conn->conn();
-    QSqlQuery q ;//= conn->query(queryPROVA);
-
-    QVector<QString> cmd;
-
-    cmd.push_back("asd");
-    cmd.push_back("1");
-    qDebug() << cmd;
-    q = this->conn->query(queryLOGIN, cmd);
-
-    if (q.first()){
-        QString s = q.value(0).toString();
-        qDebug() << s;
-    }
-    */
+    user->setSocket(socket);
 }
 
 
 s_thread::~s_thread()
 {
+    qDebug() << "Distruttore s_thread";
     this->disconnectDB();
     delete this->conn;
     delete this->user;
+    this->quit();
+    this->requestInterruption();
+    this->wait();
 }
 \
 /*********************************************************************************************************
@@ -72,7 +60,7 @@ void s_thread::leggiXML(QByteArray qb)
         if (token == QXmlStreamReader::StartElement){
             qDebug() << "comando: " << stream.name();
             QString cmd = stream.name().toString();
-            command.insert("cmd", cmd);
+            command.insert(CMD, cmd);
         }
         token = stream.readNext();
         // leggo elemnto variabile
@@ -100,7 +88,7 @@ void s_thread::leggiXML(QByteArray qb)
  * legge nella mappa il nome del comando e richiama le funzioni corrette
  */
 void s_thread::dispatchCmd(QMap<QString, QString> cmd){
-    auto comando = cmd.find("cmd");
+    auto comando = cmd.find(CMD);
     if (comando.value() == CONN) {
         this->connectDB();
     } else if (comando.value() == LOGIN) {
@@ -109,8 +97,6 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
         this->logoffDB(cmd);
     } else if (comando.value() == REG) {
         this->registerDB(cmd);
-    } else if (comando.value() == REM_IN || comando.value() == REM_DEL) {
-        this->sendMsg(cmd);
     } else if (comando.value() == DISC) {
         this->disconnectDB();
     } else if (comando.value() == FILES) {
@@ -119,6 +105,10 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
         this->addFileDB(cmd);
     } else if (comando.value() == BROWS) {
         this->browsFile(cmd);
+    } else if (comando.value() == OPEN_FILE) {
+        this->openFile(cmd);
+    } else if (comando.value() == REM_IN || comando.value() == REM_DEL) {
+    this->sendMsg(cmd);
     }
 }
 
@@ -131,7 +121,8 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
  */
 bool s_thread::scriviXML(QMap<QString, QString> comando)
 {
-    if (!comando.contains(CMD)){ return false;   }
+    QList<QString> list = {CMD};
+    if (!verifyCMD(comando, list)){ return false;   }
     QByteArray ba;
     QXmlStreamWriter wr(&ba);
     wr.writeStartDocument();
@@ -182,6 +173,8 @@ bool s_thread::clientMsg(QByteArray data){
  * override per mandare messaggi al client
  */
 bool s_thread::clientMsg(QMap<QString, QString> comando){
+    QList<QString> list = {CMD};
+    if (!verifyCMD(comando, list)){ return false;   }
     QByteArray ba;
     QXmlStreamWriter wr(&ba);
     wr.writeStartDocument();
@@ -229,6 +222,8 @@ void s_thread::connectDB()
 }
 
 void s_thread::loginDB(QMap<QString, QString> &comando){
+    QList<QString> list = {CMD};
+    if (!verifyCMD(comando, list)){ return;   }
     if (!this->conn->isOpen()){
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();
@@ -248,6 +243,8 @@ void s_thread::loginDB(QMap<QString, QString> &comando){
 
 void s_thread::logoffDB(QMap<QString, QString> &comando)
 {
+    QList<QString> list = {CMD};
+    if (!verifyCMD(comando, list)){ return;   }
     if (!this->conn->isOpen()){
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();
@@ -267,6 +264,8 @@ void s_thread::logoffDB(QMap<QString, QString> &comando)
 }
 
 void s_thread::registerDB(QMap<QString, QString> &comando){
+    QList<QString> list = {CMD};
+    if (!verifyCMD(comando, list)){ return;   }
     if (!this->conn->isOpen()){
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();
@@ -305,6 +304,8 @@ void s_thread::disconnectDB()
 
 void s_thread::addFileDB(QMap<QString, QString> &comando)
 {
+    QList<QString> list = {CMD};
+    if (!verifyCMD(comando, list)){ return;   }
     if (!this->conn->isOpen()){
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();
@@ -324,6 +325,8 @@ void s_thread::addFileDB(QMap<QString, QString> &comando)
 
 void s_thread::browsFile(QMap<QString, QString> &comando)
 {
+    QList<QString> list = {CMD};
+    if (!verifyCMD(comando, list)){ return;   }
     if (!this->conn->isOpen()){
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();
@@ -345,13 +348,17 @@ void s_thread::browsFile(QMap<QString, QString> &comando)
  */
 void s_thread::openFile(QMap<QString, QString> &comando)
 {
+    QList<QString> list = {CMD, DOCID}; // DOCID, FNAME, UNAME
+    if (!verifyCMD(comando, list)){ return;   }
     if (!this->conn->isOpen()){
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();
     }
+
+    // accedo a db e verifico file apribile dall'utente
     QString logStr;
-    if (this->conn->openFile(*user, comando.value(DOCID)) ){
-        clientMsg("File apribile dallì'utente");
+    if (this->conn->canUserOpenFile(*user, comando.value(DOCID)) ){
+        //clientMsg("File apribile dallì'utente");
         logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + user->getUsername();
     } else {
         clientMsg("File non apribile dallì'utente");
@@ -360,14 +367,18 @@ void s_thread::openFile(QMap<QString, QString> &comando)
         return;
     }
     Logger::getLog().write(logStr);
+
+    // aggiungo editor se file presente nello store ma non aperto da altri utenti
     Network &net = Network::getNetwork();
     if (!net.filePresent(comando.value(DOCID))){
         // aggiungi file
-        net.createEditor(comando.value(DOCID), comando.value(FNAME), *user);
+        net.createEditor(comando.value(DOCID), PATH + comando.value(FNAME), *user);
     } else {
         // aumenta contatore user attivi
-        net.addRefToEditor(comando.value(DOCID), comando.value(UNAME));
+        net.addRefToEditor(comando.value(DOCID), *this->user);
     }
+    // send Map
+    net.getEditor(comando.value(DOCID)).sendMap(this->user->getUsername());
 }
 
 /*********************************************************************************************************
@@ -382,9 +393,28 @@ void s_thread::openFile(QMap<QString, QString> &comando)
 void s_thread::sendMsg(QMap<QString, QString> comando)
 {
     Message msg = Message();
-    msg.prepareMsg(comando);
+    if (!msg.prepareMsg(comando, this->user->getUsername())){
+        return;
+    }
     Network &net = Network::getNetwork();
     net.push(msg);
+}
+
+
+/**
+ * @brief s_thread::verifyCMD
+ * @param cmd
+ * @param list
+ * @return true se tutti i campi di list sono chiavi di cmd
+ * verifica presenza dei campi nella mappa dei comandi
+ */
+bool s_thread::verifyCMD(QMap<QString, QString> &cmd, QList<QString> &list)
+{
+    QString val;
+    foreach (val, list){
+        if (!cmd.contains(val)){    return false;   }
+    }
+    return true;
 }
 
 
@@ -461,6 +491,8 @@ void s_thread::disconnected()
     qDebug() << "client disconnesso "
              << this->sockID;
     this->socket->deleteLater();
-    exit(0);
+    //delete this->socket;
+    this->exit(0);
 }
+
 

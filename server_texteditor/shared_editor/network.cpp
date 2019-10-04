@@ -2,7 +2,7 @@
 
 Network::Network(QObject *parent) : QObject(parent)
 {
-    connect(this, SIGNAL(sigSend()), this, SLOT(dispatch()));
+    connect(this, SIGNAL(sigSend()), this, SLOT(dispatch()),  Qt::ConnectionType::DirectConnection);
 }
 
 Network& Network::getNetwork(){
@@ -17,8 +17,9 @@ Network& Network::getNetwork(){
  */
 void Network::push(Message &msg)
 {
-    std::lock_guard<std::mutex> lg(mQueue);
+    std::unique_lock<std::mutex> lg(mQueue);
     this->msgQueue.push_back(msg);
+    lg.unlock();
     emit sigSend();
 }
 
@@ -35,7 +36,7 @@ void Network::msgRead(Message &msg)
     }
 }
 
-void Network::createEditor(QString fileId, QString nomeFile, utente &user)
+bool Network::createEditor(QString fileId, QString nomeFile, utente &user)
 {
     // verifica nome file non sia già presente
     if (this->editorMap.contains(fileId)){
@@ -43,20 +44,9 @@ void Network::createEditor(QString fileId, QString nomeFile, utente &user)
         throw std::exception();
     }
     Editor *ed = new Editor(fileId, nomeFile);
-    ed->addUser(user.getUsername());
-    this->editorMap.insert(nomeFile, ed);
-}
-
-void Network::createEditor(QMap<QString, QString> cmd)
-{
-    if (!cmd.contains(UNAME)){  return; }
-    if (!cmd.contains(FNAME)){  return; }
-    if (!cmd.contains(DOCID)){  return; }
-    // verifica utente presente nel db
-
-    Editor* ed = new Editor(cmd.value(DOCID), cmd.value(FNAME));
-    QString nome = cmd.value(UNAME);
-    ed->addUser(nome);
+    ed->addUser(user);
+    this->editorMap.insert(fileId, ed);
+    return true;
 }
 
 void Network::sendToEdit(Message &msg)
@@ -76,6 +66,19 @@ void Network::sendToEdit(Message &msg)
 }
 
 /**
+ * @brief Network::sendToUsers
+ * @param msg
+ * @return
+ * invia msg a tutti gli altri utenti
+ */
+bool Network::sendToUsers(Message &msg)
+{
+    QString sendUser = msg.getUser();
+
+    return false;
+}
+
+/**
  * @brief Network::filePresent
  * @param fileId
  * @return true / false
@@ -88,7 +91,8 @@ bool Network::filePresent(QString fileId)
     return false;
 }
 
-bool Network::addRefToEditor(QString fileId, QString user)
+
+bool Network::addRefToEditor(QString fileId, utente &user)
 {
     if (this->editorMap.contains(fileId)){
         editorMap.value(fileId)->addUser(user);
@@ -96,6 +100,11 @@ bool Network::addRefToEditor(QString fileId, QString user)
     } else {
         return false;
     }
+}
+
+Editor &Network::getEditor(QString docId)
+{
+    return *this->editorMap.value(docId);
 }
 
 /**
@@ -110,6 +119,8 @@ void Network::dispatch()
             Message msg = msgQueue.dequeue();
             // leggo messaggio e lo consegno
             sendToEdit(msg);
+            // send to altri utenti
+
         }
     }
 }

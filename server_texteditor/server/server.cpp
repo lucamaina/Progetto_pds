@@ -23,7 +23,7 @@ void server::incomingConnection(int socketID)
              << socketID;
     s_thread *newThread = new s_thread(socketID);
     connect(newThread, SIGNAL(finished()), this, SLOT(deleteLater()), Qt::ConnectionType::DirectConnection);
-
     // TODO exception
     newThread->run();
+
 }

@@ -102,7 +102,11 @@ bool db::userLogin(utente &user)
         QString s = res.value(1).toString();
         bool connesso = res.value(0).toBool();
         qDebug() <<"res: "<< connesso << " s: "<<s;
-        if (connesso == false){
+        if (connesso == true){
+            // utente già connesso
+            this->myDb.rollback();      // chiudo transazione con rollback
+            return false;
+        } else {
             values.clear();
             values.push_back(user.getUsername());
             QSqlQuery res = this->query(queryUpdateLOGIN, values);
@@ -210,7 +214,7 @@ bool db::addFile(utente &user, QString nomefile)
     val.clear();
 
     // aggiunge file
-    val.push_back("files/"+nomefile);
+    val.push_back(nomefile);
     val.push_back(nomefile);
     res = this->query(queryFILEadd, val);
     if (!res.isValid()){
@@ -225,7 +229,7 @@ bool db::addFile(utente &user, QString nomefile)
     return true;
 }
 
-bool db::openFile(utente &user, QString FileId)
+bool db::canUserOpenFile(utente &user, QString FileId)
 {
     QVector<QString> val;
     val.push_back(user.getUsername());

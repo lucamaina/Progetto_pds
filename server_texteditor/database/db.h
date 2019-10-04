@@ -27,7 +27,7 @@ public:
     bool isOpen(){  return this->myDb.isOpen(); }
     bool disconn(utente& user);
     bool addFile(utente & user, QString nomefile);
-    bool openFile(utente & user, QString nomefile);
+    bool canUserOpenFile(utente & user, QString nomefile);
     QMap<QString, QString> browsFile(utente & user);
 
 signals:
@@ -36,7 +36,7 @@ public slots:
 
 private:
     QSqlDatabase myDb;
-    utente user;
+    //utente user;
     Logger *log;
 };
 

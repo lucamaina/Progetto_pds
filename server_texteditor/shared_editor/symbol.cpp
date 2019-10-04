@@ -5,45 +5,36 @@ Symbol::Symbol()
 
 }
 
-uint Symbol::getNum() const
+QMap<QString, QString> Symbol::toMap()
+{
+    QMap<QString, QString> map;
+    map.insert(UNAME, this->userName);
+    map.insert(CAR, this->car);
+    map.insert(IDX, QString::number(this->index));
+    return map;
+}
+
+
+double Symbol::getNum() const
 {
     return num;
 }
 
-void Symbol::setNum(const uint &value)
+void Symbol::setNum(const double &value)
 {
     num = value;
 }
 
-uint Symbol::getDen() const
+double Symbol::getDen() const
 {
     return den;
 }
 
-void Symbol::setDen(const uint &value)
+void Symbol::setDen(const double &value)
 {
     den = value;
 }
 
-uint Symbol::getNumR() const
-{
-    return numR;
-}
-
-void Symbol::setNumR(const uint &value)
-{
-    numR = value;
-}
-
-uint Symbol::getDenR() const
-{
-    return denR;
-}
-
-void Symbol::setDenR(const uint &value)
-{
-    denR = value;
-}
 
 QString Symbol::getUserName() const
 {
@@ -55,12 +46,12 @@ void Symbol::setUserName(const QString &value)
     userName = value;
 }
 
-uint Symbol::getIndex() const
+double Symbol::getIndex() const
 {
     return index;
 }
 
-void Symbol::setIndex(const uint &value)
+void Symbol::setIndex(const double &value)
 {
     index = value;
 }

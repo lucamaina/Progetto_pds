@@ -1,14 +1,19 @@
 #include "message.h"
 
-bool Message::prepareMsg(QMap<QString, QString> comando)
+bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
 {
     if (comando.isEmpty()){ return false;   }
-    QString nomecmd, nomeFile, utente;
+    QString nomecmd, fileId;
+    QChar car;
     msgType  tipo;
-    if (comando.contains(CMD) && comando.contains(FILES) && comando.contains(UNAME)){
+    double idx;
+
+    // il comando non contiene username perchè viene preso l'utente collegato
+    if (comando.contains(CMD) && comando.contains(DOCID)){
         nomecmd = comando.value(CMD);
-        nomeFile = comando.value(FILES);
-        utente = comando.value(UNAME);
+        fileId = comando.value(DOCID);
+        car = comando.value(CAR).at(0);
+        idx = comando.value(IDX).toDouble();
     } else {    return false;   }
 
     if (nomecmd == REM_IN) {
@@ -19,14 +24,15 @@ bool Message::prepareMsg(QMap<QString, QString> comando)
         return false;               // comando non riconosciuto, messaggio ignorato
     }
 
-    this->file = nomeFile;
-    this->user = utente;
+    this->fileId = fileId;
+    this->user = username;
     this->tipo = tipo;
 
     if (this->tipo == Rem_In || this->tipo == Rem_Del){
-        this->sym = new Symbol();   // TODO
+        this->sym = new Symbol(user, car, idx);
     } else {
         this->sym = nullptr;
+        return false;
     }
 
     return true;
@@ -49,10 +55,47 @@ QString Message::getUser() const
 
 QString Message::getFile() const
 {
-    return file;
+    return fileId;
+}
+
+QMap<QString, QString> Message::toMap()
+{
+    QMap<QString, QString> map = this->sym->toMap();
+    QString tipe = REM_IN;
+    if (this->tipo == Message::Rem_Del)
+        tipe = REM_DEL;
+    map.insert(CMD, tipe);
+    return map;
+}
+
+QByteArray Message::toQByteArray()
+{
+    QByteArray ba;
+    QXmlStreamWriter wr(&ba);
+    QMap<QString, QString> comando = this->toMap();
+    wr.writeStartDocument();
+    wr.writeStartElement(comando.value(CMD));
+    comando.remove(CMD);
+/*
+    foreach (QString key, comando.keys()) {
+        wr.writeTextElement(key, comando.value(key));
+    }*/
+    wr.writeEndElement();
+    wr.writeEndDocument();
+
+    int dim = ba.size();
+    QByteArray len;
+    len = QByteArray::number(dim, 16);
+    len.prepend(8 - len.size(), '0');
+
+    ba.prepend(len);
+    ba.prepend(INIT);
+    qDebug() << QString(ba);
+
+    return ba;
 }
 
 Message::Message()
 {
-
+    
 }

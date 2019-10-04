@@ -16,14 +16,16 @@ public:
     static Network& getNetwork();
     void push(Message &msg);
     void msgRead(Message &msg);
-    void createEditor(QString fileID, QString nomeFile, utente& userName);
-    void createEditor(QMap<QString, QString> cmd);
+    bool createEditor(QString fileID, QString nomeFile, utente& userName);
+    bool createEditor(QMap<QString, QString> cmd);
     void sendToEdit(Message& msg);
+    bool sendToUsers(Message & msg);
     bool filePresent(QString fileId);
-    bool addRefToEditor(QString fileId, QString user);
+    bool addRefToEditor(QString fileId, utente& user);
+    Editor& getEditor(QString docId);
 
 signals:
-    void sigSend();     // segnale
+    void sigSend(void);     // segnale
 
 public slots:
     void dispatch();
@@ -34,8 +36,7 @@ private:
     QMap<QString, Editor*> editorMap;   // chiave = DocId
     QQueue<Message> msgQueue;
 
-
-     explicit Network(QObject *parent = nullptr);
+    explicit Network(QObject *parent = nullptr);
 
     // metodi non definiti
     Network(const Network & hold) = delete;

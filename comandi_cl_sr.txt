@@ -35,10 +35,10 @@ Formato messaggi ricevuti dal server.
 
 // creazione nuovo file
 <?xml version="1.0" encoding="UTF-8"?>
-<ADD_FILE>
+<ADD-FILE>
 	<username>val1</username>
 	<filename>val2</filename>   
-</ADD_FILE>
+</ADD-FILE>
 
 // eliminazione file dal file system
 <?xml version="1.0" encoding="UTF-8"?>
@@ -55,10 +55,14 @@ Formato messaggi ricevuti dal server.
 // risposta file disponibili
 <?xml version="1.0" encoding="UTF-8"?>
 <BROWS>
-    <nomefile>val1</nomefile>
-    <nomefile>val2</nomefile>
-	<nomefile>val3</nomefile>
-	<nomefile>val4</nomefile>
+    <filename1>val1</filename1>
+	<docid1>id1</docid1>
+    <filename2>val2</filename2>
+	<docid2>id2</docid2>
+	<filename3>val3</filename3>
+	<docid3>id3</docid3>
+	<filename4>val4</filename4>
+	<docid4>id4</docid4>
 	...
 </BROWS>
 
@@ -69,16 +73,18 @@ Formato messaggi ricevuti dal server.
 <?xml version="1.0" encoding="UTF-8"?>
 <OPEN-FILE>
 	<username>val1</username>
-	<nomefile>val2</nomefile>
+	<docid>val2</docid>
+	<filename>val1</filename>
 </OPEN-FILE>
 
 // messaggio di inserimento di carattere
 <?xml version="1.0" encoding="UTF-8"?>
 <REMOTE-INSERT>
 	<char>a</char>
-	<index>11</index>
+	<rowindex>num1</rowindex>	// da verificare
+	<index>num2</index>
 	<username>val1</username>
-	<nomefile>val2</nomefile>
+	<docid>val2</docid>
 </REMOTE-INSERT>
 
 // messaggio di eeliminazione di carattere
@@ -87,20 +93,72 @@ Formato messaggi ricevuti dal server.
 	<char>a</char>
 	<index>11</index>
 	<username>val1</username>
-	<nomefile>val2</nomefile>   
+	<docid>val2</docid>   
 </REMOTE-DELETE>
 
+// messaggio di invio contenuto file
+<?xml version="1.0" encoding="UTF-8"?>
+<FILE-BODY>
+	<dimtot>111111</dimtot>
+	<dimpack>111111</dimpack>
+	<bosy>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</body>
+</FILE-BODY>
 
 ## esempi
 
 <INIT>00000039<?xml version="1.0" encoding="UTF-8"?><CONNECT></CONNECT>
+
 <INIT>00000065<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>asd</username><password>1</password></LOG-IN>
-<INIT>00000071<?xml version="1.0" encoding="UTF-8"?><ADD_FILE><username>asd</username><filename>prova.txt</filename></ADD_FILE>
-
-<INIT>00000089<?xml version="1.0" encoding="UTF-8"?><REGISTER><username>user</username><nickname>nick_name</nickname><password>10</password></REGISTER>
-
-<INIT>00000072<?xml version="1.0" encoding="UTF-8"?><ADD_FILE><username>asd</username><filename>editor.txt</filename></ADD_FILE>
 
 <INIT>00000035<?xml version="1.0" encoding="UTF-8"?><BROWS></BROWS>
 
-<INIT>00000098<?xml version="1.0" encoding="UTF-8"?><REMOTE-INSERT><char>a</char><index>1</index><username>asd</username><nomefile>file.txt</nomefile></REMOTE-INSERT>
+// obsoleto <INIT>00000071<?xml version="1.0" encoding="UTF-8"?><ADD-FILE><username>asd</username><filename>file.txt</filename></ADD-FILE>
+
+<INIT>00000089<?xml version="1.0" encoding="UTF-8"?><REGISTER><username>user</username><nickname>nick_name</nickname><password>10</password></REGISTER>
+
+<INIT>00000082<?xml version="1.0" encoding="UTF-8"?><OPEN-FILE><username>asd</username><docid>1</docid><filename>file.txt</filename></OPEN-FILE>
+
+<INIT>00000073<?xml version="1.0" encoding="UTF-8"?><REMOTE-INSERT><char>a</char><index>1</index><docid>1</docid></REMOTE-INSERT>
+
+<INIT>00000073<?xml version="1.0" encoding="UTF-8"?><FILE-BODY><dimtot>00000073</dimtot><dimpack>00000073</dimpack><body>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</body></FILE-BODY>
+
+
+
+		CLIENT			|		SERVER
+------------------------|----------------------------------	
+CONNEC				->	| 
+						|	<- OK
+------------------------|----------------------------------						
+LOG-IN				->	|	
+						|	<- OK / ERR
+------------------------|----------------------------------	
+REGISTER			->	|	
+						|	<- OK / ERR						
+------------------------|----------------------------------	
+BROWS				->	|	
+						|	<- BROWS
+------------------------|----------------------------------	
+ADD-FILE/OPEN-FILE	->	|	
+						|	<- OK / ERR
+------------------------|----------------------------------	
+REMOTE-INSERT		->	|
+						|	<- REMOTE-INSERT (eccetto utente di provenienza)
+						|
+						|
+						|
+						|
+	
+	
+utente: asd
+
+<INIT>00000039<?xml version="1.0" encoding="UTF-8"?><CONNECT></CONNECT>
+<INIT>00000065<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>asd</username><password>1</password></LOG-IN>		
+<INIT>00000082<?xml version="1.0" encoding="UTF-8"?><OPEN-FILE><username>asd</username><docid>1</docid><filename>file.txt</filename></OPEN-FILE>
+<INIT>00000073<?xml version="1.0" encoding="UTF-8"?><REMOTE-INSERT><char>a</char><index>1</index><docid>1</docid></REMOTE-INSERT>			
+
+utente: qwe
+<INIT>00000039<?xml version="1.0" encoding="UTF-8"?><CONNECT></CONNECT>
+<INIT>00000066<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>qwe</username><password>10</password></LOG-IN>		
+<INIT>00000082<?xml version="1.0" encoding="UTF-8"?><OPEN-FILE><username>qwe</username><docid>1</docid><filename>file.txt</filename></OPEN-FILE>
+<INIT>00000073<?xml version="1.0" encoding="UTF-8"?><REMOTE-INSERT><char>b</char><index>1</index><docid>2</docid></REMOTE-INSERT>			
+	

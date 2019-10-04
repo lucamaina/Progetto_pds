@@ -8,15 +8,22 @@
 #define LOGIN "LOG-IN"
 #define LOGOFF "LOG-OFF"
 #define REG "REGISTER"
-#define REM_IN "REMOTE_INSERT"
-#define REM_DEL "REMOTE_DELETE"
+
+#define REM_IN "REMOTE-INSERT"
+#define REM_DEL "REMOTE-DELETE"
 #define DISC "DISCONNETC"
 #define FILES "FILE"
-#define ADD_FILE "ADD_FILE"
-#define REMOVE_FILE "REMOVE_FILE"
+#define ADD_FILE "ADD-FILE"
+#define OPEN_FILE "OPEN-FILE"
+#define REMOVE_FILE "REMOVE-FILE"
+#define FBODY "FILE-BODY"
 #define CMD "CMD"
 #define BROWS "BROWS"
 
+#define OK "OK"
+#define ERR "ERR"
+
+#define PATH "files/"
 
 /****************************************************************************
  * dimensioni messaggi definiti *********************************************/
@@ -29,7 +36,12 @@
 #define NICK "nickname"
 #define PASS "password"
 #define FNAME "filename"
-#define DOCID "DocId"
+#define DOCID "docid"
+
+#define CAR "char"
+#define IDX "index"
+#define DIMTOT "dimtot"
+#define BODY "body"
 
 
 /****************************************************************************

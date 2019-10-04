@@ -64,6 +64,7 @@ private:
      * metodi accesso a netowrk *************************************************/
     void sendMsg(QMap<QString, QString> comando);
 
+    bool verifyCMD(QMap<QString, QString> &cmd, QList<QString> &list);
 };
 
 #endif // S_THREAD_H

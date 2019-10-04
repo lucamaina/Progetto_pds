@@ -8,11 +8,7 @@
 
 #include "utente.h"
 
-utente::utente(QString username, QString password, QObject *parent)
-    : QObject(parent), username(username), password(password)
-{
 
-}
 
 /**
  * @brief utente::utente
@@ -36,6 +32,12 @@ bool utente::prepareUtente(QMap<QString, QString> map){
     return true;
 }
 
+QTcpSocket *utente::getSocket() const
+{
+    return mioSocket;
+}
+
+
 QString utente::getUsername(){   return this->username;}
 
 QString utente::getNick(){  return this->nickname;}
@@ -45,6 +47,11 @@ QString utente::getPass(){  return this->password;}
 void utente::setNick(QString nick)
 {
     this->nickname = nick;
+}
+
+void utente::setSocket(QTcpSocket *sock)
+{
+    this->mioSocket = sock;
 }
 
 void utente::setConn(bool setConn){

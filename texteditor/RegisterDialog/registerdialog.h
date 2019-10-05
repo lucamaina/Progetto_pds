@@ -7,6 +7,7 @@
 #include <QGridLayout>
 #include <QStringList>
 #include <QDebug>
+#include <QMessageBox>
 
 /*!
  '''Makes class LoginDialog a child to its parent, QDialog

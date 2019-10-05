@@ -80,6 +80,7 @@ public:
 public slots:
     void fileNew();
     void LoginDialog();
+    void LogoutDialog();
     void RegisterDialog();
 
 
@@ -111,6 +112,7 @@ private slots:
     void printPreview(QPrinter *);
 
 private:
+    void setupUserActions();
     void setupFileActions();
     void setupEditActions();
     void setupTextActions();
@@ -165,6 +167,7 @@ private slots:
 signals:
     void sig_asd();
     void cursorChanged (int& posx, int& posy);
+    void acceptLogout();
 };
 
 #endif // TEXTEDIT_H

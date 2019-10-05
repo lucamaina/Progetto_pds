@@ -2,7 +2,6 @@
 Client::Client(QObject *parent) : QObject(parent)
 {
     logged=false;
-    connesso=false;
     username="";
 
     socket = new QTcpSocket(this);
@@ -108,20 +107,23 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
 void Client::connected(){
     qDebug()<<"Connesso al server\n";
     QMap<QString, QString> comando;
-    this->connesso=true;
     comando.insert("CMD", CONN);
     this->sendMsg(comando);
 }
 
 void Client::disconnected(){
     qDebug()<<"Disconnesso dal server\n";
-    this->connesso=false;
 }
 
 void Client::handleLogin(QString& username, QString& password){
 
     QMap<QString, QString> comando;
-
+    if(socket->state() != QTcpSocket::ConnectedState){
+        QMessageBox Messaggio;
+        Messaggio.critical(0,"Login Error","User not connected to the server");
+        Messaggio.setFixedSize(500,200);
+        return;
+    }
     this->username=username;
     this->logged=true;
 
@@ -129,6 +131,17 @@ void Client::handleLogin(QString& username, QString& password){
     comando.insert("username", username);
     comando.insert("password", password);
     this->sendMsg(comando);
+}
+
+void Client::handleLogout(){
+
+    QMap<QString, QString> comando;
+
+    comando.insert("CMD", LOGOUT);
+    comando.insert("username", username);
+    //comando.insert("password", password);
+    this->sendMsg(comando);
+
 }
 
 void Client::handleRegistration(QString& username, QString& password){

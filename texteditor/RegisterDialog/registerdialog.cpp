@@ -100,6 +100,13 @@ void RegisterDialog::slotAcceptRegistration(){
  QString password2 = editPassword2->text();
  int index = comboUsername->currentIndex();
 
+ if(password1!=password2){
+     QMessageBox q;
+     q.critical(0,"Registration Error","Please, be sure to type the same Password in both boxes!");
+     q.setFixedSize(500,200);
+     return;
+    }
+
  emit acceptRegistration( username, // current username
  password1                         // current password
  );

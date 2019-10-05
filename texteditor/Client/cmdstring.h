@@ -4,6 +4,8 @@
 #define INIT "<INIT>"
 #define CONN "CONNECT"
 #define LOGIN "LOG-IN"
+#define LOGOUT "LOG-OUT"
+
 #define REG "REGISTER"
 #define REM_IN "REMOTE_INSERT"
 #define REM_DEL "REMOTE_DELETE"

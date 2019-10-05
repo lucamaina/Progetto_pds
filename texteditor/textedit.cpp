@@ -120,9 +120,11 @@ TextEdit::TextEdit(QWidget *parent)
 
 
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
+    setupUserActions();
     setupFileActions();
     setupEditActions();
     setupTextActions();
+
 
     {
         QMenu *helpMenu = menuBar()->addMenu(tr("Help"));
@@ -225,20 +227,35 @@ void TextEdit::closeEvent(QCloseEvent *e)
         e->ignore();
 }
 
+void TextEdit::setupUserActions()
+{
+    QToolBar *tb = addToolBar(tr("User Actions"));
+    QMenu *menu = menuBar()->addMenu(tr("User"));
+
+    const QIcon loginIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
+    QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
+  //  login->setShortcut(QKeySequence::ZoomIn); tr("Ctrl+a")
+    tb->addAction(login);
+    login->setCheckable(true);
+
+    const QIcon logoutIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/logout.png"));
+    QAction *logout = menu->addAction(logoutIcon, tr("&Logout"), this, &TextEdit::LogoutDialog);
+  //  login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
+    tb->addAction(logout);
+    login->setCheckable(true);
+
+    const QIcon registerIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/registration.png"));
+    QAction *registration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::RegisterDialog);
+   // registration->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
+    tb->addAction(registration);
+    login->setCheckable(true);
+
+}
+
 void TextEdit::setupFileActions()
 {
     QToolBar *tb = addToolBar(tr("File Actions"));
     QMenu *menu = menuBar()->addMenu(tr("&File"));
-
-    //aggiungere aggiungere
-
-    const QIcon loginIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
-    QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
-    login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
-
-    const QIcon registerIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
-    QAction *registration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::RegisterDialog);
-    registration->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
 
     const QIcon newIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/filenew.png"));
     QAction *a = menu->addAction(newIcon,  tr("&New"), this, &TextEdit::fileNew);
@@ -330,6 +347,7 @@ void TextEdit::setupTextActions()
 {
     QToolBar *tb = addToolBar(tr("Format Actions"));
     QMenu *menu = menuBar()->addMenu(tr("F&ormat"));
+
 
     const QIcon boldIcon = QIcon::fromTheme("format-text-bold", QIcon(rsrcPath + "/textbold.png"));
     actionTextBold = menu->addAction(boldIcon, tr("&Bold"), this, &TextEdit::textBold);
@@ -510,6 +528,11 @@ void TextEdit::LoginDialog()
     class LoginDialog* loginDialog = new class LoginDialog( this );
     connect( loginDialog, SIGNAL (acceptLogin(QString&,QString&)), this->client, SLOT (handleLogin(QString&,QString&)) );
     loginDialog->exec();
+}
+
+void TextEdit::LogoutDialog()
+{
+    connect( this, SIGNAL (acceptLogoff()), this->client, SLOT (handleLogoff()) );
 }
 
 void TextEdit::RegisterDialog()

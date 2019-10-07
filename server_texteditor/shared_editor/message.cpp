@@ -7,13 +7,14 @@ bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
     QChar car;
     msgType  tipo;
     double idx;
-
+    int cursor;
     // il comando non contiene username perchè viene preso l'utente collegato
     if (comando.contains(CMD) && comando.contains(DOCID)){
         nomecmd = comando.value(CMD);
         fileId = comando.value(DOCID);
         car = comando.value(CAR).at(0);
         idx = comando.value(IDX).toDouble();
+        cursor = comando.value(CUR).toInt();
     } else {    return false;   }
 
     if (nomecmd == REM_IN) {
@@ -29,7 +30,7 @@ bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
     this->tipo = tipo;
 
     if (this->tipo == Rem_In || this->tipo == Rem_Del){
-        this->sym = new Symbol(user, car, idx);
+        this->sym = new Symbol(user, car, idx,cursor);
     } else {
         this->sym = nullptr;
         return false;

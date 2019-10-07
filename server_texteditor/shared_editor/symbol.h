@@ -10,6 +10,7 @@ class Symbol
 {
 private:
     QChar car;
+    int cursor;
     double num, den;
     double index;
     QString userName;           // identifica utente che inserische il carattere
@@ -18,6 +19,7 @@ public:
     explicit Symbol();
     explicit Symbol(QString user, QChar car, uint num, uint den) :  userName(user), car(car), num(num), den(den){}
     explicit Symbol(QString user, QChar car, double idx) :  userName(user), car(car), index(idx){}
+    explicit Symbol(QString user, QChar car, double idx, int cur) :  userName(user), car(car), index(idx), cursor(cur){}
     QChar getChar(){return this->car;}
     QMap<QString, QString> toMap();
 

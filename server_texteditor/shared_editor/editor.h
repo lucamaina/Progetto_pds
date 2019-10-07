@@ -48,9 +48,9 @@ public:
     /****************************************************************************
      * metodi di insert e delete ************************************************/
     bool localInsert(Message msg);
-    bool localRemove(Symbol sym);
-    bool remoteInsert(Message msg);
-    bool remoteRemove(Symbol sym);
+    bool localDelete(Message msg);
+    bool cursorChange(Message msg);
+    bool remoteSend(Message msg);
     bool process(Message& msg);
     bool send(QTcpSocket *t, QByteArray ba);
 

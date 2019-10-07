@@ -149,7 +149,6 @@ bool db::userLogOut(utente &user)
 {
     QVector<QString> values;
     values.push_back(user.getUsername());
-    values.push_back(user.getPass());
     QSqlQuery res = this->query(queryLOGOUT, values);
     return true;
 }

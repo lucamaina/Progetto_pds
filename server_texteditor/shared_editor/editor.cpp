@@ -100,12 +100,17 @@ bool Editor::process(Message &msg)
     Message::msgType tipo = msg.getTipo();
     if (tipo == Message::msgType::Rem_In){
         this->localInsert(msg);
-        this->remoteInsert(msg);
+        this->remoteSend(msg);
     } else if (tipo == Message::msgType::Rem_Del) {
         // call localDel
-    } else if (tipo == Message::msgType::Remove_File) {
-        // call removeFile
-    } else {
+        this->localDelete(msg);
+        this->remoteSend(msg);
+    }
+    else if(tipo == Message::msgType::Cur_Cng){
+        this->cursorChange(msg);
+        this->remoteSend(msg);
+    }
+    else {
         return false;
     }
     return false;
@@ -172,12 +177,18 @@ bool Editor::localInsert(Message msg)
     return true;
 }
 
+bool Editor::localDelete(Message msg)
+{
+    this->symMap.remove(msg.getSym()->getIndex());
+    return true;
+}
+
 /**
  * @brief Editor::remoteInsert
  * @param sym
  * @return
  */
-bool Editor::remoteInsert(Message msg)
+bool Editor::remoteSend(Message msg)
 {
     QByteArray ba = msg.toQByteArray();
     foreach (QString ut, this->sendList.keys()){
@@ -188,6 +199,12 @@ bool Editor::remoteInsert(Message msg)
     return true;
 }
 
+
+bool Editor::cursorChange(Message msg)
+{
+   //To Do
+    return true;
+}
 /**
  * @brief Editor::save
  * @return

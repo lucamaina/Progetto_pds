@@ -19,6 +19,7 @@
 #define FBODY "FILE-BODY"
 #define CMD "CMD"
 #define BROWS "BROWS"
+#define CURSOR "CURSOR"
 
 #define OK "OK"
 #define ERR "ERR"
@@ -42,6 +43,8 @@
 #define IDX "index"
 #define DIMTOT "dimtot"
 #define BODY "body"
+#define MEX "msg"
+#define CUR "cursor"
 
 
 /****************************************************************************

@@ -12,7 +12,7 @@
 class Message
 {
 public:
-    enum msgType {Rem_In, Rem_Del, Remove_File};
+    enum msgType {Rem_In, Rem_Del, Cur_Cng};
 
 private:
     msgType tipo;

@@ -17,13 +17,20 @@ void server::startServer()
 
 }
 
+void server::deleteThread()
+{
+    qDebug() << "delete: " << this->newThread;
+    this->newThread->~s_thread();
+}
+
 void server::incomingConnection(int socketID)
 {
     qDebug() << "Connecting from "
              << socketID;
-    s_thread *newThread = new s_thread(socketID);
-    connect(newThread, SIGNAL(finished()), this, SLOT(deleteLater()), Qt::ConnectionType::DirectConnection);
+    this->newThread = new s_thread(socketID);
+    connect(newThread, SIGNAL(finished()), this, SLOT(deleteThread()), Qt::ConnectionType::DirectConnection);
     // TODO exception
+
     newThread->run();
 
 }

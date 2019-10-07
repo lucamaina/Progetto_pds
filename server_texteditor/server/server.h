@@ -18,11 +18,13 @@ public:
 signals:
 
 public slots:
+    void deleteThread();
 
 private:
     void incomingConnection(int socketID);
 
     Logger *log;    
+    s_thread *newThread;
 
 };
 

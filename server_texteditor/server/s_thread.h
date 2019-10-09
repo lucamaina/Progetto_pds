@@ -31,6 +31,9 @@ public slots:
     void readyRead();
     void disconnected();
 
+signals:
+    void deleteThreadSig(s_thread &t);
+
 private:
     int sockID;
     QTcpSocket *socket = nullptr;

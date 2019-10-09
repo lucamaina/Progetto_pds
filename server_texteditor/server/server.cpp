@@ -17,18 +17,34 @@ void server::startServer()
 
 }
 
-void server::deleteThread()
+void server::deleteThread(s_thread &t)
 {
+    m.lock();
+    numThread--;
+    m.unlock();
     qDebug() << "delete: " << this->newThread;
-    this->newThread->~s_thread();
+    t.~s_thread();
+
 }
 
 void server::incomingConnection(int socketID)
 {
-    qDebug() << "Connecting from "
-             << socketID;
+
+    int n;
+    m.lock();
+    if (numThread < maxThread){
+        numThread++;
+        n = numThread;
+    } else {
+        qDebug() << "connessione rifiutata, max utenti raggiunti";
+        m.unlock();
+        return;
+    }
+    m.unlock();
+
+    qDebug() << "Connecting from " << socketID << " thread num: " << n;
     this->newThread = new s_thread(socketID);
-    connect(newThread, SIGNAL(finished()), this, SLOT(deleteThread()), Qt::ConnectionType::DirectConnection);
+    connect(newThread, &s_thread::deleteThreadSig, this, &server::deleteThread, Qt::ConnectionType::DirectConnection);
     // TODO exception
 
     newThread->run();

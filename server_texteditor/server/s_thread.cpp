@@ -17,18 +17,32 @@ void s_thread::run()
     qDebug() << "Client connesso";
     this->user = new utente();
     user->setSocket(socket);
+    this->connectDB();
 }
 
+/**
+ * @brief s_thread::disconnected
+ * metodo chiamato quando viene disconesso il socket dal client.
+ */
+void s_thread::disconnected()
+{
+    this->setTerminationEnabled(true);
+    qDebug() << "client disconnesso "
+             << QString::number(this->sockID);
+    this->socket->deleteLater();
+    // this->disconnectDB();
+    this->quit();
+    emit deleteThreadSig(*this);
+}
 
 s_thread::~s_thread()
 {
-    qDebug() << "Distruttore s_thread";
-    this->disconnectDB();
+    qDebug() << "Distruttore s_thread."; // User: " << this->user->getUsername() << " connesso: "<< this->user->isConnected();
+    if (this->user != nullptr || this->user->isConnected()){
+        this->disconnectDB();   }
     delete this->conn;
     delete this->user;
-    this->quit();
-    this->requestInterruption();
-    this->wait();
+    delete this->socket;
 }
 \
 /*********************************************************************************************************
@@ -506,18 +520,6 @@ void s_thread::readyRead()
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));  // ripristino connessione allo slot
 }
 
-/**
- * @brief s_thread::disconnected
- * metodo chiamato quando viene disconesso il socket dal client.
- */
-void s_thread::disconnected()
-{
-    qDebug() << "client disconnesso "
-             << QString::number(this->sockID);
-    this->socket->deleteLater();
-    this->disconnectDB();
-    //delete this->socket;
-    this->quit();
-}
+
 
 

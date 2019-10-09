@@ -18,13 +18,16 @@ public:
 signals:
 
 public slots:
-    void deleteThread();
+    void deleteThread(s_thread &t);
 
 private:
     void incomingConnection(int socketID);
 
     Logger *log;    
     s_thread *newThread;
+    std::mutex m;
+    int numThread = 0;
+    int maxThread = 4;
 
 };
 

@@ -265,3 +265,8 @@ QMap<QString, QString> db::browsFile(utente &user)
     }
     return risp;
 }
+
+void db::setUpUtenti()
+{
+    QSqlQuery res = this->query(querySetUpUtenti);
+}

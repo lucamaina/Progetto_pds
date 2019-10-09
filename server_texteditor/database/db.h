@@ -38,6 +38,8 @@ private:
     QSqlDatabase myDb;
     //utente user;
     Logger *log;
+
+    void setUpUtenti();
 };
 
 #endif // DB_H

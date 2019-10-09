@@ -63,6 +63,8 @@
 #define queryBROWS "SELECT * FROM documenti WHERE DocId IN (SELECT DocId FROM relazioni WHERE UserName = :UserName);"
 #define queryOPEN "SELECT Count(*) FROM relazioni WHERE UserName = :UserName AND DocId = :DocId;"
 
+#define querySetUpUtenti "UPDATE utenti SET connesso = '0';"
+
 #define queryPROVA "SELECT connesso FROM utenti where UserName = 'asd' AND Password = '1' FOR UPDATE;"
 #define queryP "SELECT connesso FROM utenti where UserName = ?;"
 

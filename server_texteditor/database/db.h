@@ -19,6 +19,7 @@ public:
     explicit db(int connName, QObject *parent = nullptr);
     bool conn();
     bool conn(utente & user);
+    void setUpUtenti();
     QSqlQuery query(QString querySrc);
     QSqlQuery query(QString querySrc, QVector<QString> values);
     bool userLogin(utente & user);
@@ -39,7 +40,7 @@ private:
     //utente user;
     Logger *log;
 
-    void setUpUtenti();
+
 };
 
 #endif // DB_H

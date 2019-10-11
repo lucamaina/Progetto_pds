@@ -96,6 +96,8 @@ Formato messaggi ricevuti dal server.
 	<docid>val2</docid>   
 </REMOTE-DELETE>
 
+
+### !!!!!!!!!!!!!!!!!!!!!!!! ###
 // messaggio di invio contenuto file
 <?xml version="1.0" encoding="UTF-8"?>
 <FILE-BODY>
@@ -103,6 +105,19 @@ Formato messaggi ricevuti dal server.
 	<dimpack>111111</dimpack>
 	<body>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</body>
 </FILE-BODY>
+
+
+// nuovo formato
+<?xml version="1.0" encoding="UTF-8"?>
+<FILE-BODY>
+	<dimtot>111111</dimtot>
+</FILE-BODY>
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+
+### !!!!!!!!!!!!!!!!!!!!!!!! ###
+
+
 
 // messaggio di posizione del cursore
 <?xml version="1.0" encoding="UTF-8"?>

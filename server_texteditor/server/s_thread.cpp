@@ -26,23 +26,20 @@ void s_thread::run()
  */
 void s_thread::disconnected()
 {
-    this->setTerminationEnabled(true);
-    qDebug() << "client disconnesso "
+    qDebug() << "(disconnected) client disconnesso "
              << QString::number(this->sockID);
-    this->socket->deleteLater();
-    // this->disconnectDB();
     this->quit();
     emit deleteThreadSig(*this);
 }
 
 s_thread::~s_thread()
 {
-    qDebug() << "Distruttore s_thread."; // User: " << this->user->getUsername() << " connesso: "<< this->user->isConnected();
-    if (this->user != nullptr || this->user->isConnected()){
+    qDebug() << "Distruttore s_thread.";
+    if (this->user->isConnected()){
         this->disconnectDB();   }
-    delete this->conn;
+/*    delete this->conn;
     delete this->user;
-    delete this->socket;
+    delete this->socket;*/
 }
 \
 /*********************************************************************************************************
@@ -67,7 +64,7 @@ void s_thread::leggiXML(QByteArray qb)
         QXmlStreamReader::TokenType token = stream.readNext();
         // leggo start document
         if (token == QXmlStreamReader::StartDocument){
-            qDebug() << "start doc: " << QString(token) << " - " << stream.readElementText();
+            // qDebug() << "start doc: " << QString(token) << " - " << stream.readElementText();
         }
         token = stream.readNext();
         // leggo elemento con nome del comando
@@ -81,17 +78,16 @@ void s_thread::leggiXML(QByteArray qb)
         while ( token == QXmlStreamReader::StartElement ){
             QString name = stream.name().toString(), text = stream.readElementText();
             command.insert(name, text);
-            qDebug() << "start elem: " << name;
-            qDebug() << "val elem: " << text;
+            qDebug() << "start elem: " << name << " val: " << text;
             token = stream.readNext();
         }
     }
 
     // TODO in caso di messaggio non corretto riparti da stato corretto
     if (stream.hasError()){
-        qDebug() << "finito lettura xml con errore" << stream.errorString();
+        qDebug() << "err in lettura XML" << stream.errorString();
     } else {
-        qDebug() << "finito lettura xml no errori " << stream.errorString();
+        // qDebug() << "finito lettura xml no errori " << stream.errorString();
         this->dispatchCmd(command);
     }
 }
@@ -257,11 +253,11 @@ void s_thread::loginDB(QMap<QString, QString> &comando){
         risp.insert(CMD, OK);
         risp.insert(MEX,"login effettuato");
         logStr = QString::number(this->sockID) + " loggato a db con utente: " + user->getUsername();
-        this->user = &tmp;
+        this->user->prepareUtente(comando, true);
     } else {
         risp.insert(CMD, ERR);
         risp.insert(MEX,"login fallito, user o password errati");
-        logStr = QString::number(this->sockID) + " non loggato a db con utente: " + user->getUsername();
+        logStr = QString::number(this->sockID) + " non loggato a db con utente: ";
         this->user = nullptr;
     }
     Logger::getLog().write(logStr);
@@ -327,10 +323,8 @@ void s_thread::disconnectDB()
     if (this->conn->isOpen()){
         QString logStr;
         if (this->conn->disconn(*user) ){
-           // clientMEX("Registrazione corretta");
             logStr = QString::number(this->sockID) + " disconnesso a db con utente: " + user->getUsername();
         } else {
-          //  clientMEX("Registrazione fallita");
             logStr = QString::number(this->sockID) + " errore nella disconessione a db con utente: " + user->getUsername();
         }
         Logger::getLog().write(logStr);
@@ -365,6 +359,7 @@ void s_thread::browsFile(QMap<QString, QString> &comando)
 {
     QList<QString> list = {CMD};
     if (!verifyCMD(comando, list)){ return;   }
+    if (user == nullptr) return;
     if (!this->conn->isOpen()){
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();
@@ -388,6 +383,7 @@ void s_thread::openFile(QMap<QString, QString> &comando)
 {
     QList<QString> list = {CMD, DOCID}; // DOCID, FNAME, UNAME
     if (!verifyCMD(comando, list)){ return;   }
+    if (user == nullptr) return;
     if (!this->conn->isOpen()){
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();

@@ -28,6 +28,7 @@ public:
     void setNick(QString nick);
     void setSocket(QTcpSocket *sock);
     bool prepareUtente(QMap<QString, QString> map);
+    bool prepareUtente(QMap<QString, QString> map, bool isConnect);
     bool isConnected(){ return this->isConnect; }
     void setConn(bool setConn);
     QTcpSocket *getSocket() const;

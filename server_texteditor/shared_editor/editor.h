@@ -36,6 +36,8 @@ public:
     static Editor& getFile();
     bool loadMap();
     bool sendMap(QString nomeUtente);
+    bool sendBody(QTcpSocket *sock);
+
     QString mapToSend();
     ~Editor();
 

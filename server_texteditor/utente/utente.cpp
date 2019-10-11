@@ -15,21 +15,10 @@
  * @param map   mappa del comando
  * costruttore dell'utente a partire dalla mappa costruita dall'XML ricevuto
  */
-bool utente::prepareUtente(QMap<QString, QString> map){
-    if (map.empty()){   return false;   }
-    if (!map.contains(UNAME) || !map.contains(PASS)){   return false;   }
-    QString nametmp = map.values(UNAME).first();
-    if (nametmp.isEmpty()) return false;
-    QString passtmp = map.values(PASS).first();
-    if (passtmp.isEmpty()) return false;
-    this->username = nametmp;
-    this->password = passtmp;
-
-    if (map.contains(NICK) && !map.values(UNAME).first().isEmpty()){
-        QString nicktmp = map.values(UNAME).first();
-        this->nickname = nicktmp;
-    }
-    return true;
+bool utente::prepareUtente(QMap<QString, QString> map, bool isConnect){
+    this->isConnect = isConnect;
+    return this->prepareUtente(map);
+;
 }
 
 QTcpSocket *utente::getSocket() const
@@ -52,6 +41,24 @@ void utente::setNick(QString nick)
 void utente::setSocket(QTcpSocket *sock)
 {
     this->mioSocket = sock;
+}
+
+bool utente::prepareUtente(QMap<QString, QString> map)
+{
+    if (map.empty()){   return false;   }
+    if (!map.contains(UNAME) || !map.contains(PASS)){   return false;   }
+    QString nametmp = map.values(UNAME).first();
+    if (nametmp.isEmpty()) return false;
+    QString passtmp = map.values(PASS).first();
+    if (passtmp.isEmpty()) return false;
+    this->username = nametmp;
+    this->password = passtmp;
+
+    if (map.contains(NICK) && !map.values(UNAME).first().isEmpty()){
+        QString nicktmp = map.values(UNAME).first();
+        this->nickname = nicktmp;
+    }
+    return true;
 }
 
 void utente::setConn(bool setConn){

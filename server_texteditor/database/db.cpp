@@ -31,8 +31,8 @@ db::db(int connName, QObject *parent) : QObject(parent)
 QSqlQuery db::query(QString querySrc)
 {
     QSqlQuery query(this->myDb);
-    if (myDb.isOpen()){
-        qDebug() << "db aperto prima di exec";
+    if (!myDb.isOpen()){
+        qDebug() << "err db non aperto prima di exec query";
     }
     if (query.exec(querySrc) == false){
         QSqlError err = query.lastError();
@@ -57,7 +57,7 @@ QSqlQuery db::query(QString querySrc, QVector<QString> values)
         QSqlError err = query.lastError();
         qDebug() << err.text();
     }
-    qDebug() << "last query" << query.executedQuery();
+    qDebug() << "last query" << query.executedQuery() << " values: " << values;
     return query;
 }
 

@@ -44,6 +44,7 @@ bool Editor::loadMap()
     return true;
 }
 
+
 bool Editor::sendMap(QString nomeUtente)
 {
     QTcpSocket *sock = this->sendList.value(nomeUtente);
@@ -51,13 +52,13 @@ bool Editor::sendMap(QString nomeUtente)
 
     QByteArray ba;
     QXmlStreamWriter wr(&ba);
-    QString body = this->mapToSend();
+    int bodySize = this->symMap.size();           // dimensione del file da inviare
 
     wr.writeStartDocument();
     wr.writeStartElement(FBODY);
 
-    wr.writeTextElement(DIMTOT, QString::number(body.size()));
-    wr.writeTextElement(BODY, body);
+    wr.writeTextElement(DIMTOT, QString::number(bodySize));
+  //  wr.writeTextElement(BODY, body);
 
     wr.writeEndElement();
     wr.writeEndDocument();
@@ -71,7 +72,34 @@ bool Editor::sendMap(QString nomeUtente)
     ba.prepend(INIT);
     qDebug() << QString(ba);
 
-    this->send(sock, ba);
+    if (!this->send(sock, ba)){
+        qDebug() << "err invio";
+    }
+    return sendBody(sock);
+}
+
+bool Editor::sendBody(QTcpSocket *sock )
+{
+    QString body = this->mapToSend();
+    int totSize = body.size();
+    int dim = totSize;
+    while (dim > 0) {
+        if (dim > 4096){
+
+            int written = static_cast<int>(sock->write(body.toUtf8(), 4096));
+            if (written != 4096){
+                dim = dim - written;
+                body.remove(0, written);
+            }
+        } else {
+            int written = static_cast<int>(sock->write(body.toUtf8(), dim));
+            if (written != 4096){
+                dim = dim - written;
+                body.remove(0, written);
+            }
+        }
+    }
+
     return true;
 }
 

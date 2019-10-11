@@ -5,8 +5,12 @@
 #include <database/db.h>
 #include <QTcpServer>
 #include <QDebug>
+
+#include "../database/db.h"
 #include "s_thread.h"
 #include "../shared_editor/network.h"
+
+#define MAX_THREAD 4
 
 class server : public QTcpServer
 {
@@ -27,8 +31,10 @@ private:
     s_thread *newThread;
     std::mutex m;
     int numThread = 0;
-    int maxThread = 4;
+    int maxThread = MAX_THREAD;
+    db *mioDB;
 
+    QVector<s_thread*> tVec;
 };
 
 #endif // SERVER_H

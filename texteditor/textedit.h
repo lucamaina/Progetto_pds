@@ -55,6 +55,10 @@
 #include <QMainWindow>
 #include <QMap>
 #include <QPointer>
+#include <Client/client.h>
+#include <Highlighter/highlighter.h>
+#include <LoginDialog/logindialog.h>
+#include <RegisterDialog/registerdialog.h>
 
 class QAction;
 class QComboBox;
@@ -75,6 +79,10 @@ public:
 
 public slots:
     void fileNew();
+    void LoginDialog();
+    void LogoutDialog();
+    void RegisterDialog();
+
 
 protected:
     void closeEvent(QCloseEvent *e) override;
@@ -104,6 +112,7 @@ private slots:
     void printPreview(QPrinter *);
 
 private:
+    void setupUserActions();
     void setupFileActions();
     void setupEditActions();
     void setupTextActions();
@@ -115,7 +124,9 @@ private:
     void colorChanged(const QColor &c);
     void alignmentChanged(Qt::Alignment a);
 
-
+    QAction* registration;
+    Highlighter* Evidenziatore;
+    Client *client;
     QAction *actionSave;
     QAction *actionTextBold;
     QAction *actionTextUnderline;
@@ -155,6 +166,8 @@ private slots:
 
 signals:
     void sig_asd();
+    void cursorChanged (int& posx, int& posy);
+    void acceptLogout();
 };
 
 #endif // TEXTEDIT_H

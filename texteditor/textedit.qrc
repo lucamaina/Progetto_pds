@@ -20,6 +20,9 @@
         <file>images/win/textunder.png</file>
         <file>images/win/zoomin.png</file>
         <file>images/win/zoomout.png</file>
-		<file>example.html</file>
+        <file>example.html</file>
+        <file>images/win/login.png</file>
+        <file>images/win/logout.png</file>
+        <file>images/win/registration.png</file>
     </qresource>
 </RCC>

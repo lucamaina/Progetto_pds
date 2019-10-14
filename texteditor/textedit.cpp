@@ -116,10 +116,15 @@ TextEdit::TextEdit(QWidget *parent)
             this, &TextEdit::cursorPositionChanged);
     setCentralWidget(textEdit);
 
+    Evidenziatore = new Highlighter(textEdit->document());
+
+
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
+    setupUserActions();
     setupFileActions();
     setupEditActions();
     setupTextActions();
+
 
     {
         QMenu *helpMenu = menuBar()->addMenu(tr("Help"));
@@ -170,6 +175,10 @@ TextEdit::TextEdit(QWidget *parent)
 
     setupStatusBar();
     this->textEdit->installEventFilter(this);       // importante
+
+    this->client= new Client();
+    connect(this, SIGNAL(cursorChanged(int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&)));
+
 }
 
 /*******************************************************************
@@ -195,8 +204,12 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
     if (obj == this->textEdit) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *e = static_cast<QKeyEvent*>(event);
+            if(e->text()==""){return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
             QString str;
             str = QString::number(e->key());
+            qDebug()<<e->text();
+            qDebug()<<e->nativeScanCode();
+
             this->statusBar()->showMessage(str, 1000);
         }
         return false;
@@ -214,22 +227,35 @@ void TextEdit::closeEvent(QCloseEvent *e)
         e->ignore();
 }
 
+void TextEdit::setupUserActions()
+{
+    QToolBar *tb = addToolBar(tr("User Actions"));
+    QMenu *menu = menuBar()->addMenu(tr("User"));
+
+    const QIcon loginIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
+    QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
+  //  login->setShortcut(QKeySequence::ZoomIn); tr("Ctrl+a")
+    tb->addAction(login);
+    login->setCheckable(true);
+
+    const QIcon logoutIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/logout.png"));
+    QAction *logout = menu->addAction(logoutIcon, tr("&Logout"), this, &TextEdit::LogoutDialog);
+  //  login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
+    tb->addAction(logout);
+    login->setCheckable(true);
+
+    const QIcon registerIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/registration.png"));
+    QAction *registration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::RegisterDialog);
+   // registration->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
+    tb->addAction(registration);
+    login->setCheckable(true);
+
+}
+
 void TextEdit::setupFileActions()
 {
     QToolBar *tb = addToolBar(tr("File Actions"));
     QMenu *menu = menuBar()->addMenu(tr("&File"));
-
-    /**
-     *  Prova menu
-     */
-    QAction *asd = menu->addAction(tr("&asd"), this, &TextEdit::slot_asd);
-    asd->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
-    connect(asd, SIGNAL(sig_asd()), this, SLOT(slot_asd()));
-
-    /**
-     *
-     */
-
 
     const QIcon newIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/filenew.png"));
     QAction *a = menu->addAction(newIcon,  tr("&New"), this, &TextEdit::fileNew);
@@ -321,6 +347,7 @@ void TextEdit::setupTextActions()
 {
     QToolBar *tb = addToolBar(tr("Format Actions"));
     QMenu *menu = menuBar()->addMenu(tr("F&ormat"));
+
 
     const QIcon boldIcon = QIcon::fromTheme("format-text-bold", QIcon(rsrcPath + "/textbold.png"));
     actionTextBold = menu->addAction(boldIcon, tr("&Bold"), this, &TextEdit::textBold);
@@ -495,6 +522,27 @@ void TextEdit::setCurrentFileName(const QString &fileName)
     setWindowTitle(tr("%1[*] - %2").arg(shownName, QCoreApplication::applicationName()));
     setWindowModified(false);
 }
+
+void TextEdit::LoginDialog()
+{
+    class LoginDialog* loginDialog = new class LoginDialog( this );
+    connect( loginDialog, SIGNAL (acceptLogin(QString&,QString&)), this->client, SLOT (handleLogin(QString&,QString&)) );
+    loginDialog->exec();
+}
+
+void TextEdit::LogoutDialog()
+{
+    connect( this, SIGNAL (acceptLogoff()), this->client, SLOT (handleLogoff()) );
+}
+
+void TextEdit::RegisterDialog()
+{
+    class RegisterDialog* registerdialog = new class RegisterDialog( this );
+    connect( registerdialog, SIGNAL (acceptRegistration(QString&,QString&)), this->client, SLOT (handleRegistration(QString&,QString&)) );
+    registerdialog->exec();
+}
+
+
 
 void TextEdit::fileNew()
 {
@@ -783,7 +831,10 @@ void TextEdit::cursorPositionChanged()
      */
     QTextCursor cursore = textEdit->textCursor();
     QString str = QString::number(cursore.position());
-
+    int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
+    int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
+    qDebug()<<"cursor at:"<<posx<<posy<<"\n";
+    emit cursorChanged(posx,posy);
     //statusBar()->showMessage(str, 0);
     /*
      *

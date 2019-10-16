@@ -13,14 +13,18 @@ TEMPLATE        = app
 TARGET          = textedit
 
 HEADERS         = textedit.h \
+    BrowseWindow/browsewindow.h \
                   Client/client.h \ \
     Client/cmdstring.h \
     Highlighter/highlighter.h \
-    LoginDialog/logindialog.h
+    LoginDialog/logindialog.h \
+    RegisterDialog/registerdialog.h
 
 SOURCES         = textedit.cpp \
+                  BrowseWindow/browsewindow.cpp \
                   Highlighter/highlighter.cpp \
                   LoginDialog/logindialog.cpp \
+                  RegisterDialog/registerdialog.cpp \
                   main.cpp \
                   Client/client.cpp
 

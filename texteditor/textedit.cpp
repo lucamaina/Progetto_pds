@@ -76,6 +76,9 @@
 #include <QCloseEvent>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QHBoxLayout>
+#include <QListWidget>
+
 #if defined(QT_PRINTSUPPORT_LIB)
 #include <QtPrintSupport/qtprintsupportglobal.h>
 #if QT_CONFIG(printer)
@@ -114,15 +117,24 @@ TextEdit::TextEdit(QWidget *parent)
             this, &TextEdit::currentCharFormatChanged);
     connect(textEdit, &QTextEdit::cursorPositionChanged,
             this, &TextEdit::cursorPositionChanged);
-    setCentralWidget(textEdit);
+
+    list=new QListWidget();
+    QWidget *centrale=new QWidget();
+    QHBoxLayout *miolayout=new QHBoxLayout(centrale);
+    miolayout->addWidget(textEdit,1);
+    setCentralWidget(centrale);
+    miolayout->addWidget(list);
+
+    //this->layout()->addWidget(list);
 
     Evidenziatore = new Highlighter(textEdit->document());
 
-
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
+    setupUserActions();
     setupFileActions();
     setupEditActions();
     setupTextActions();
+
 
     {
         QMenu *helpMenu = menuBar()->addMenu(tr("Help"));
@@ -174,8 +186,9 @@ TextEdit::TextEdit(QWidget *parent)
     setupStatusBar();
     this->textEdit->installEventFilter(this);       // importante
 
-    this->client= new Client();
-
+    this->client= new Client(this);
+    connect(this, SIGNAL(cursorChanged(int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&)));
+    connect(this->client, SIGNAL(spostaCursSignal(int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,char&,QString&)));
 }
 
 /*******************************************************************
@@ -201,9 +214,19 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
     if (obj == this->textEdit) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *e = static_cast<QKeyEvent*>(event);
-            QString str;
-            str = QString::number(e->key());
-            this->statusBar()->showMessage(str, 1000);
+
+            if(e->text()==""){return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
+            //if(e->key()==16777219){ qDebug()<<"bellaaaaaaa"; return false;} // PULSANTE BACKSPACE CHIAMA CANCELLAZIONE REMOTA
+
+            QChar c = e->text().front();
+            int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
+            int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
+
+            this->client->remoteInsert(c,posx,posy);
+
+            qDebug()<<e->text().front();
+
+            this->statusBar()->showMessage(c, 1000);
         }
         return false;
     }
@@ -220,16 +243,37 @@ void TextEdit::closeEvent(QCloseEvent *e)
         e->ignore();
 }
 
+void TextEdit::setupUserActions()
+{
+    QToolBar *tb = addToolBar(tr("User Actions"));
+    QMenu *menu = menuBar()->addMenu(tr("User"));
+
+    const QIcon loginIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
+    QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
+  //  login->setShortcut(QKeySequence::ZoomIn); tr("Ctrl+a")
+    tb->addAction(login);
+    login->setCheckable(true);
+
+    const QIcon logoutIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/logout.png"));
+    QAction *logout = menu->addAction(logoutIcon, tr("&Logout"), this, &TextEdit::LogoutDialog);
+  //  login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
+    tb->addAction(logout);
+    login->setCheckable(true);
+
+    const QIcon registerIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/registration.png"));
+    QAction *registration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::RegisterDialog);
+   // registration->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
+    tb->addAction(registration);
+    login->setCheckable(true);
+
+
+
+}
+
 void TextEdit::setupFileActions()
 {
     QToolBar *tb = addToolBar(tr("File Actions"));
     QMenu *menu = menuBar()->addMenu(tr("&File"));
-
-    //aggiungere aggiungere
-
-    const QIcon loginIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
-    QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
-    login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
 
     const QIcon newIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/filenew.png"));
     QAction *a = menu->addAction(newIcon,  tr("&New"), this, &TextEdit::fileNew);
@@ -253,6 +297,22 @@ void TextEdit::setupFileActions()
     a = menu->addAction(tr("Save &As..."), this, &TextEdit::fileSaveAs);
     a->setPriority(QAction::LowPriority);
     menu->addSeparator();
+
+    const QIcon remoteBrows = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/remoteBrows.png"));
+    a = menu->addAction(remoteBrows, tr("&Remote Brows..."), this, &TextEdit::remoteBrows);
+    a->setShortcut(QKeySequence::Open);
+    tb->addAction(a);
+
+    const QIcon remoteAddFile = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/newOnServer.png"));
+    a = menu->addAction(remoteAddFile, tr("&Remote Add..."), this, &TextEdit::remoteAddFile);
+    a->setShortcut(QKeySequence::Open);
+    tb->addAction(a);
+
+    const QIcon remoteRemoveFile = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/remoteDelete.png"));
+    a = menu->addAction(remoteRemoveFile, tr("&Remote Remove..."), this, &TextEdit::remoteRemoveFile);
+    a->setShortcut(QKeySequence::Open);
+    tb->addAction(a);
+
 
 #ifndef QT_NO_PRINTER
     const QIcon printIcon = QIcon::fromTheme("document-print", QIcon(rsrcPath + "/fileprint.png"));
@@ -321,6 +381,7 @@ void TextEdit::setupTextActions()
 {
     QToolBar *tb = addToolBar(tr("Format Actions"));
     QMenu *menu = menuBar()->addMenu(tr("F&ormat"));
+
 
     const QIcon boldIcon = QIcon::fromTheme("format-text-bold", QIcon(rsrcPath + "/textbold.png"));
     actionTextBold = menu->addAction(boldIcon, tr("&Bold"), this, &TextEdit::textBold);
@@ -498,10 +559,24 @@ void TextEdit::setCurrentFileName(const QString &fileName)
 
 void TextEdit::LoginDialog()
 {
+
     class LoginDialog* loginDialog = new class LoginDialog( this );
     connect( loginDialog, SIGNAL (acceptLogin(QString&,QString&)), this->client, SLOT (handleLogin(QString&,QString&)) );
     loginDialog->exec();
 }
+
+void TextEdit::LogoutDialog()
+{
+    connect( this, SIGNAL (acceptLogoff()), this->client, SLOT (handleLogoff()) );
+}
+
+void TextEdit::RegisterDialog()
+{
+    class RegisterDialog* registerdialog = new class RegisterDialog( this );
+    connect( registerdialog, SIGNAL (acceptRegistration(QString&,QString&)), this->client, SLOT (handleRegistration(QString&,QString&)) );
+    registerdialog->exec();
+}
+
 
 
 void TextEdit::fileNew()
@@ -545,6 +620,30 @@ bool TextEdit::fileSave()
     }
     return success;
 }
+
+void TextEdit::remoteBrows()
+{
+
+    QMap<QString, QString> comando;
+    comando.insert("CMD","BROWS");
+    this->client->sendMsg(comando);
+}
+
+void TextEdit::remoteAddFile()
+{
+    QMap<QString, QString> comando;
+    comando.insert("CMD","ADD-FILE");
+    this->client->sendMsg(comando);
+}
+
+void TextEdit::remoteRemoveFile()
+{
+    QMap<QString, QString> comando;
+    comando.insert("CMD","ADD-FILE");
+    this->client->sendMsg(comando);
+
+}
+
 
 bool TextEdit::fileSaveAs()
 {
@@ -791,7 +890,10 @@ void TextEdit::cursorPositionChanged()
      */
     QTextCursor cursore = textEdit->textCursor();
     QString str = QString::number(cursore.position());
-
+    int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
+    int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
+    qDebug()<<"cursor at:"<<posx<<posy<<"\n";
+    emit cursorChanged(posx,posy);
     //statusBar()->showMessage(str, 0);
     /*
      *
@@ -848,4 +950,50 @@ void TextEdit::alignmentChanged(Qt::Alignment a)
         actionAlignRight->setChecked(true);
     else if (a & Qt::AlignJustify)
         actionAlignJustify->setChecked(true);
+}
+
+void TextEdit::spostaCursor(int& posX,int& posY,char& car ,QString& user){ //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
+
+    //qDebug()<<posX<<posY<<car<<user;
+
+    if(!mappaCursori.contains(user)){
+
+
+        //Se non ho mai visto questo user lo metto nella lista di user
+
+        this->list->addItem(user);
+        //Se non ho mai visto questo user creo un nuovo Cursore
+
+        mappaCursori.insert(user,new QTextCursor(textEdit->document()));
+        //muovo il cursore
+        QTextCursor *s= mappaCursori.find(user).value();
+        s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
+        s->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
+
+        QChar c(car);
+
+        s->insertText(c);
+
+        textEdit->setTextCursor(* mappaCursori.find(user).value()); //Rende visibile il cursore nel textedit (DEBUG)
+
+    }
+
+    else{
+
+        // muovo il cursore
+        QTextCursor *s1= mappaCursori.find(user).value();
+        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s1->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
+        s1->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
+
+    }
+
+}
+
+void TextEdit::deleteListSlot(){
+   //svuota la lista perchè non sono più connesso;
+   while(this->list->count()>0){
+       delete this->list->takeItem(0);
+   }
 }

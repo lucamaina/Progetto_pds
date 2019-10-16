@@ -4,6 +4,8 @@
 #define INIT "<INIT>"
 #define CONN "CONNECT"
 #define LOGIN "LOG-IN"
+#define LOGOUT "LOG-OUT"
+
 #define REG "REGISTER"
 #define REM_IN "REMOTE_INSERT"
 #define REM_DEL "REMOTE_DELETE"
@@ -11,6 +13,7 @@
 #define FILES "FILE"
 #define ADD_FILE "ADD_FILE"
 #define CMD "CMD"
+#define CRS "CURSOR"
 
 #define INIT_DIM 6
 #define LEN_NUM 8

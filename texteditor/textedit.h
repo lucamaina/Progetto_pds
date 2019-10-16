@@ -52,13 +52,15 @@
 #ifndef TEXTEDIT_H
 #define TEXTEDIT_H
 
+#include <BrowseWindow/browsewindow.h>
 #include <QMainWindow>
 #include <QMap>
 #include <QPointer>
 #include <Client/client.h>
 #include <Highlighter/highlighter.h>
 #include <LoginDialog/logindialog.h>
-
+#include <RegisterDialog/registerdialog.h>
+#include <QListWidgetItem>
 
 class QAction;
 class QComboBox;
@@ -80,12 +82,25 @@ public:
 public slots:
     void fileNew();
     void LoginDialog();
+    void LogoutDialog();
+    void RegisterDialog();
 
 
 protected:
     void closeEvent(QCloseEvent *e) override;
 
 private slots:
+
+    /*************** Comandi per gestione cursore e caratteri **************/
+    void spostaCursor(int& posX,int& posY,char& car,QString& user); //ATTENZIONE: questo oltre al cursore gestisce inserimento caratteri
+    void deleteListSlot();
+
+    /*************** Comandi per gestione file remoti **************/
+    void remoteBrows();
+    void remoteAddFile();
+    void remoteRemoveFile();
+
+    /***************************************************************/
     void fileOpen();
     bool fileSave();
     bool fileSaveAs();
@@ -110,6 +125,7 @@ private slots:
     void printPreview(QPrinter *);
 
 private:
+    void setupUserActions();
     void setupFileActions();
     void setupEditActions();
     void setupTextActions();
@@ -121,6 +137,9 @@ private:
     void colorChanged(const QColor &c);
     void alignmentChanged(Qt::Alignment a);
 
+    QListWidget *list;
+    QMap<QString,QTextCursor*> mappaCursori; //mappa con nome utente e relativo cursore;
+    QAction* registration;
     Highlighter* Evidenziatore;
     Client *client;
     QAction *actionSave;
@@ -150,6 +169,7 @@ private:
 
  // prove
 public:
+
     int cursorPos;
 
 private:
@@ -160,8 +180,11 @@ private:
 private slots:
     bool slot_asd();
 
+
 signals:
     void sig_asd();
+    void cursorChanged (int& posx, int& posy);
+    void acceptLogout();
 };
 
 #endif // TEXTEDIT_H

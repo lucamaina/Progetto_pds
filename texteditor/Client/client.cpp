@@ -3,14 +3,13 @@ Client::Client(QObject *parent) : QObject(parent)
 {
     logged=false;
     username="";
+    password="";
 
     socket = new QTcpSocket(this);
     socket->connectToHost(QHostAddress::LocalHost, 2000);
 
     connect(socket, &QTcpSocket::connected, this, &Client::connected);
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
-    connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
-
 
 
 }
@@ -96,7 +95,6 @@ void Client::leggiXML(QByteArray qb)
 
 
 void Client::dispatchCmd(QMap<QString, QString> cmd){
-     auto comando = cmd.find("cmd");
     //TODO
 }
 
@@ -106,25 +104,14 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
 
 void Client::connected(){
     qDebug()<<"Connesso al server\n";
-    QMap<QString, QString> comando;
-    comando.insert("CMD", CONN);
-    this->sendMsg(comando);
-}
-
-void Client::disconnected(){
-    qDebug()<<"Disconnesso dal server\n";
 }
 
 void Client::handleLogin(QString& username, QString& password){
 
     QMap<QString, QString> comando;
-    if(socket->state() != QTcpSocket::ConnectedState){
-        QMessageBox Messaggio;
-        Messaggio.critical(0,"Login Error","User not connected to the server");
-        Messaggio.setFixedSize(500,200);
-        return;
-    }
+
     this->username=username;
+    this->password=password;
     this->logged=true;
 
     comando.insert("CMD", LOGIN);
@@ -132,43 +119,6 @@ void Client::handleLogin(QString& username, QString& password){
     comando.insert("password", password);
     this->sendMsg(comando);
 }
-
-void Client::handleLogout(){
-
-    QMap<QString, QString> comando;
-
-    comando.insert("CMD", LOGOUT);
-    comando.insert("username", username);
-    //comando.insert("password", password);
-    this->sendMsg(comando);
-
-}
-
-void Client::handleRegistration(QString& username, QString& password){
-
-    QMap<QString, QString> comando;
-
-    comando.insert("CMD", LOGIN);
-    comando.insert("username", username);
-    comando.insert("password", password);
-    qDebug()<<comando;
-    this->sendMsg(comando);
-}
-
-void Client::handleMyCursorChange(int& posX,int& posY){
-
-    if(!logged){return;}
-
-    QMap<QString, QString> comando;
-
-    comando.insert("CMD",CRS);
-    comando.insert("username",this->username);
-    comando.insert("posX", QString::number(posX) );
-    comando.insert("posY", QString::number(posY) );
-    qDebug()<<comando;
-    this->sendMsg(comando);
-}
-
 
 void Client::readyRead(){
     disconnect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));  // disconnetto lo slot cosi da non avere più chiamate nello stesso

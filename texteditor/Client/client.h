@@ -6,7 +6,6 @@
 #include <QtNetwork/QTcpSocket>
 #include "cmdstring.h"
 #include <QXmlStreamWriter>
-#include <QMessageBox>
 
 class Client : public QObject
 {
@@ -20,16 +19,12 @@ signals:
 
 public slots:
     void connected();
-    void disconnected();
     void handleLogin(QString& username, QString& password);
-    void handleLogout();
-    void handleRegistration(QString& username, QString& password);
     void readyRead();
-    void handleMyCursorChange(int& posX,int& posY);
 
 private:
-    QString username;
-    bool logged,connesso;
+    QString username, password;
+    bool logged;
     QTcpSocket* socket;
     QByteArray buffer;
 

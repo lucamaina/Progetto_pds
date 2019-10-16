@@ -16,13 +16,11 @@ HEADERS         = textedit.h \
                   Client/client.h \ \
     Client/cmdstring.h \
     Highlighter/highlighter.h \
-    LoginDialog/logindialog.h \
-    RegisterDialog/registerdialog.h
+    LoginDialog/logindialog.h
 
 SOURCES         = textedit.cpp \
                   Highlighter/highlighter.cpp \
                   LoginDialog/logindialog.cpp \
-                  RegisterDialog/registerdialog.cpp \
                   main.cpp \
                   Client/client.cpp
 

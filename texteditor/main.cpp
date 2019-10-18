@@ -82,6 +82,7 @@ int main(int argc, char *argv[])
         mw.fileNew();
 
     mw.show();
+
     return a.exec();
 }
 

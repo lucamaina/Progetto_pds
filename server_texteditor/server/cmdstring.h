@@ -53,9 +53,9 @@
 #define queryUpdateLOGIN "UPDATE utenti SET connesso = '1' WHERE UserName = :UserName;"
 
 #define queryLOGOUT "UPDATE utenti SET connesso = '0' WHERE UserName = :UserName;"
-#define queryREG "INSERT INTO utenti(UserName, NickName, Password) VALUE (:UserName, :NickName, :Password);"
 
 #define queryPreReg "SELECT Count(*) FROM utenti WHERE UserName = :UserName AND Password = :Password FOR UPDATE;"
+#define queryREG "INSERT INTO utenti(UserName, NickName, Password, connesso) VALUE (:UserName, :NickName, :Password, '1');"
 
 #define queryFILEexist "SELECT Count(*) FROM documenti WHERE FileSysPath = :FileSysPath;"
 #define queryFILEadd "INSERT INTO documenti(FileSysPath, LinkPath) VALUE (:FileSysPath, :LinkPath);"

@@ -230,8 +230,7 @@ bool Editor::remoteSend(Message msg)
 
 bool Editor::cursorChange(Message msg)
 {
-   //To Do
-    return true;
+    return remoteSend(msg);
 }
 /**
  * @brief Editor::save

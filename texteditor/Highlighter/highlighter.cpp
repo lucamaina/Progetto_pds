@@ -25,18 +25,18 @@ Highlighter::Highlighter(QTextDocument *parent): QSyntaxHighlighter(parent)
         }
 
         classFormat.setFontWeight(QFont::Bold);
-           classFormat.setForeground(Qt::magenta);
+           classFormat.setForeground(Qt::darkMagenta);
            Rule.pattern = QRegularExpression(QStringLiteral("\\bQ[A-Za-z]+\\b"));
            Rule.format = classFormat;
            HighlightingRules.append(Rule);
 
-           quotationFormat.setForeground(Qt::green);
+           quotationFormat.setForeground(Qt::darkGreen);
            Rule.pattern = QRegularExpression(QStringLiteral("\".*\""));
            Rule.format = quotationFormat;
            HighlightingRules.append(Rule);
 
            functionFormat.setFontItalic(true);
-           functionFormat.setForeground(Qt::cyan);
+           functionFormat.setForeground(Qt::darkCyan);
            Rule.pattern = QRegularExpression(QStringLiteral("\\b[A-Za-z0-9_]+(?=\\()"));
            Rule.format = functionFormat;
            HighlightingRules.append(Rule);

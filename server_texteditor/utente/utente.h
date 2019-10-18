@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QMap>
 #include <iostream>
-
+#include <QCryptographicHash>
 
 #include "../server/cmdstring.h"
 

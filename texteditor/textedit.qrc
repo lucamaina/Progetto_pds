@@ -24,5 +24,8 @@
         <file>images/win/login.png</file>
         <file>images/win/logout.png</file>
         <file>images/win/registration.png</file>
+        <file>images/win/newOnServer.png</file>
+        <file>images/win/remoteBrows.png</file>
+        <file>images/win/remoteDelete.png</file>
     </qresource>
 </RCC>

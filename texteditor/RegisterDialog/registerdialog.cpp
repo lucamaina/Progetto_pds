@@ -107,6 +107,13 @@ void RegisterDialog::slotAcceptRegistration(){
      return;
     }
 
+ if(password1.size()==0 || password2.size()==0 || username.size()==0){
+     QMessageBox q;
+     q.critical(0,"Registration Error","Please, be sure to fill every box!");
+     q.setFixedSize(500,200);
+     return;
+    }
+
  emit acceptRegistration( username, // current username
  password1                         // current password
  );

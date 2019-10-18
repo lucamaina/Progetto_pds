@@ -1,25 +1,35 @@
 #include "client.h"
+#include <RegisterDialog/registerdialog.h>
+#include <LoginDialog/logindialog.h>
+
 Client::Client(QObject *parent) : QObject(parent)
 {
+    connectedDB=false;
     logged=false;
     username="";
+    docID="";
+    tempUser="";
+    tempPass="";
 
     socket = new QTcpSocket(this);
-    socket->connectToHost(QHostAddress::LocalHost, 2000);
 
     connect(socket, &QTcpSocket::connected, this, &Client::connected);
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
+    connect(this, SIGNAL(spostaCursSignal(int&,int&,char&,QString&)),this->parent(),SLOT(spostaCursor(int&,int&,char&,QString&)));
 
+    socket->connectToHost(QHostAddress::LocalHost, 2000);
 
 
 }
+
+
 
 bool Client::sendMsg(QByteArray ba){
     if (socket->isOpen() && socket->isWritable()){
         if (this->socket->write(ba, ba.size()) == -1){
             // errore
-            qDebug() << "errore scrittura verso client";
+            qDebug() << "errore scrittura verso server";
         }
     }
 
@@ -97,7 +107,157 @@ void Client::leggiXML(QByteArray qb)
 
 void Client::dispatchCmd(QMap<QString, QString> cmd){
      auto comando = cmd.find("cmd");
+
+     if(comando.value()=="CRS"){
+        spostaCursori(cmd);
+     }
+
+     else if(comando.value()=="BROWS"){
+        handleBrowse(cmd);
+     }
+
+     else if(comando.value()=="OK"){
+        dispatchOK(cmd);
+     }
+
+     else if(comando.value()=="ERR"){
+        dispatchERR(cmd);
+     }
+
+     else if (comando.value() == REM_IN || comando.value() == REM_DEL) {
+        inserimento(cmd);
+
+     }
     //TODO
+}
+
+void Client::dispatchOK(QMap <QString, QString> cmd){
+    auto comando = cmd.find("MEX");
+
+    if(comando.value()==" connesso a db con utente: "){
+        this->connectedDB=true;
+    }
+
+    else if(comando.value()=="login effettuato"){
+        QMessageBox Messaggio;
+        Messaggio.information(0,"Login","Logged in successfully");
+        Messaggio.setFixedSize(500,200);
+
+        this->logged=true;
+    }
+
+    else if(comando.value()=="logout effettuato"){
+        QMessageBox Messaggio;
+        Messaggio.information(0,"Logout","Logged out successfully");
+        Messaggio.setFixedSize(500,200);
+
+        connect(this,SIGNAL(deleteListSig()),this->parent(),SLOT(deleteListSlot()));
+        emit deleteListSig();
+
+        this->logged=false;
+
+    }
+
+    else if(comando.value()=="registrazione completata"){
+        QMap<QString,QString> LOGCMD;
+        LOGCMD.insert(CMD,LOGIN);
+        LOGCMD.insert("username",tempUser);
+        LOGCMD.insert("password",tempPass);
+
+        this->sendMsg(cmd);
+
+    }
+}
+
+void Client::dispatchERR(QMap <QString,QString>cmd){
+    auto comando = cmd.find("MEX");
+
+    if(comando.value()=="impossibile connettersi al db"){
+        QMessageBox Messaggio;
+        Messaggio.critical(0,"DB ERROR",comando.value());
+        Messaggio.setFixedSize(500,200);
+    }
+
+    if(comando.value()=="login fallito, user o password errati"){
+        QMessageBox Messaggio;
+        Messaggio.information(0,"Login Error", comando.value());
+        Messaggio.setFixedSize(500,200);
+
+        LoginDialog* loginDialog = new LoginDialog( );
+        connect( loginDialog, SIGNAL (acceptLogin(QString&,QString&)), this, SLOT (handleLogin(QString&,QString&)) );
+        loginDialog->exec();
+    }
+
+    if(comando.value()=="logout fallito"){
+        QMessageBox Messaggio;
+        Messaggio.information(0,"Logout", comando.value());
+        Messaggio.setFixedSize(500,200);
+
+    }
+
+    if(comando.value()=="Registrazione annullata, user già in uso o impossibile aggiungerlo"){
+        QMessageBox Messaggio;
+        Messaggio.information(0,"Logout", comando.value());
+        Messaggio.setFixedSize(500,200);
+
+        RegisterDialog* registerdialog = new RegisterDialog( );
+        connect( registerdialog, SIGNAL (acceptRegistration(QString&,QString&)), this, SLOT (handleRegistration(QString&,QString&)) );
+        registerdialog->exec();
+
+    }
+}
+
+void Client::handleBrowse(QMap<QString,QString> cmd){
+    BrowseWindow *b= new BrowseWindow();
+    b->exec();
+
+    QString delimiter="==>";
+    connect(b, SIGNAL(openFileSignal(QString&)),this, SLOT(remoteOpen(QString&)));
+    QList<QString> listanomi,listaID;
+    int i=0;
+
+    /****** creo una mappa MAP <DOCID, FILENAME> e poi aggiungo la scelta alla finestra come docid+filename,
+     ******  in modo che quando mi viene ritornata la scelta ho l'informazione sull id e sul nome
+     ******  ed evito di avere duplicati nella tendina della scelta *****/
+
+    foreach(QString s, cmd.keys()){i++; if(s=="filename"+QString::number(i)){ listanomi.push_back(cmd.value(s)); } }
+    i=0;
+    foreach(QString s, cmd.keys()){i++; if(s=="docID"+QString::number(i)){ listaID.push_back(cmd.value(s)); } }
+
+
+    for(int j=0; j<i; j++){
+        files.insert(listaID[j],listanomi[j]);
+    }
+
+
+    foreach(QString s, cmd.keys()){
+        QString temp=s+delimiter+cmd.value(s);
+        b->addScelta(temp);
+    }
+
+    b->exec();
+}
+
+void Client::inserimento(QMap<QString,QString> cmd){
+    QString user=cmd.find("username").value();
+    int posX=cmd.find("posX").value().toInt();
+    int posY=cmd.find("posX").value().toInt();
+    char c=cmd.find("char").value().at(0).toLatin1();
+
+    if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; }
+
+    emit spostaCursSignal(posX,posY,c,user);
+}
+
+void Client::spostaCursori(QMap <QString,QString>cmd){
+    QString user=cmd.find("username").value();
+    int posX=cmd.find("posX").value().toInt();
+    int posY=cmd.find("posX").value().toInt();
+    char c='\0';
+
+    if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; }
+
+    emit spostaCursSignal(posX,posY,c,user);
 }
 
 /*********************************************************************************************************
@@ -113,12 +273,20 @@ void Client::connected(){
 
 void Client::disconnected(){
     qDebug()<<"Disconnesso dal server\n";
+    this->connectedDB=false;
 }
 
 void Client::handleLogin(QString& username, QString& password){
 
+    int i=1,j=2;
+    QString s="pippo";
+    char c='\x8';
+
+    emit spostaCursSignal(i,j,c,s);
+
+
     QMap<QString, QString> comando;
-    if(socket->state() != QTcpSocket::ConnectedState){
+    if(socket->state() != QTcpSocket::ConnectedState || !connectedDB){
         QMessageBox Messaggio;
         Messaggio.critical(0,"Login Error","User not connected to the server");
         Messaggio.setFixedSize(500,200);
@@ -135,6 +303,13 @@ void Client::handleLogin(QString& username, QString& password){
 
 void Client::handleLogout(){
 
+    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
+        QMessageBox Messaggio;
+        Messaggio.critical(0,"Logout Error","User not connected or not logged to the server");
+        Messaggio.setFixedSize(500,200);
+        return;
+    }
+
     QMap<QString, QString> comando;
 
     comando.insert("CMD", LOGOUT);
@@ -146,18 +321,29 @@ void Client::handleLogout(){
 
 void Client::handleRegistration(QString& username, QString& password){
 
+    if(socket->state() != QTcpSocket::ConnectedState || !connectedDB){
+        QMessageBox Messaggio;
+        Messaggio.critical(0,"Registration Error","User not connected to the server");
+        Messaggio.setFixedSize(500,200);
+        return;
+    }
+
     QMap<QString, QString> comando;
 
     comando.insert("CMD", LOGIN);
     comando.insert("username", username);
     comando.insert("password", password);
+
+    tempUser=username;
+    tempPass=password;
+
     qDebug()<<comando;
     this->sendMsg(comando);
 }
 
 void Client::handleMyCursorChange(int& posX,int& posY){
 
-    if(!logged){return;}
+    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
 
     QMap<QString, QString> comando;
 
@@ -169,6 +355,72 @@ void Client::handleMyCursorChange(int& posX,int& posY){
     this->sendMsg(comando);
 }
 
+void Client::remoteOpen(QString& name){
+
+    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
+        QMessageBox Messaggio;
+        Messaggio.critical(0,"Network Error","User not connected or not logged to the server");
+        Messaggio.setFixedSize(500,200);
+        return;
+    }
+
+    QMap<QString, QString> comando;
+    QString delimiter="==>";
+
+    /****** name contiene docID==>filename, qui lo splitto nelle due stringhe e mando il messaggio ********/
+
+    int pos = name.indexOf(delimiter);
+    int pos2 = pos+delimiter.size();
+
+    QString docID=name.mid(0,pos);
+    QString filename=name.mid( pos2 , name.size()-pos2 );
+
+    comando.insert("CMD","OPEN-FILE");
+    comando.insert("username",username);
+    comando.insert("doc",docID);
+    comando.insert("filename",filename);
+
+    sendMsg(comando);
+}
+
+void Client::remoteAdd(QString& name){
+    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
+        QMessageBox Messaggio;
+        Messaggio.critical(0,"Network Error","User not connected or not logged to the server");
+        Messaggio.setFixedSize(500,200);
+        return;
+    }
+
+    QMap<QString, QString> comando;
+    QString delimiter="==>";
+
+    /****** name contiene docID==>filename, qui lo splitto nelle due stringhe e mando il messaggio ********/
+
+    int pos = name.indexOf(delimiter);
+    int pos2 = pos+delimiter.size();
+
+    QString docID=name.mid(0,pos);
+    QString filename=name.mid( pos2 , name.size()-pos2 );
+
+    comando.insert("CMD","ADD-File");
+    comando.insert("username",username);
+    comando.insert("filename",filename);
+
+    sendMsg(comando);
+}
+
+void Client::remoteInsert(QChar& c, int posx, int posy){
+
+    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
+
+    QMap<QString,QString> cmd;
+    cmd.insert("CMD", REM_IN);
+    cmd.insert("char", c);
+    cmd.insert("cursor", QString::number(posx));
+    cmd.insert("index", QString::number(posy));
+    cmd.insert("username",username);
+    cmd.insert("docid",docID);
+}
 
 void Client::readyRead(){
     disconnect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));  // disconnetto lo slot cosi da non avere più chiamate nello stesso

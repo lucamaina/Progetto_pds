@@ -142,7 +142,7 @@ bool db::userReg(utente &user)
     res = this->query(queryREG, values);
     // verifica res
     this->myDb.commit();
-    return false;
+    return true;
 }
 
 bool db::userLogOut(utente &user)

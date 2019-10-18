@@ -45,14 +45,17 @@ void utente::setSocket(QTcpSocket *sock)
 
 bool utente::prepareUtente(QMap<QString, QString> map)
 {
+    QCryptographicHash hash(QCryptographicHash::Sha3_256);
     if (map.empty()){   return false;   }
     if (!map.contains(UNAME) || !map.contains(PASS)){   return false;   }
     QString nametmp = map.values(UNAME).first();
     if (nametmp.isEmpty()) return false;
     QString passtmp = map.values(PASS).first();
+    QString passHash = hash.hash(passtmp.toUtf8(), QCryptographicHash::Sha3_256);
+
     if (passtmp.isEmpty()) return false;
     this->username = nametmp;
-    this->password = passtmp;
+    this->password = passHash;
 
     if (map.contains(NICK) && !map.values(UNAME).first().isEmpty()){
         QString nicktmp = map.values(UNAME).first();

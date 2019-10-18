@@ -88,6 +88,13 @@ void LoginDialog::slotAcceptLogin(){
  QString password = editPassword->text();
  int index = comboUsername->currentIndex();
 
+ if(password.size()==0 || username.size()==0){
+     QMessageBox q;
+     q.critical(0,"Registration Error","Please, be sure to fill every box!");
+     q.setFixedSize(500,200);
+     return;
+    }
+
  emit acceptLogin( username, // current username
  password // current password
  );

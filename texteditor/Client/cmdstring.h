@@ -1,36 +1,72 @@
 #ifndef CMDSTRING_H
 #define CMDSTRING_H
 
-#define INIT "<INIT>"
+/****************************************************************************
+ * nomi dei comandi definiti ************************************************/
+#define INIT "<INIT>"               // token di inizio messaggio
+#define CMD "CMD"
+
 #define CONN "CONNECT"
+#define DISC "DISCONNETC"
 #define LOGIN "LOG-IN"
 #define LOGOUT "LOG-OUT"
-
 #define REG "REGISTER"
-#define REM_IN "REMOTE_INSERT"
-#define REM_DEL "REMOTE_DELETE"
-#define DISC "DISCONNETC"
+
+#define REM_IN "REMOTE-INSERT"
+#define REM_DEL "REMOTE-DELETE"
+
 #define FILES "FILE"
-#define ADD_FILE "ADD_FILE"
-#define CMD "CMD"
+#define ADD_FILE "ADD-FILE"
+#define OPEN_FILE "OPEN-FILE"
+#define REMOVE_FILE "REMOVE-FILE"
+
+#define FBODY "FILE-BODY"
+#define BROWS "BROWS"
 #define CRS "CURSOR"
 
-#define INIT_DIM 6
-#define LEN_NUM 8
+#define OK "OK"
+#define ERR "ERR"
 
+
+/****************************************************************************
+ * identificatori di utenti e files definiti ********************************/
 #define UNAME "username"
 #define NICK "nickname"
 #define PASS "password"
 #define FNAME "filename"
+#define DOCID "docid"
 
-#define queryLOGIN "SELECT connesso, NickName FROM utenti WHERE UserName = ? AND Password = ?;"
-#define queryUpdateLOGIN "UPDATE utenti SET connesso = '1' WHERE UserName = :UserName;"
-#define queryLOGOUT "UPDATE utenti SET connesso = '0' WHERE UserName = :UserName;"
-#define queryREG "INSERT INTO utenti(UserName, NickName, Password) VALUE (:UserName, :NickName, :Password);"
-#define queryPreReg "SELECT Count(*) FROM utenti WHERE UserName = :UserName AND Password = :Password FOR UPDATE;"
+#define CAR "char"
+#define IDX "index"
+#define DIMTOT "dimtot"
+#define BODY "body"
 
-#define queryPROVA "SELECT connesso FROM utenti where UserName = 'asd' AND Password = '1' FOR UPDATE;"
-#define queryP "SELECT connesso FROM utenti where UserName = ?;"
+#define MEX "msg"
+
+
+
+/****************************************************************************
+ * messaggi standard ********************************************************/
+#define CONN_ERR "error - connection to db not working"
+#define CONN_OK "ok - connection to db work"
+
+#define LOGIN_ERR "error - login failed"
+#define LOGIN_OK "ok - login success"
+
+#define LOGOUT_ERR "error - logout failed"
+#define LOGOUT_OK "ok - logout success"
+
+#define REG_ERR "error - registration failed"
+#define REG_OK "ok - registration success"
+
+#define FILE_ERR "error - user cannot open file"
+#define FILE_OK "ok - file open"
+
+
+/****************************************************************************
+ * dimensioni utili *********************************************************/
+#define INIT_DIM 6
+#define LEN_NUM 8
 
 
 #endif // CMDSTRING_H

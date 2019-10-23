@@ -10,6 +10,6 @@ int main(int argc, char *argv[])
     qDebug() << "Server texteditor distribuito";
 
     server_main* server = new server_main();
-    qDebug() << server;
+    (void) server; // suppress warning of non used variable
     return a.exec();
 }

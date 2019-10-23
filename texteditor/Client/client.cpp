@@ -131,24 +131,30 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
     //TODO
 }
 
-void Client::dispatchOK(QMap <QString, QString> cmd){
-    auto comando = cmd.find("MEX");
 
-    if(comando.value()==" connesso a db con utente: "){
+/**
+ * @brief Client::dispatchOK
+ * @param cmd
+ */
+//
+void Client::dispatchOK(QMap <QString, QString> cmd){
+    auto comando = cmd.find(MEX);
+
+    if(comando.value()== CONN_OK){
         this->connectedDB=true;
     }
 
-    else if(comando.value()=="login effettuato"){
+    else if(comando.value()== LOGIN_OK){
         QMessageBox Messaggio;
-        Messaggio.information(0,"Login","Logged in successfully");
+        Messaggio.information(nullptr,"Login","Logged in successfully");
         Messaggio.setFixedSize(500,200);
 
         this->logged=true;
     }
 
-    else if(comando.value()=="logout effettuato"){
+    else if(comando.value()== LOGOUT_OK){
         QMessageBox Messaggio;
-        Messaggio.information(0,"Logout","Logged out successfully");
+        Messaggio.information(nullptr,"Logout","Logged out successfully");
         Messaggio.setFixedSize(500,200);
 
         connect(this,SIGNAL(deleteListSig()),this->parent(),SLOT(deleteListSlot()));
@@ -158,7 +164,7 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
 
     }
 
-    else if(comando.value()=="registrazione completata"){
+    else if(comando.value()== REG_OK){
         QMap<QString,QString> LOGCMD;
         LOGCMD.insert(CMD,LOGIN);
         LOGCMD.insert("username",tempUser);
@@ -170,17 +176,17 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
 }
 
 void Client::dispatchERR(QMap <QString,QString>cmd){
-    auto comando = cmd.find("MEX");
+    auto comando = cmd.find(MEX);
 
-    if(comando.value()=="impossibile connettersi al db"){
+    if(comando.value()== CONN_ERR){
         QMessageBox Messaggio;
-        Messaggio.critical(0,"DB ERROR",comando.value());
+        Messaggio.critical(nullptr,"DB ERROR",comando.value());
         Messaggio.setFixedSize(500,200);
     }
 
-    if(comando.value()=="login fallito, user o password errati"){
+    if(comando.value()== LOGIN_ERR){
         QMessageBox Messaggio;
-        Messaggio.information(0,"Login Error", comando.value());
+        Messaggio.information(nullptr,"Login Error", comando.value());
         Messaggio.setFixedSize(500,200);
 
         LoginDialog* loginDialog = new LoginDialog( );
@@ -188,16 +194,16 @@ void Client::dispatchERR(QMap <QString,QString>cmd){
         loginDialog->exec();
     }
 
-    if(comando.value()=="logout fallito"){
+    if(comando.value()== LOGOUT_ERR){
         QMessageBox Messaggio;
-        Messaggio.information(0,"Logout", comando.value());
+        Messaggio.information(nullptr,"Logout", comando.value());
         Messaggio.setFixedSize(500,200);
 
     }
 
-    if(comando.value()=="Registrazione annullata, user già in uso o impossibile aggiungerlo"){
+    if(comando.value()== REG_ERR){
         QMessageBox Messaggio;
-        Messaggio.information(0,"Logout", comando.value());
+        Messaggio.information(nullptr,"Logout", comando.value());
         Messaggio.setFixedSize(500,200);
 
         RegisterDialog* registerdialog = new RegisterDialog( );
@@ -288,7 +294,7 @@ void Client::handleLogin(QString& username, QString& password){
     QMap<QString, QString> comando;
     if(socket->state() != QTcpSocket::ConnectedState || !connectedDB){
         QMessageBox Messaggio;
-        Messaggio.critical(0,"Login Error","User not connected to the server");
+        Messaggio.critical(nullptr,"Login Error","User not connected to the server");
         Messaggio.setFixedSize(500,200);
         return;
     }
@@ -305,7 +311,7 @@ void Client::handleLogout(){
 
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
         QMessageBox Messaggio;
-        Messaggio.critical(0,"Logout Error","User not connected or not logged to the server");
+        Messaggio.critical(nullptr,"Logout Error","User not connected or not logged to the server");
         Messaggio.setFixedSize(500,200);
         return;
     }
@@ -323,7 +329,7 @@ void Client::handleRegistration(QString& username, QString& password){
 
     if(socket->state() != QTcpSocket::ConnectedState || !connectedDB){
         QMessageBox Messaggio;
-        Messaggio.critical(0,"Registration Error","User not connected to the server");
+        Messaggio.critical(nullptr,"Registration Error","User not connected to the server");
         Messaggio.setFixedSize(500,200);
         return;
     }
@@ -359,7 +365,7 @@ void Client::remoteOpen(QString& name){
 
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
         QMessageBox Messaggio;
-        Messaggio.critical(0,"Network Error","User not connected or not logged to the server");
+        Messaggio.critical(nullptr,"Network Error","User not connected or not logged to the server");
         Messaggio.setFixedSize(500,200);
         return;
     }
@@ -386,7 +392,7 @@ void Client::remoteOpen(QString& name){
 void Client::remoteAdd(QString& name){
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
         QMessageBox Messaggio;
-        Messaggio.critical(0,"Network Error","User not connected or not logged to the server");
+        Messaggio.critical(nullptr,"Network Error","User not connected or not logged to the server");
         Messaggio.setFixedSize(500,200);
         return;
     }

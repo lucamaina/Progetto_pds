@@ -193,7 +193,15 @@ utente: asd
 
 utente: qwe
 <INIT>00000039<?xml version="1.0" encoding="UTF-8"?><CONNECT></CONNECT>
-<INIT>00000066<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>qwe</username><password>10</password></LOG-IN>		
+<INIT>00000067<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>user</username><password>10</password></LOG-IN>		
 <INIT>00000082<?xml version="1.0" encoding="UTF-8"?><OPEN-FILE><username>qwe</username><docid>1</docid><filename>file.txt</filename></OPEN-FILE>
 <INIT>00000073<?xml version="1.0" encoding="UTF-8"?><REMOTE-INSERT><char>b</char><index>1</index><docid>2</docid></REMOTE-INSERT>			
 	
+	
+<INIT>00000089<?xml version="1.0" encoding="UTF-8"?><REGISTER><username>user</username><nickname>nick_name</nickname><password>10</password></REGISTER>
+<INIT>00000087<?xml version="1.0" encoding="UTF-8"?><REGISTER><username>asd</username><nickname>nick_name</nickname><password>1</password></REGISTER>
+<INIT>00000087<?xml version="1.0" encoding="UTF-8"?><REGISTER><username>qwe</username><nickname>nick_name</nickname><password>2</password></REGISTER>
+
+
+dd121e36961a04627eacff629765dd35
+dd121e36961a04627eacff629765dd3528471ed745c1e32222db4a8a5f3421c4

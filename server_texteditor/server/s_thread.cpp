@@ -103,7 +103,7 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
         this->connectDB();
     } else if (comando.value() == LOGIN) {
         this->loginDB(cmd);
-    } else if (comando.value() == LOGOFF) {
+    } else if (comando.value() == LOGOUT) {
         this->logoffDB(cmd);
     } else if (comando.value() == REG) {
         this->registerDB(cmd);
@@ -117,7 +117,7 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
         this->browsFile(cmd);
     } else if (comando.value() == OPEN_FILE) {
         this->openFile(cmd);
-    } else if (comando.value() == REM_IN || comando.value() == REM_DEL) {
+    } else if (comando.value() == REM_IN || comando.value() == REM_DEL || comando.value() == CRS) {
     this->sendMsg(cmd);
     }
 }
@@ -222,12 +222,12 @@ void s_thread::connectDB()
         if (conn->conn() == false){
             // ritorna messaggio al client di fallimento
             risp.insert(CMD, ERR);
-            risp.insert(MEX,"impossibile connettersi al db");
+            risp.insert(MEX,CONN_ERR);
             logStr = QString::number(this->sockID) + "non connesso a db con utente: ";
         } else {
             // messaggio di successo al client
             risp.insert(CMD, OK);
-            risp.insert(MEX,"connesso al db");
+            risp.insert(MEX,CONN_OK);
 
             logStr = QString::number(this->sockID) + " connesso a db con utente: ";
         }
@@ -251,12 +251,12 @@ void s_thread::loginDB(QMap<QString, QString> &comando){
     QString logStr;
     if (this->conn->userLogin(*user) ){
         risp.insert(CMD, OK);
-        risp.insert(MEX,"login effettuato");
+        risp.insert(MEX,LOGIN_OK);
         logStr = QString::number(this->sockID) + " loggato a db con utente: " + user->getUsername();
         this->user->prepareUtente(comando, true);
     } else {
         risp.insert(CMD, ERR);
-        risp.insert(MEX,"login fallito, user o password errati");
+        risp.insert(MEX,LOGIN_ERR);
         logStr = QString::number(this->sockID) + " non loggato a db con utente: ";
         this->user = nullptr;
     }
@@ -279,11 +279,11 @@ void s_thread::logoffDB(QMap<QString, QString> &comando)
     QString logStr;
     if (this->conn->userLogOut(*user) ){
         risp.insert(CMD, OK);
-        risp.insert(MEX,"logout effettuato");
+        risp.insert(MEX, LOGOUT_OK);
         logStr = QString::number(this->sockID) + " log out a db con utente: " + user->getUsername();
     } else {
         risp.insert(CMD, ERR);
-        risp.insert(MEX,"logout fallito");
+        risp.insert(MEX, LOGOUT_ERR);
         logStr = QString::number(this->sockID) + " non log out a db con utente: " + user->getUsername();
     }
     Logger::getLog().write(logStr);
@@ -297,17 +297,25 @@ void s_thread::registerDB(QMap<QString, QString> &comando){
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();
     }
+
+    if (this->user->isConnected()){
+        QMap<QString, QString> tmpCmd;
+        tmpCmd.insert(CMD, LOGOUT);
+        tmpCmd.insert(UNAME, user->getUsername());
+        tmpCmd.insert(PASS, user->getPass());
+        logoffDB(tmpCmd);
+    }
     this->user->prepareUtente(comando);
     QMap<QString,QString> risp;
 
     QString logStr;
     if (this->conn->userReg(*user) ){
         risp.insert(CMD, OK);
-        risp.insert(MEX,"Registrazione completata");
+        risp.insert(MEX, REG_OK);
         logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + user->getUsername();
     } else {
         risp.insert(CMD, ERR);
-        risp.insert(MEX,"Registrazione annullata, user già in uso o impossibile aggiungerlo");
+        risp.insert(MEX, REG_ERR);
         logStr = QString::number(this->sockID) + " non viene registrato a db con utente: " + user->getUsername();
     }
     Logger::getLog().write(logStr);
@@ -388,19 +396,25 @@ void s_thread::openFile(QMap<QString, QString> &comando)
         qDebug() <<"connessione non aperta: " << conn->isOpen();
         this->connectDB();
     }
+    QMap<QString,QString> risp;
 
     // accedo a db e verifico file apribile dall'utente
     QString logStr;
     if (this->conn->canUserOpenFile(*user, comando.value(DOCID)) ){
         //clientMEX("File apribile dallì'utente");
+        risp.insert(CMD, OK);
+        risp.insert(MEX, FILE_OK);
         logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + user->getUsername();
     } else {
-        clientMsg("File non apribile dallì'utente");
+        risp.insert(CMD, ERR);
+        risp.insert(MEX, FILE_ERR);
         logStr = QString::number(this->sockID) + " File non apribile dallì'utente: " + user->getUsername();
         Logger::getLog().write(logStr);
+        clientMsg(risp);
         return;
     }
     Logger::getLog().write(logStr);
+    clientMsg(risp);
 
     // aggiungo editor se file presente nello store ma non aperto da altri utenti
     Network &net = Network::getNetwork();

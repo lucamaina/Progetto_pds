@@ -51,7 +51,7 @@ bool utente::prepareUtente(QMap<QString, QString> map)
     QString nametmp = map.values(UNAME).first();
     if (nametmp.isEmpty()) return false;
     QString passtmp = map.values(PASS).first();
-    QString passHash = hash.hash(passtmp.toUtf8(), QCryptographicHash::Sha3_256);
+    QString passHash = hash.hash(passtmp.toUtf8(), QCryptographicHash::Sha3_256).toHex();
 
     if (passtmp.isEmpty()) return false;
     this->username = nametmp;

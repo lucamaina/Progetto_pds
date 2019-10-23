@@ -8,9 +8,10 @@
 
 #include "../database/db.h"
 #include "s_thread.h"
+#include "cmdstring.h"
 #include "../shared_editor/network.h"
 
-#define MAX_THREAD 4
+
 
 class server : public QTcpServer
 {

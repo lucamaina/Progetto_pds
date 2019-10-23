@@ -75,7 +75,7 @@ bool Network::sendToUsers(Message &msg)
 {
     QString sendUser = msg.getUser();
 
-    return false;
+    return true;
 }
 
 /**

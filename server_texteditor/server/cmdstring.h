@@ -6,7 +6,7 @@
 #define INIT "<INIT>"               // token di inizio messaggio
 #define CONN "CONNECT"
 #define LOGIN "LOG-IN"
-#define LOGOFF "LOG-OFF"
+#define LOGOUT "LOG-OUT"
 #define REG "REGISTER"
 
 #define REM_IN "REMOTE-INSERT"
@@ -19,10 +19,12 @@
 #define FBODY "FILE-BODY"
 #define CMD "CMD"
 #define BROWS "BROWS"
-#define CURSOR "CURSOR"
+#define CRS "CURSOR"
 
 #define OK "OK"
 #define ERR "ERR"
+
+#define MAX_THREAD 8
 
 #define PATH "files/"
 
@@ -47,26 +49,24 @@
 #define CUR "cursor"
 
 
+
 /****************************************************************************
- * query prepared definite **************************************************/
-#define queryLOGIN "SELECT connesso, NickName FROM utenti WHERE UserName = ? AND Password = ?;"
-#define queryUpdateLOGIN "UPDATE utenti SET connesso = '1' WHERE UserName = :UserName;"
+ * messaggi standard ********************************************************/
+#define CONN_ERR "error - connection to db not working"
+#define CONN_OK "ok - connection to db work"
 
-#define queryLOGOUT "UPDATE utenti SET connesso = '0' WHERE UserName = :UserName;"
+#define LOGIN_ERR "error - login failed"
+#define LOGIN_OK "ok - login success"
 
-#define queryPreReg "SELECT Count(*) FROM utenti WHERE UserName = :UserName AND Password = :Password FOR UPDATE;"
-#define queryREG "INSERT INTO utenti(UserName, NickName, Password, connesso) VALUE (:UserName, :NickName, :Password, '1');"
+#define LOGOUT_ERR "error - logout failed"
+#define LOGOUT_OK "ok - logout success"
 
-#define queryFILEexist "SELECT Count(*) FROM documenti WHERE FileSysPath = :FileSysPath;"
-#define queryFILEadd "INSERT INTO documenti(FileSysPath, LinkPath) VALUE (:FileSysPath, :LinkPath);"
+#define REG_ERR "error - registration failed"
+#define REG_OK "ok - registration success"
 
-#define queryBROWS "SELECT * FROM documenti WHERE DocId IN (SELECT DocId FROM relazioni WHERE UserName = :UserName);"
-#define queryOPEN "SELECT Count(*) FROM relazioni WHERE UserName = :UserName AND DocId = :DocId;"
+#define FILE_ERR "error - user cannot open file"
+#define FILE_OK "ok - file open"
 
-#define querySetUpUtenti "UPDATE utenti SET connesso = '0';"
-
-#define queryPROVA "SELECT connesso FROM utenti where UserName = 'asd' AND Password = '1' FOR UPDATE;"
-#define queryP "SELECT connesso FROM utenti where UserName = ?;"
 
 
 #endif // CMDSTRING_H

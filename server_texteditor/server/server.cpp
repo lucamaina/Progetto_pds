@@ -4,7 +4,8 @@ server::server(QObject *parent) : QTcpServer (parent)
 {
     Logger &lg = Logger::getLog();
     this->log = &lg;
-    log->write("Costruttore server");
+    log->write("Start server con "+ QString::number(MAX_THREAD) + " thread");
+    qDebug() << "Start server con "+ QString::number(MAX_THREAD) + " thread";
     mioDB = new db(1);
     if (!mioDB->conn()){
         log->write("Impossibilile aprire db");

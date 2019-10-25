@@ -125,6 +125,7 @@ TextEdit::TextEdit(QWidget *parent)
     setCentralWidget(centrale);
     miolayout->addWidget(list);
 
+    connect(this->list, SIGNAL(itemClicked(QListWidgetItem*)),this,SLOT(userListClicked(QListWidgetItem*)));
     //this->layout()->addWidget(list);
 
     Evidenziatore = new Highlighter(textEdit->document());
@@ -214,17 +215,25 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
     if (obj == this->textEdit) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *e = static_cast<QKeyEvent*>(event);
-
-            if(e->text()==""){return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
-            //if(e->key()==16777219){ qDebug()<<"bellaaaaaaa"; return false;} // PULSANTE BACKSPACE CHIAMA CANCELLAZIONE REMOTA
-
-            QChar c = e->text().front();
             int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
             int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
+
+            if(e->text()==""){ return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
+
+            if(e->key()==16777219 || e->key()==16777223){
+                QChar c=e->key();
+
+                this->client->remoteDelete(c,posx,posy);    // PULSANTE BACKSPACE CHIAMA CANCELLAZIONE REMOTA
+                return false;
+            }
+
+            QChar c = e->text().front();
 
             this->client->remoteInsert(c,posx,posy);
 
             qDebug()<<e->text().front();
+            qDebug()<<e->key();
+
 
             this->statusBar()->showMessage(c, 1000);
         }
@@ -893,6 +902,38 @@ void TextEdit::cursorPositionChanged()
     int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
     int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
     qDebug()<<"cursor at:"<<posx<<posy<<"\n";
+
+    /****************** QUA INSERISCO ME STESSO NELLA LISTA DELLE PERSONE ONLINE E DEI CURSORI ************/
+
+    if(!mappaCursori.contains("Me")){
+
+
+        //Se non ho mai visto questo user lo metto nella lista di user
+
+        this->list->addItem("Me");
+        //Se non ho mai visto questo user creo un nuovo Cursore
+        QTextCursor* k=new QTextCursor(textEdit->document());
+        k->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        k->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posx);
+        k->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posy);
+        mappaCursori.insert("Me",k);
+
+
+    }
+
+    else{
+
+        // muovo il cursore
+        QTextCursor *s1= mappaCursori.find("Me").value();
+        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s1->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posx);
+        s1->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posy);
+
+        //qDebug()<<s1->blockNumber()<<s1->positionInBlock();
+    }
+
+
+
     emit cursorChanged(posx,posy);
     //statusBar()->showMessage(str, 0);
     /*
@@ -975,7 +1016,7 @@ void TextEdit::spostaCursor(int& posX,int& posY,char& car ,QString& user){ //ATT
 
         s->insertText(c);
 
-        textEdit->setTextCursor(* mappaCursori.find(user).value()); //Rende visibile il cursore nel textedit (DEBUG)
+        //textEdit->setTextCursor(* mappaCursori.find(user).value()); //Rende visibile il cursore nel textedit (DEBUG)
 
     }
 
@@ -996,4 +1037,76 @@ void TextEdit::deleteListSlot(){
    while(this->list->count()>0){
        delete this->list->takeItem(0);
    }
+}
+
+void TextEdit::userListClicked(QListWidgetItem* item){
+    //rendo visibile il cursore appena cliccato
+
+    QString lalla=item->text();
+    //
+    qDebug()<<lalla;
+
+    textEdit->setFocus(); //rimette il focus al widget che fa text editor altrimenti scompare il cursore
+
+    if(mappaCursori.contains(lalla)){
+        textEdit->setTextCursor(* mappaCursori.find(lalla).value());
+        //qDebug()<<mappaCursori.find(lalla).value()->positionInBlock();
+        //qDebug()<<mappaCursori.find(lalla).value()->blockNumber();
+
+
+    }
+    else{ qDebug()<<"errore utente non trovato";}
+}
+
+void TextEdit::cancellaAtCursor(int& posX,int& posY,char& car ,QString& user){
+
+    if(!mappaCursori.contains(user)){
+
+
+        //Se non ho mai visto questo user lo metto nella lista di user
+
+        this->list->addItem(user);
+        //Se non ho mai visto questo user creo un nuovo Cursore
+
+        mappaCursori.insert(user,new QTextCursor(textEdit->document()));
+        //muovo il cursore
+        QTextCursor *s= mappaCursori.find(user).value();
+        s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
+        s->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
+
+
+        if(car=='\x3'){
+            s->deletePreviousChar();
+        }
+
+        else if(car=='\x7'){
+            s->deleteChar();
+        }
+
+
+        //textEdit->setTextCursor(* mappaCursori.find(user).value()); //Rende visibile il cursore nel textedit (DEBUG)
+
+    }
+
+    else{
+
+        // muovo il cursore
+        QTextCursor *s1= mappaCursori.find(user).value();
+        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s1->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
+        s1->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
+
+        if(car=='\x3'){
+            s1->deletePreviousChar();
+        }
+
+        else if(car=='\x7'){
+            s1->deleteChar();
+        }
+
+    }
+
+
+
 }

@@ -18,6 +18,7 @@ Client::Client(QObject *parent) : QObject(parent)
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
     connect(this, SIGNAL(spostaCursSignal(int&,int&,char&,QString&)),this->parent(),SLOT(spostaCursor(int&,int&,char&,QString&)));
+    connect(this, SIGNAL(cancellaSignal(int&,int&,char&,QString&)),this->parent(),SLOT(cancellaAtCursor(int&,int&,char&,QString&)));
 
 
 
@@ -246,6 +247,10 @@ void Client::inserimento(QMap<QString,QString> cmd){
 
     if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; }
 
+    if(c=='\x3' || c=='\x7'){
+        emit cancellaSignal(posX,posY,c,user);
+    }
+
     emit spostaCursSignal(posX,posY,c,user);
 }
 
@@ -415,6 +420,19 @@ void Client::remoteInsert(QChar& c, int posx, int posy){
 
     QMap<QString,QString> cmd;
     cmd.insert("CMD", REM_IN);
+    cmd.insert("char", c);
+    cmd.insert("cursor", QString::number(posx));
+    cmd.insert("index", QString::number(posy));
+    cmd.insert("username",username);
+    cmd.insert("docid",docID);
+}
+
+void Client::remoteDelete(QChar& c, int posx, int posy){
+
+    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
+
+    QMap<QString,QString> cmd;
+    cmd.insert("CMD", REM_DEL);
     cmd.insert("char", c);
     cmd.insert("cursor", QString::number(posx));
     cmd.insert("index", QString::number(posy));

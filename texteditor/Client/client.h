@@ -19,10 +19,12 @@ public:
     explicit Client(QObject *parent = nullptr);
     void handleBrowse(QMap<QString,QString> cmd);
     void remoteInsert(QChar& c, int posx, int posy);
+    void remoteDelete(QChar& c, int posx, int posy);
     void inserimento(QMap<QString,QString> cmd);
 signals:
 
     void spostaCursSignal(int& posX, int& posY,char& car, QString& user);
+    void cancellaSignal(int& posX, int& posY,char& car, QString& user);
     void deleteListSig(); //cancella la lista di utenti online dal widget
 
 public slots:

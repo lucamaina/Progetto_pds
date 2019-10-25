@@ -93,7 +93,9 @@ private slots:
 
     /*************** Comandi per gestione cursore e caratteri **************/
     void spostaCursor(int& posX,int& posY,char& car,QString& user); //ATTENZIONE: questo oltre al cursore gestisce inserimento caratteri
+    void cancellaAtCursor(int& posX,int& posY,char& car,QString& user);
     void deleteListSlot();
+    void userListClicked(QListWidgetItem* item);
 
     /*************** Comandi per gestione file remoti **************/
     void remoteBrows();

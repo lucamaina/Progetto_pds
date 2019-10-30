@@ -41,7 +41,7 @@ bool Network::createEditor(QString fileId, QString nomeFile, utente &user)
     // verifica nome file non sia già presente
     if (this->editorMap.contains(fileId)){
         // file già presente, non posso crearlo
-        throw std::exception();
+        return false;
     }
     Editor *ed = new Editor(fileId, nomeFile);
     ed->addUser(user);

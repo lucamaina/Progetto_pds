@@ -23,7 +23,6 @@ private:
     QString DocId;      // id usato nel db
     QFile *file;
     int refCount;
-    // QVector<Symbol> *symVec;
     QMap<double, Symbol> symMap;
     QVector<utente> userList;
     QMap<QString, QTcpSocket*> sendList;
@@ -39,6 +38,7 @@ public:
     bool sendBody(QTcpSocket *sock);
 
     QString mapToSend();
+    bool loadFile(const QString &nomeUser, const int dimFile);        // leggo socket dell'utente e carico il file
     ~Editor();
 
     /****************************************************************************

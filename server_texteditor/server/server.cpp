@@ -13,7 +13,7 @@ server::server(QObject *parent) : QTcpServer (parent)
         return;
     }
     mioDB->setUpUtenti();
-    tVec.resize(MAX_THREAD);
+    tVec.reserve(MAX_THREAD);
     tVec.clear();
 }
 
@@ -48,8 +48,10 @@ void server::incomingConnection(int socketID)
         n = numThread;
 
         qDebug() << "Connecting from " << socketID << " thread num: " << n;
-        s_thread *newThread = new s_thread(socketID);
-        tVec.push_back(newThread);
+
+        tVec.push_back( new s_thread(socketID) );
+        s_thread *newThread = tVec.last();
+
         connect(newThread, &s_thread::deleteThreadSig, this, &server::deleteThread, Qt::ConnectionType::DirectConnection);
         // TODO exception
 

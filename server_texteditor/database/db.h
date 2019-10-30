@@ -27,6 +27,8 @@ asdq
 #define queryPROVA "SELECT connesso FROM utenti where UserName = 'asd' AND Password = '1' FOR UPDATE;"
 #define queryP "SELECT connesso FROM utenti where UserName = ?;"
 
+#define queryGetDocId "SELECT MAX(DocId) FROM relazioni as r, documenti as d WHERE r.DocId = d.DocId AND r.UserName = :UerName AND d.FileSysPath = :nomeFile;"
+
 
 #include <QObject>
 #include <QtSql>
@@ -52,6 +54,8 @@ public:
     bool addFile(utente & user, QString nomefile);
     bool canUserOpenFile(utente & user, QString nomefile);
     QMap<QString, QString> browsFile(utente & user);
+    QString getDocId(const QString nomeFile, const QString nomeUtente);
+
 
 signals:
 

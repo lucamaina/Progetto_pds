@@ -81,7 +81,8 @@ Formato messaggi ricevuti dal server.
 <?xml version="1.0" encoding="UTF-8"?>
 <REMOTE-INSERT>
 	<char>a</char>
-	<cursor>num1</cursor>	// da verificare
+	<posX>num1</posX>	
+	<posy>num2</posy>
 	<index>num2</index>
 	<username>val1</username>
 	<docid>val2</docid>
@@ -102,15 +103,8 @@ Formato messaggi ricevuti dal server.
 <?xml version="1.0" encoding="UTF-8"?>
 <FILE-BODY>
 	<dimtot>111111</dimtot>
-	<dimpack>111111</dimpack>
-	<body>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</body>
-</FILE-BODY>
-
-
-// nuovo formato
-<?xml version="1.0" encoding="UTF-8"?>
-<FILE-BODY>
-	<dimtot>111111</dimtot>
+	<filename>nome</filename>
+	
 </FILE-BODY>
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
@@ -122,19 +116,21 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 // messaggio di posizione del cursore
 <?xml version="1.0" encoding="UTF-8"?>
 <CURSOR>
-	<cursor>10</cursor>
+	<posX>10</posX>
+	<posY>2</posY>
 	<docid>111111</docid>
 </CURSOR>
 
 ## risposte del server
 <?xml version="1.0" encoding="UTF-8"?>
 <OK>
-    <mex>val1</mex>
+    <msg>val1</msg>
+	<nickname>nick</nickname>		// per risposta a login e register  
 </OK>
 
 <?xml version="1.0" encoding="UTF-8"?>
 <ERR>
-    <mex>val1</mex>
+    <msg>val1</msg>
 </ERR>
 
 
@@ -156,7 +152,7 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 <INIT>00000073<?xml version="1.0" encoding="UTF-8"?><FILE-BODY><dimtot>00000073</dimtot><body>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</body></FILE-BODY>
 
-
+<INIT>0000006D<?xml version="1.0" encoding="UTF-8"?><FILE-BODY><dimtot>52</dimtot><filename>nome.txt</filename></FILE-BODY>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 		CLIENT			|		SERVER
 ------------------------|----------------------------------		
@@ -195,7 +191,12 @@ utente: qwe
 <INIT>00000039<?xml version="1.0" encoding="UTF-8"?><CONNECT></CONNECT>
 <INIT>00000067<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>user</username><password>10</password></LOG-IN>		
 <INIT>00000082<?xml version="1.0" encoding="UTF-8"?><OPEN-FILE><username>qwe</username><docid>1</docid><filename>file.txt</filename></OPEN-FILE>
-<INIT>00000073<?xml version="1.0" encoding="UTF-8"?><REMOTE-INSERT><char>b</char><index>1</index><docid>2</docid></REMOTE-INSERT>			
+<INIT>00000073<?xml version="1.0" encoding="UTF-8"?><REMOTE-INSERT><char>b</char><index>1</index><docid>2</docid></REMOTE-INSERT>
+
+
+			
+<INIT>00000067<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>user</username><password>10</password></LOG-IN>
+<INIT>0000006D<?xml version="1.0" encoding="UTF-8"?><FILE-BODY><dimtot>52</dimtot><filename>nome.txt</filename></FILE-BODY>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|qwerwerwer
 	
 	
 <INIT>00000089<?xml version="1.0" encoding="UTF-8"?><REGISTER><username>user</username><nickname>nick_name</nickname><password>10</password></REGISTER>

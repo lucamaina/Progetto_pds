@@ -112,6 +112,14 @@ QString Editor::mapToSend()
     return str;
 }
 
+bool Editor::loadFile(const QString &nomeUser, const int dimFile)
+{
+    if (!this->sendList.contains(nomeUser)){    return false;   }
+
+
+    return true;
+}
+
 Editor::~Editor()
 {
     // salva symVec su file

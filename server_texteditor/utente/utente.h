@@ -34,6 +34,11 @@ public:
     bool isConnected(){ return this->isConnect; }
     void setConn(bool setConn);
     QTcpSocket *getSocket() const;
+    void clear(){
+        username = nickname = password = "";
+        isConnect = false;
+        mioSocket = nullptr;
+    }
 
 signals:
 

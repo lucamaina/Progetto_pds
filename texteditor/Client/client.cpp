@@ -422,10 +422,12 @@ void Client::remoteInsert(QChar& c, int posx, int posy){
     QMap<QString,QString> cmd;
     cmd.insert("CMD", REM_IN);
     cmd.insert("char", c);
-    cmd.insert("cursor", QString::number(posx));
-    cmd.insert("index", QString::number(posy));
+    cmd.insert("posX", QString::number(posx));
+    cmd.insert("posY", QString::number(posy));
     cmd.insert("username",username);
     cmd.insert("docid",docID);
+
+    sendMsg(cmd);
 }
 
 void Client::readyRead(){

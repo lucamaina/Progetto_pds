@@ -266,6 +266,19 @@ QMap<QString, QString> db::browsFile(utente &user)
     return risp;
 }
 
+QString db::getDocId(const QString nomeFile, const QString nomeUtente)
+{
+    QVector<QString> values;
+    values.push_back(nomeUtente);
+    values.push_back(nomeFile);
+    QSqlQuery res = this->query(queryGetDocId, values);
+    if (res.first()){
+        QString dociID = res.value(0).toString();
+        return dociID;
+    }
+    return "";
+}
+
 void db::setUpUtenti()
 {
     QSqlQuery res = this->query(querySetUpUtenti);

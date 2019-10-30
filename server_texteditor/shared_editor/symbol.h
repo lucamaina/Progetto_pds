@@ -11,6 +11,7 @@ class Symbol
 private:
     QChar car;
     int cursor;
+    int posX, posY;
     double num, den;
     double index;
     QString userName;           // identifica utente che inserische il carattere

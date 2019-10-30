@@ -38,8 +38,11 @@ private:
     int sockID;
     QTcpSocket *socket = nullptr;
     utente *user = nullptr;
-    QByteArray buffer;
     db *conn;
+
+    // nuova versione ready read
+    QByteArray buffer, command;
+
 
     /****************************************************************************
      * metodi controllo dei comandi ricevuti ************************************/
@@ -62,6 +65,7 @@ private:
     void addFileDB(QMap<QString, QString> &comando);
     void browsFile(QMap<QString, QString> &comando);
     void openFile(QMap<QString, QString> &comando);
+    void loadFile(QMap<QString, QString> &comando);
 
     /****************************************************************************
      * metodi accesso a netowrk *************************************************/

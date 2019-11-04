@@ -52,6 +52,7 @@
 #ifndef TEXTEDIT_H
 #define TEXTEDIT_H
 
+#include <QShortcut>
 #include <BrowseWindow/browsewindow.h>
 #include <QMainWindow>
 #include <QMap>
@@ -84,6 +85,7 @@ public slots:
     void LoginDialog();
     void LogoutDialog();
     void RegisterDialog();
+    void ConnectDialog();
 
 
 protected:
@@ -92,10 +94,12 @@ protected:
 private slots:
 
     /*************** Comandi per gestione cursore e caratteri **************/
-    void spostaCursor(int& posX,int& posY,char& car,QString& user); //ATTENZIONE: questo oltre al cursore gestisce inserimento caratteri
-    void cancellaAtCursor(int& posX,int& posY,char& car,QString& user);
+    void spostaCursor(int& posX,int& posY,int& anchor,char& car,QString& user); //ATTENZIONE: questo oltre al cursore gestisce inserimento caratteri
+    void cancellaAtCursor(int& posX,int& posY,int& anchor,char& car,QString& user);
     void deleteListSlot();
+    void nuovoFile(QString& filename);
     void userListClicked(QListWidgetItem* item);
+    void addMeSlot();
 
     /*************** Comandi per gestione file remoti **************/
     void remoteBrows();
@@ -139,6 +143,7 @@ private:
     void colorChanged(const QColor &c);
     void alignmentChanged(Qt::Alignment a);
 
+    QShortcut* sh;
     QListWidget *list;
     QMap<QString,QTextCursor*> mappaCursori; //mappa con nome utente e relativo cursore;
     QAction* registration;
@@ -181,12 +186,16 @@ private:
 
 private slots:
     bool slot_asd();
+    void goPaste();
 
 
 signals:
     void sig_asd();
-    void cursorChanged (int& posx, int& posy);
+    void cursorChanged (int& posx, int& posy, int& anchor);
     void acceptLogout();
+    void stileTesto(QString& stile);
+    void connectSig();
+    void pasteSig(QString& clipboard);
 };
 
 #endif // TEXTEDIT_H

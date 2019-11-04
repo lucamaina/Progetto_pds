@@ -9,6 +9,7 @@
 #include <QXmlStreamWriter>
 #include <QMessageBox>
 #include <QTextEdit>
+#include "shared_editor/editor.h"
 
 class Client : public QObject
 {
@@ -18,23 +19,32 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = nullptr);
     void handleBrowse(QMap<QString,QString> cmd);
-    void remoteInsert(QChar& c, int posx, int posy);
-    void remoteDelete(QChar& c, int posx, int posy);
+    void remoteInsert(QChar& c, int posx, int posy, int anchor);
+    void remoteDelete(QChar& c, int posx, int posy, int anchor);
     void inserimento(QMap<QString,QString> cmd);
-signals:
+    void nuovoFile(QMap<QString,QString> cmd);
 
-    void spostaCursSignal(int& posX, int& posY,char& car, QString& user);
-    void cancellaSignal(int& posX, int& posY,char& car, QString& user);
+    Editor* remoteFile;
+
+
+signals:
+    void addMe();
+    void spostaCursSignal(int& posX, int& posY, int& anchor, char& car, QString& user);
+    void cancellaSignal(int& posX, int& posY, int& anchor,char& car, QString& user);
     void deleteListSig(); //cancella la lista di utenti online dal widget
+    void cambiaFile(QString& file);
 
 public slots:
     void connected();
     void disconnected();
+    void connectSlot();
     void handleLogin(QString& username, QString& password);
     void handleLogout();
     void handleRegistration(QString& username, QString& password);
+    void handleStile(QString& stile);
     void readyRead();
-    void handleMyCursorChange(int& posX,int& posY);
+    void pasteSlot(QString& clipboard);
+    void handleMyCursorChange(int& posX,int& posY, int& anchor);
     void remoteOpen(QString& name);
     void remoteAdd(QString& name);
     bool sendMsg(QMap<QString, QString> cmd);
@@ -44,6 +54,7 @@ private:
     QMap<QString,QString> files;
     QString username;
     QString docID;
+    QString filename;
     bool logged,connectedDB;
     QTcpSocket* socket;
     QByteArray buffer;

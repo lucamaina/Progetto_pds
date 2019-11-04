@@ -18,7 +18,10 @@ HEADERS         = textedit.h \
     Client/cmdstring.h \
     Highlighter/highlighter.h \
     LoginDialog/logindialog.h \
-    RegisterDialog/registerdialog.h
+    RegisterDialog/registerdialog.h \
+    shared_editor/editor.h \
+    shared_editor/message.h \
+    shared_editor/symbol.h
 
 SOURCES         = textedit.cpp \
                   BrowseWindow/browsewindow.cpp \
@@ -26,7 +29,10 @@ SOURCES         = textedit.cpp \
                   LoginDialog/logindialog.cpp \
                   RegisterDialog/registerdialog.cpp \
                   main.cpp \
-                  Client/client.cpp
+                  Client/client.cpp \
+                  shared_editor/editor.cpp \
+                  shared_editor/message.cpp \
+                  shared_editor/symbol.cpp
 
 RESOURCES += textedit.qrc
 build_all:!build_pass {

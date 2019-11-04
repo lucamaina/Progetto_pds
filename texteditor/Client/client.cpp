@@ -8,6 +8,7 @@ Client::Client(QObject *parent) : QObject(parent)
     logged=false;
     username="";
     docID="";
+    filename="";
     tempUser="";
     tempPass="";
 
@@ -17,9 +18,10 @@ Client::Client(QObject *parent) : QObject(parent)
     connect(socket, &QTcpSocket::connected, this, &Client::connected);
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
-    connect(this, SIGNAL(spostaCursSignal(int&,int&,char&,QString&)),this->parent(),SLOT(spostaCursor(int&,int&,char&,QString&)));
-    connect(this, SIGNAL(cancellaSignal(int&,int&,char&,QString&)),this->parent(),SLOT(cancellaAtCursor(int&,int&,char&,QString&)));
-
+    connect(this, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
+    connect(this, SIGNAL(cancellaSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(cancellaAtCursor(int&,int&,int&,char&,QString&)));
+    connect(this, SIGNAL(cambiaFile(QString&)),this->parent(),SLOT(nuovoFile(QString&)));
+    connect(this, SIGNAL(addMe()),this->parent(),SLOT(addMeSlot()));
 
 
 }
@@ -129,6 +131,11 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
         inserimento(cmd);
 
      }
+
+     else if (comando.value() == FBODY) {
+        nuovoFile(cmd);
+
+     }
     //TODO
 }
 
@@ -144,6 +151,7 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         Messaggio.information(0,"Login","Logged in successfully");
         Messaggio.setFixedSize(500,200);
 
+        emit addMe();
         this->logged=true;
     }
 
@@ -160,14 +168,13 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
     }
 
     else if(comando.value()=="registrazione completata"){
-        QMap<QString,QString> LOGCMD;
-        LOGCMD.insert(CMD,LOGIN);
-        LOGCMD.insert("username",tempUser);
-        LOGCMD.insert("password",tempPass);
+        QMessageBox Messaggio;
+        Messaggio.information(0,"Registration","Registered & Logged in successfully");
+        Messaggio.setFixedSize(500,200);
 
-        this->sendMsg(cmd);
-
+        this->logged=true;
     }
+
 }
 
 void Client::dispatchERR(QMap <QString,QString>cmd){
@@ -239,30 +246,47 @@ void Client::handleBrowse(QMap<QString,QString> cmd){
     b->exec();
 }
 
+void Client::nuovoFile(QMap<QString,QString> cmd){
+
+    int dim=cmd.find("dimtot").value().toInt();
+    QString buffer=cmd.find("body").value();
+
+    this->remoteFile=new Editor(this->docID,this->filename,buffer,username);
+    emit cambiaFile(this->filename);
+
+}
+
+
 void Client::inserimento(QMap<QString,QString> cmd){
     QString user=cmd.find("username").value();
+    int index=cmd.find("index").value().toInt();
     int posX=cmd.find("posX").value().toInt();
-    int posY=cmd.find("posX").value().toInt();
+    int posY=cmd.find("posY").value().toInt();
+    int anchor=cmd.find("anchor").value().toInt();
     char c=cmd.find("char").value().at(0).toLatin1();
 
     if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; }
 
+    this->remoteFile->insertLocal(index,c);
+
     if(c=='\x3' || c=='\x7'){
-        emit cancellaSignal(posX,posY,c,user);
+
+        emit cancellaSignal(posX,posY,anchor,c,user);
     }
 
-    emit spostaCursSignal(posX,posY,c,user);
+    emit spostaCursSignal(posX,posY,anchor,c,user);
 }
 
 void Client::spostaCursori(QMap <QString,QString>cmd){
     QString user=cmd.find("username").value();
     int posX=cmd.find("posX").value().toInt();
     int posY=cmd.find("posX").value().toInt();
+    int anchor=cmd.find("anchor").value().toInt();
     char c='\0';
 
     if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; }
 
-    emit spostaCursSignal(posX,posY,c,user);
+    emit spostaCursSignal(posX,posY,anchor,c,user);
 }
 
 /*********************************************************************************************************
@@ -280,15 +304,34 @@ void Client::disconnected(){
     qDebug()<<"Disconnesso dal server\n";
     this->connectedDB=false;
 }
+void Client::handleStile(QString& stile){
+    QMap<QString, QString> comando;
+
+    comando.insert("stile", stile);
+    qDebug()<<comando;
+
+    this->sendMsg(comando);
+}
+
+void Client::connectSlot(){
+    if(socket->state() != QTcpSocket::ConnectedState || socket == NULL){
+    socket = new QTcpSocket(this);
+    socket->connectToHost(QHostAddress::LocalHost, 2000);
+    }
+}
+
 
 void Client::handleLogin(QString& username, QString& password){
 
-    int i=1,j=2;
+    int i=2,j=0,k=0;
     QString s="pippo";
-    char c='\x8';
+    char c=(char)0;
 
-    emit spostaCursSignal(i,j,c,s);
+//    QString kappa("C:/Users/valer/Desktop/Progetto_pds/texteditor/Client/test.html");
+//    emit cambiaFile(kappa);
 
+    emit spostaCursSignal(i,j,k,c,s);
+    emit addMe();
 
     QMap<QString, QString> comando;
     if(socket->state() != QTcpSocket::ConnectedState || !connectedDB){
@@ -346,7 +389,7 @@ void Client::handleRegistration(QString& username, QString& password){
     this->sendMsg(comando);
 }
 
-void Client::handleMyCursorChange(int& posX,int& posY){
+void Client::handleMyCursorChange(int& posX,int& posY, int& anchor){
 
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
 
@@ -356,6 +399,17 @@ void Client::handleMyCursorChange(int& posX,int& posY){
     comando.insert("username",this->username);
     comando.insert("posX", QString::number(posX) );
     comando.insert("posY", QString::number(posY) );
+    comando.insert("anchor", QString::number(anchor) );
+    qDebug()<<comando;
+    this->sendMsg(comando);
+}
+void Client::pasteSlot(QString& clipboard){
+    //if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
+
+    QMap<QString, QString> comando;
+
+    comando.insert("CMD","PASTE");
+    comando.insert("clipboard",clipboard);
     qDebug()<<comando;
     this->sendMsg(comando);
 }
@@ -377,8 +431,8 @@ void Client::remoteOpen(QString& name){
     int pos = name.indexOf(delimiter);
     int pos2 = pos+delimiter.size();
 
-    QString docID=name.mid(0,pos);
-    QString filename=name.mid( pos2 , name.size()-pos2 );
+    this->docID=name.mid(0,pos);
+    this->filename=name.mid( pos2 , name.size()-pos2 );
 
     comando.insert("CMD","OPEN-FILE");
     comando.insert("username",username);
@@ -404,8 +458,8 @@ void Client::remoteAdd(QString& name){
     int pos = name.indexOf(delimiter);
     int pos2 = pos+delimiter.size();
 
-    QString docID=name.mid(0,pos);
-    QString filename=name.mid( pos2 , name.size()-pos2 );
+    this->docID=name.mid(0,pos);
+    this->filename=name.mid( pos2 , name.size()-pos2 );
 
     comando.insert("CMD","ADD-File");
     comando.insert("username",username);
@@ -414,7 +468,7 @@ void Client::remoteAdd(QString& name){
     sendMsg(comando);
 }
 
-void Client::remoteInsert(QChar& c, int posx, int posy){
+void Client::remoteInsert(QChar& c, int posx, int posy,int anchor){
 
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
 
@@ -423,11 +477,12 @@ void Client::remoteInsert(QChar& c, int posx, int posy){
     cmd.insert("char", c);
     cmd.insert("cursor", QString::number(posx));
     cmd.insert("index", QString::number(posy));
+    cmd.insert("anchor", QString::number(anchor));
     cmd.insert("username",username);
     cmd.insert("docid",docID);
 }
 
-void Client::remoteDelete(QChar& c, int posx, int posy){
+void Client::remoteDelete(QChar& c, int posx, int posy, int anchor){
 
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
 
@@ -436,6 +491,7 @@ void Client::remoteDelete(QChar& c, int posx, int posy){
     cmd.insert("char", c);
     cmd.insert("cursor", QString::number(posx));
     cmd.insert("index", QString::number(posy));
+    cmd.insert("anchor", QString::number(anchor));
     cmd.insert("username",username);
     cmd.insert("docid",docID);
 }

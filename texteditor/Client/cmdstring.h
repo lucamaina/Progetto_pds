@@ -14,6 +14,14 @@
 #define ADD_FILE "ADD_FILE"
 #define CMD "CMD"
 #define CRS "CURSOR"
+#define CAR "char"
+#define IDX "index"
+#define DOCID "docid"
+#define CUR "cursor"
+#define DIMTOT "dimtot"
+#define FBODY "File-Body"
+
+
 
 #define INIT_DIM 6
 #define LEN_NUM 8

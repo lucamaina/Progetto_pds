@@ -259,7 +259,9 @@ void Client::nuovoFile(QMap<QString,QString> cmd){
 
 void Client::inserimento(QMap<QString,QString> cmd){
     QString user=cmd.find("username").value();
-    int index=cmd.find("index").value().toInt();
+    double index=cmd.find("index").value().toInt();
+    QByteArray format=cmd.find("format").value().toUtf8();
+    QTextCharFormat charform = deserialize(format);
     int posX=cmd.find("posX").value().toInt();
     int posY=cmd.find("posY").value().toInt();
     int anchor=cmd.find("anchor").value().toInt();
@@ -296,6 +298,7 @@ void Client::spostaCursori(QMap <QString,QString>cmd){
 void Client::connected(){
     qDebug()<<"Connesso al server\n";
     QMap<QString, QString> comando;
+    this->connectedDB=true;
     comando.insert("CMD", CONN);
     this->sendMsg(comando);
 }
@@ -468,14 +471,34 @@ void Client::remoteAdd(QString& name){
     sendMsg(comando);
 }
 
-void Client::remoteInsert(QChar& c, int posx, int posy,int anchor){
+QByteArray Client::serialize(const QTextCharFormat &format)
+{
+    QByteArray s;
+    QDataStream out(&s,QIODevice::ReadWrite);
+    out <<format;
 
-    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
+    return s;
+}
+
+QTextCharFormat Client::deserialize(QByteArray &s)
+{
+    QTextCharFormat frm;
+    QDataStream out(&s,QIODevice::ReadWrite);
+
+    out >> frm;
+    return frm;
+}
+
+void Client::remoteInsert(QChar& c, QTextCharFormat format, int posx, int posy,int anchor){
+
+    //if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
+
 
     QMap<QString,QString> cmd;
     cmd.insert("CMD", REM_IN);
     cmd.insert("char", c);
     cmd.insert("cursor", QString::number(posx));
+    cmd.insert("format", this->serialize(format));
     cmd.insert("index", QString::number(posy));
     cmd.insert("anchor", QString::number(anchor));
     cmd.insert("username",username);

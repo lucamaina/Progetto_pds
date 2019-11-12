@@ -23,9 +23,6 @@ private:
     QString nomeFile;
     QString DocId;      // id usato nel db
     QFile *file;
-    // QVector<Symbol> *symVec;
-    QMap<double, Symbol> symMap;
-    QVector<Symbol>_symbols;
 
 
 public:
@@ -34,6 +31,7 @@ public:
 
     static Editor& getFile();
     bool loadMap();
+    QMap<double, Symbol> symMap;
 
     QString mapToSend();
     ~Editor();
@@ -44,9 +42,8 @@ public:
     void localDelete(int index);
     bool cursorChange(Message msg);
     bool remoteSend(Message msg);
-    int insertLocal(int index,char value);
-    QVector<int> fsum(int num1, int den1, int num2, int den2);
-    QVector<int> fmed(int num1, int den1, int num2, int den2);
+    double insertLocal(double index,char value);
+    double fmed(double num1, double num2);
 
 
 

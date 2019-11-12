@@ -193,6 +193,8 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this, SIGNAL(stileTesto(QString&)), this->client, SLOT(handleStile(QString&)));
     connect(this, SIGNAL(pasteSig(QString&)),this->client, SLOT(pasteSlot(QString&)));
 
+    this->client->remoteFile=new Editor("1","mio","","io");
+
 }
 
 /*******************************************************************
@@ -221,6 +223,7 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
             int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
             int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
             int anchor=textEdit->textCursor().anchor();
+
             if(e->text()==""){ return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
 
             if(e->key()==16777219 || e->key()==16777223){
@@ -231,8 +234,11 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
             }
 
             QChar c = e->text().front();
-            //qDebug()<<this->client->remoteFile->insertLocal(this->textEdit->textCursor().position(),e->text().front().toLatin1());
-            this->client->remoteInsert(c,posx,posy,anchor);
+            qDebug()<<this->client->remoteFile->insertLocal(this->textEdit->textCursor().position(),e->text().front().toLatin1());
+            qDebug()<<this->client->remoteFile->symMap.keys();
+            QTextCharFormat format = textEdit->textCursor().charFormat();
+            //qDebug()<<format.font();
+            this->client->remoteInsert(c,format,posx,posy,anchor); //INSERIMENTO REMOTO
 
             qDebug()<<e->text().front();
             qDebug()<<e->key();

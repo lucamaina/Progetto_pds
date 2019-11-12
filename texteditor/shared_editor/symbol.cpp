@@ -15,25 +15,6 @@ QMap<QString, QString> Symbol::toMap()
 }
 
 
-int Symbol::getNum() const
-{
-    return num;
-}
-
-void Symbol::setNum(const int &value)
-{
-    num = value;
-}
-
-int Symbol::getDen() const
-{
-    return den;
-}
-
-void Symbol::setDen(const int &value)
-{
-    den = value;
-}
 
 
 QString Symbol::getUserName() const

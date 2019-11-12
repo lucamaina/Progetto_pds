@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QTextEdit>
 #include "shared_editor/editor.h"
+#include <QTextCharFormat>
 
 class Client : public QObject
 {
@@ -19,10 +20,14 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = nullptr);
     void handleBrowse(QMap<QString,QString> cmd);
-    void remoteInsert(QChar& c, int posx, int posy, int anchor);
+    void remoteInsert(QChar& c, QTextCharFormat format, int posx, int posy, int anchor);
     void remoteDelete(QChar& c, int posx, int posy, int anchor);
     void inserimento(QMap<QString,QString> cmd);
     void nuovoFile(QMap<QString,QString> cmd);
+    QByteArray serialize(const QTextCharFormat &format);
+    QTextCharFormat deserialize(QByteArray &s);
+
+
 
     Editor* remoteFile;
 

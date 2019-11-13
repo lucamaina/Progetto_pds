@@ -100,6 +100,7 @@ private slots:
     void nuovoFile(QString& filename);
     void userListClicked(QListWidgetItem* item);
     void addMeSlot();
+    void nuovoStileSlot(QString& stile,QString& param);
 
     /*************** Comandi per gestione file remoti **************/
     void remoteBrows();
@@ -141,7 +142,10 @@ private:
     void mergeFormatOnWordOrSelection(const QTextCharFormat &format);
     void fontChanged(const QFont &f);
     void colorChanged(const QColor &c);
+    void myColorChange(QString& nome);
     void alignmentChanged(Qt::Alignment a);
+    void myTextAlign(QString& a);
+
 
     QShortcut* sh;
     QListWidget *list;
@@ -169,7 +173,7 @@ private:
     QComboBox *comboStyle;
     QFontComboBox *comboFont;
     QComboBox *comboSize;
-
+    bool remoteStile;
     QToolBar *tb;
     QString fileName;
     QTextEdit *textEdit;
@@ -193,7 +197,7 @@ signals:
     void sig_asd();
     void cursorChanged (int& posx, int& posy, int& anchor);
     void acceptLogout();
-    void stileTesto(QString& stile);
+    void stileTesto(QString& stile,QString& param);
     void connectSig();
     void pasteSig(QString& clipboard);
 };

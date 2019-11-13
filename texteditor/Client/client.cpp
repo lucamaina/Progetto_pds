@@ -22,7 +22,7 @@ Client::Client(QObject *parent) : QObject(parent)
     connect(this, SIGNAL(cancellaSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(cancellaAtCursor(int&,int&,int&,char&,QString&)));
     connect(this, SIGNAL(cambiaFile(QString&)),this->parent(),SLOT(nuovoFile(QString&)));
     connect(this, SIGNAL(addMe()),this->parent(),SLOT(addMeSlot()));
-
+    connect(this, SIGNAL(nuovoStile(QString&,QString&)), this->parent(),SLOT(nuovoStileSlot(QString&,QString&)));
 
 }
 
@@ -125,6 +125,10 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
 
      else if(comando.value()=="ERR"){
         dispatchERR(cmd);
+     }
+
+     else if(comando.value()=="STILE"){
+        dispatchStile(cmd);
      }
 
      else if (comando.value() == REM_IN || comando.value() == REM_DEL) {
@@ -291,6 +295,14 @@ void Client::spostaCursori(QMap <QString,QString>cmd){
     emit spostaCursSignal(posX,posY,anchor,c,user);
 }
 
+void Client::dispatchStile(QMap <QString,QString>cmd){
+    QString stile=cmd.find("stile").value();
+    QString param=cmd.find("param").value();
+
+    emit nuovoStile(stile,param);
+}
+
+
 /*********************************************************************************************************
  ************************ public slots *******************************************************************
  *********************************************************************************************************/
@@ -307,10 +319,12 @@ void Client::disconnected(){
     qDebug()<<"Disconnesso dal server\n";
     this->connectedDB=false;
 }
-void Client::handleStile(QString& stile){
+void Client::handleStile(QString& stile,QString& param){
     QMap<QString, QString> comando;
-
+    comando.insert("CMD", "STILE");
     comando.insert("stile", stile);
+    comando.insert("param", param);
+
     qDebug()<<comando;
 
     this->sendMsg(comando);

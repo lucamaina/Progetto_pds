@@ -38,6 +38,7 @@ signals:
     void cancellaSignal(int& posX, int& posY, int& anchor,char& car, QString& user);
     void deleteListSig(); //cancella la lista di utenti online dal widget
     void cambiaFile(QString& file);
+    void nuovoStile(QString& stile,QString& param);
 
 public slots:
     void connected();
@@ -45,8 +46,9 @@ public slots:
     void connectSlot();
     void handleLogin(QString& username, QString& password);
     void handleLogout();
+    void dispatchStile(QMap <QString,QString>cmd);
     void handleRegistration(QString& username, QString& password);
-    void handleStile(QString& stile);
+    void handleStile(QString& stile,QString& param);
     void readyRead();
     void pasteSlot(QString& clipboard);
     void handleMyCursorChange(int& posX,int& posY, int& anchor);

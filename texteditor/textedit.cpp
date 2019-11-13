@@ -125,6 +125,8 @@ TextEdit::TextEdit(QWidget *parent)
     setCentralWidget(centrale);
     miolayout->addWidget(list);
 
+    remoteStile=false;
+
     connect(this->list, SIGNAL(itemClicked(QListWidgetItem*)),this,SLOT(userListClicked(QListWidgetItem*)));
     //this->layout()->addWidget(list);
 
@@ -190,10 +192,10 @@ TextEdit::TextEdit(QWidget *parent)
     this->client= new Client(this);
     connect(this, SIGNAL(cursorChanged(int&,int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&,int&)));
     connect(this->client, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
-    connect(this, SIGNAL(stileTesto(QString&)), this->client, SLOT(handleStile(QString&)));
+    connect(this, SIGNAL(stileTesto(QString&,QString&)), this->client, SLOT(handleStile(QString&,QString&)));
     connect(this, SIGNAL(pasteSig(QString&)),this->client, SLOT(pasteSlot(QString&)));
 
-    this->client->remoteFile=new Editor("1","mio","","io");
+    //this->client->remoteFile=new Editor("1","mio","","io");  DEBUG
 
 }
 
@@ -234,8 +236,7 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
             }
 
             QChar c = e->text().front();
-            qDebug()<<this->client->remoteFile->insertLocal(this->textEdit->textCursor().position(),e->text().front().toLatin1());
-            qDebug()<<this->client->remoteFile->symMap.keys();
+            //qDebug()<<this->client->remoteFile->insertLocal(this->textEdit->textCursor().position(),e->text().front().toLatin1()); DEBUG
             QTextCharFormat format = textEdit->textCursor().charFormat();
             //qDebug()<<format.font();
             this->client->remoteInsert(c,format,posx,posy,anchor); //INSERIMENTO REMOTO
@@ -776,7 +777,8 @@ void TextEdit::textBold()
     mergeFormatOnWordOrSelection(fmt);
 
     QString s="bold";
-    emit stileTesto(s);
+    QString p="";
+    if(!remoteStile)emit stileTesto(s,p);
 }
 
 void TextEdit::textUnderline()
@@ -786,7 +788,8 @@ void TextEdit::textUnderline()
     mergeFormatOnWordOrSelection(fmt);
 
     QString s="underline";
-    emit stileTesto(s);
+    QString p="";
+    if(!remoteStile)emit stileTesto(s,p);
 }
 
 void TextEdit::textItalic()
@@ -796,7 +799,8 @@ void TextEdit::textItalic()
     mergeFormatOnWordOrSelection(fmt);
 
     QString s="italic";
-    emit stileTesto(s);
+    QString p="";
+    if(!remoteStile)emit stileTesto(s,p);
 }
 
 void TextEdit::textFamily(const QString &f)
@@ -806,7 +810,8 @@ void TextEdit::textFamily(const QString &f)
     mergeFormatOnWordOrSelection(fmt);
 
     //TODO da controllare!!!
-    emit stileTesto(const_cast<QString&>(f));
+    QString p="font";
+    if(!remoteStile)emit stileTesto(p,const_cast<QString&>(f));
 }
 
 void TextEdit::textSize(const QString &p)
@@ -817,8 +822,12 @@ void TextEdit::textSize(const QString &p)
         fmt.setFontPointSize(pointSize);
         mergeFormatOnWordOrSelection(fmt);
 
-        emit stileTesto(const_cast<QString&>(p));
+
+
+
     }
+    QString l="size";
+    if(!remoteStile)emit stileTesto(l,const_cast<QString&>(p));
 }
 
 void TextEdit::textStyle(int styleIndex)
@@ -887,49 +896,88 @@ void TextEdit::textStyle(int styleIndex)
 
     cursor.endEditBlock();
 }
-
-void TextEdit::textColor()
-{
-    QColor col = QColorDialog::getColor(textEdit->textColor(), this);
+void TextEdit::myColorChange(QString& nome){
+    QColor col(nome);
     if (!col.isValid())
         return;
     QTextCharFormat fmt;
     fmt.setForeground(col);
+
+
     mergeFormatOnWordOrSelection(fmt);
     colorChanged(col);
 
     QString s=col.name();
-    emit stileTesto(s);
+    QString p="color";
+}
+void TextEdit::textColor()
+{
+    QColor col = QColorDialog::getColor(textEdit->textColor(), this);
+
+    if (!col.isValid())
+        return;
+    QTextCharFormat fmt;
+    fmt.setForeground(col);
+
+
+    mergeFormatOnWordOrSelection(fmt);
+    colorChanged(col);
+
+    QString s=col.name();
+    QString p="color";
+    emit stileTesto(p,s);
 }
 
 void TextEdit::textAlign(QAction *a)
-{
+{   QString p="align";
     if (a == actionAlignLeft){
         textEdit->setAlignment(Qt::AlignLeft | Qt::AlignAbsolute);
 
         QString s="left";
-        emit stileTesto(s);
+        if(!remoteStile)emit stileTesto(p,s);
     }
 
     else if (a == actionAlignCenter){
         textEdit->setAlignment(Qt::AlignHCenter);
 
         QString s="center";
-        emit stileTesto(s);
+        if(!remoteStile)emit stileTesto(p,s);
     }
 
     else if (a == actionAlignRight){
         textEdit->setAlignment(Qt::AlignRight | Qt::AlignAbsolute);
 
         QString s="rigt";
-        emit stileTesto(s);
+        if(!remoteStile)emit stileTesto(p,s);
     }
 
     else if (a == actionAlignJustify){
         textEdit->setAlignment(Qt::AlignJustify);
 
         QString s="giustficato";
-        emit stileTesto(s);
+        if(!remoteStile)emit stileTesto(p,s);
+    }
+}
+
+void TextEdit::myTextAlign(QString& a)
+{
+    if (a == "left"){
+        textEdit->setAlignment(Qt::AlignLeft | Qt::AlignAbsolute);
+    }
+
+    else if (a == "center"){
+        textEdit->setAlignment(Qt::AlignHCenter);
+
+    }
+
+    else if (a == "right"){
+        textEdit->setAlignment(Qt::AlignRight | Qt::AlignAbsolute);
+
+    }
+
+    else if (a == "giustificato"){
+        textEdit->setAlignment(Qt::AlignJustify);
+
     }
 }
 
@@ -1291,4 +1339,37 @@ void TextEdit::addMeSlot(){
 
 
     }
+}
+
+void TextEdit::nuovoStileSlot(QString& stile,QString& param){
+    remoteStile=true;
+
+    if(stile=="bold"){
+        this->actionTextBold->toggle();
+        this->textBold();
+    }
+    else if(stile=="underline"){
+        this->actionTextUnderline->toggle();
+        this->textUnderline();
+     }
+    else if(stile=="italic"){
+        this->actionTextItalic->toggle();
+        this->textItalic();
+     }
+    else if(stile=="font"){
+        this->textFamily(param);
+     }
+    else if(stile=="size"){
+        this->textSize(param);
+     }
+    else if(stile=="color"){
+        this->myColorChange(param);
+     }
+
+    else if(stile=="align"){
+        this->myTextAlign(param);
+     }
+
+    remoteStile=false;
+    return;
 }

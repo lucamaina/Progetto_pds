@@ -23,6 +23,7 @@ private:
     QString nomeFile;
     QString DocId;      // id usato nel db
     QFile *file;
+    QMap<double, Symbol> symMap;
 
 
 public:
@@ -31,7 +32,6 @@ public:
 
     static Editor& getFile();
     bool loadMap();
-    QMap<double, Symbol> symMap;
 
     QString mapToSend();
     ~Editor();

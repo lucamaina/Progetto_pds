@@ -18,7 +18,7 @@ Client::Client(QObject *parent) : QObject(parent)
     connect(socket, &QTcpSocket::connected, this, &Client::connected);
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
-    connect(this, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
+//    connect(this, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
     connect(this, SIGNAL(cancellaSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(cancellaAtCursor(int&,int&,int&,char&,QString&)));
     connect(this, SIGNAL(cambiaFile(QString&)),this->parent(),SLOT(nuovoFile(QString&)));
     connect(this, SIGNAL(addMe()),this->parent(),SLOT(addMeSlot()));
@@ -340,15 +340,18 @@ void Client::connectSlot(){
 
 void Client::handleLogin(QString& username, QString& password){
 
-    int i=2,j=0,k=0;
+    int i=2,j=0,k=2;
     QString s="pippo";
-    char c=(char)0;
+    char c='S';
 
 //    QString kappa("C:/Users/valer/Desktop/Progetto_pds/texteditor/Client/test.html");
 //    emit cambiaFile(kappa);
 
     emit spostaCursSignal(i,j,k,c,s);
-    emit addMe();
+    c='T';i=3;k=3;
+    emit spostaCursSignal(i,j,k,c,s);
+
+    //emit addMe();
 
     QMap<QString, QString> comando;
     if(socket->state() != QTcpSocket::ConnectedState || !connectedDB){

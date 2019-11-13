@@ -34,7 +34,7 @@ public:
 
 signals:
     void addMe();
-    void spostaCursSignal(int& posX, int& posY, int& anchor, char& car, QString& user);
+    void spostaCursSignal(int& posX, int& posY, int& anchor, char& car, QString& user); //fa anche l'inserimento
     void cancellaSignal(int& posX, int& posY, int& anchor,char& car, QString& user);
     void deleteListSig(); //cancella la lista di utenti online dal widget
     void cambiaFile(QString& file);

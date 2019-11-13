@@ -1059,7 +1059,6 @@ void TextEdit::cursorPositionChanged()
             s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
         }
 
-        //qDebug()<<s1->blockNumber()<<s1->positionInBlock();
     }
     else{//qDebug()<<"probabilmente sono offline";
     }
@@ -1067,9 +1066,7 @@ void TextEdit::cursorPositionChanged()
 
     emit cursorChanged(posx,posy,anchor);
     //statusBar()->showMessage(str, 0);
-    /*
-     *
-     */
+
 }
 
 void TextEdit::clipboardDataChanged()
@@ -1127,7 +1124,7 @@ void TextEdit::alignmentChanged(Qt::Alignment a)
 
 void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){ //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
 
-    //qDebug()<<posX<<posY<<car<<user;
+    qDebug()<<posX<<posY<<car<<user;
 
     if(!mappaCursori.contains(user)){
 
@@ -1163,15 +1160,11 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
 
         connect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
-        QChar c(car);
 
-        if(c!=0)s->insertText(c);
 
-        //textEdit->setTextCursor(* mappaCursori.find(user).value()); //Rende visibile il cursore nel textedit (DEBUG)
-    return ;
     }
 
-    else{qDebug()<<"lalalaal";
+    else if(mappaCursori.contains(user)){qDebug()<<"lalalaal";
         disconnect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
         // muovo il cursore
@@ -1191,7 +1184,14 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
         }
         connect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
+
+
     }
+QTextCursor *s= mappaCursori.find(user).value();
+
+QChar c(car);
+
+if(c!=0)s->insertText(c);
 return ;
 }
 
@@ -1216,9 +1216,6 @@ void TextEdit::userListClicked(QListWidgetItem* item){
 
     if(mappaCursori.contains(lalla)){
         textEdit->setTextCursor(* mappaCursori.find(lalla).value());
-        //qDebug()<<mappaCursori.find(lalla).value()->positionInBlock();
-        //qDebug()<<mappaCursori.find(lalla).value()->blockNumber();
-
 
     }
 
@@ -1296,16 +1293,17 @@ void TextEdit::cancellaAtCursor(int& posX,int& posY,int& anchor,char& car ,QStri
 
     }
 
-
-
-
 }
 
 void TextEdit::nuovoFile(QString& filename){
 
     if (load(filename))
         statusBar()->showMessage(tr("Opened \"%1\"").arg(QDir::toNativeSeparators(filename)));
-    else{        statusBar()->showMessage(tr("NOT Opened \"%1\"").arg(QDir::toNativeSeparators(filename)));
+    else{
+        statusBar()->showMessage(tr("NOT Opened \"%1\"").arg(QDir::toNativeSeparators(filename)));
+        QMessageBox Messaggio;
+        Messaggio.critical(0,"OpenFile ERROR",filename);
+        Messaggio.setFixedSize(500,200);
 }
     return;
 }

@@ -207,11 +207,6 @@ void TextEdit::setupStatusBar(){
     //connect(this->textEdit, &QTextEdit::textChanged, this, &TextEdit::testo );
 }
 
-bool TextEdit::slot_asd(){
-    //statusBar()->showMessage(tr("Sono in slot"), 0);
-    this->textEdit->append("_asd_");
-    return true;
-}
 
 void TextEdit::testo(){
     this->statusBar()->showMessage("cambio testo", 1000);
@@ -1034,7 +1029,7 @@ void TextEdit::cursorPositionChanged()
     int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
     int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
     int anchor=textEdit->textCursor().anchor();
-    qDebug()<<"cursor at:"<<posx<<posy<<"\n";
+    //qDebug()<<"cursor at:"<<posx<<posy<<"\n"; DEBUG
 
     /****************** QUA INSERISCO ME STESSO NELLA LISTA DELLE PERSONE ONLINE E DEI CURSORI ************/
 
@@ -1124,7 +1119,7 @@ void TextEdit::alignmentChanged(Qt::Alignment a)
 
 void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){ //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
 
-    qDebug()<<posX<<posY<<car<<user;
+    //qDebug()<<posX<<posY<<car<<user; DEBUG
 
     if(!mappaCursori.contains(user)){
 
@@ -1164,10 +1159,12 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
 
     }
 
-    else if(mappaCursori.contains(user)){qDebug()<<"lalalaal";
-        disconnect(textEdit, &QTextEdit::cursorPositionChanged,
-                this, &TextEdit::cursorPositionChanged);
+    else if(mappaCursori.contains(user)){
+
+        disconnect(textEdit, &QTextEdit::cursorPositionChanged,this, &TextEdit::cursorPositionChanged);
+
         // muovo il cursore
+
         QTextCursor *s1= mappaCursori.find(user).value();
         s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
         s1->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
@@ -1179,9 +1176,11 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
         if(anchor<=poss){
             s1->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
         }
+
        else{
-       s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
+            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
         }
+
         connect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
 
@@ -1206,7 +1205,7 @@ void TextEdit::userListClicked(QListWidgetItem* item){
     //rendo visibile il cursore appena cliccato
 
     QString lalla=item->text();
-    //
+
     qDebug()<<lalla;
 
     textEdit->setFocus(); //rimette il focus al widget che fa text editor altrimenti scompare il cursore

@@ -189,12 +189,10 @@ private:
     bool eventFilter(QObject *obj, QEvent *e) override;
 
 private slots:
-    bool slot_asd();
     void goPaste();
 
 
 signals:
-    void sig_asd();
     void cursorChanged (int& posx, int& posy, int& anchor);
     void acceptLogout();
     void stileTesto(QString& stile,QString& param);

@@ -37,6 +37,8 @@ public:
     bool sendMap(QString nomeUtente);
     bool sendBody(QTcpSocket *sock);
 
+    QByteArray getSymMap();
+
     QString mapToSend();
     bool loadFile(const QString &nomeUser, const int dimFile);        // leggo socket dell'utente e carico il file
     ~Editor();
@@ -56,6 +58,14 @@ public:
     bool process(Message& msg);
     bool send(QTcpSocket *t, QByteArray ba);
 
+
+    /****************************************************************************
+     * metodi di serialize e deserialize ****************************************/
+    bool serialize();
+    bool deserialise(QByteArray &ba);
+
+
+    void editProva(void);
 
 private:
     bool save();

@@ -18,12 +18,15 @@ class BrowseWindow: public QDialog
 public:
     BrowseWindow();
     void addScelta(QString& nome);
+    void setFileMap(QMap<QString, QString>& fileMap);
+
 private:
     void setUpGUI();
 
     QComboBox* comboScelta;
     QLabel* labelScelta;
     QDialogButtonBox* buttons;
+    QMap<QString, QString> fileMap;
 
 public slots:
     void slotOpenFile();
@@ -31,7 +34,7 @@ public slots:
 
 
 signals:
-    void openFileSignal(QString& filename);
+    void openFileSignal(QString& filename, QString& docId);
     void addFileSignal(QString& filename);
 
 };

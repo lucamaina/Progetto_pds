@@ -47,6 +47,7 @@
 #define BODY "body"
 #define MEX "msg"
 #define CUR "cursor"
+#define FORMAT "format"
 
 
 

@@ -81,6 +81,7 @@ Formato messaggi ricevuti dal server.
 <?xml version="1.0" encoding="UTF-8"?>
 <REMOTE-INSERT>
 	<char>a</char>
+	<format>QTextCharFormat serializzata</format>
 	<posX>num1</posX>	
 	<posy>num2</posy>
 	<index>num2</index>
@@ -154,30 +155,37 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 <INIT>0000006D<?xml version="1.0" encoding="UTF-8"?><FILE-BODY><dimtot>52</dimtot><filename>nome.txt</filename></FILE-BODY>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
-		CLIENT			|		SERVER
+		CLIENT							|		SERVER
 ------------------------|----------------------------------		
-connessione			->	| 										all'avvio il client si collega al server che risponde se è possibile collegarsi al db
-						|	<- OK / ERR								
+connessione					->	| 										all'avvio il client si collega al server che risponde se è possibile collegarsi al db
+												|	<- OK / ERR								
 ------------------------|----------------------------------						
-LOG-IN				->	|										quando utente richiama il LOG-IN client invia comando e server risponde						
-						|	<- OK / ERR
+LOG-IN							->	|										quando utente richiama il LOG-IN client invia comando e server risponde						
+												|	<- OK / ERR
 ------------------------|----------------------------------	
-REGISTER			->	|										dopo la registrazione l'utente è già loggato
-						|	<- OK / ERR						
+REGISTER						->	|										dopo la registrazione l'utente è già loggato
+												|	<- OK / ERR						
 ------------------------|----------------------------------	
-BROWS				->	|										l'utente richiede elenco dei documenti che può aprire e il server risponde con lista
-						|	<- BROWS
+BROWS								->	|										l'utente richiede elenco dei documenti che può aprire e il server risponde con lista
+												|	<- BROWS
 ------------------------|----------------------------------	
-OPEN-FILE			->	|	
-						|	<- OK / ERR
+OPEN-FILE						->	|	
+												|	<- OK / ERR
 ------------------------|----------------------------------	
-REMOTE-INSERT		->	|
-REMOTE-DELETE			|		
-CURSOR					|	<- REMOTE-INSERT (eccetto utente di provenienza)
-						|		REMOTE-DELETE
-						|		CURSOR
-						|
-						|
+REMOTE-INSERT				->	|
+REMOTE-DELETE						|		
+CURSOR									|	<- REMOTE-INSERT (eccetto utente di provenienza)
+												|		REMOTE-DELETE
+												|		CURSOR
+------------------------|------------------------------------------
+												
+Eseguire upload di file da editor offline al server												
+------------------------|------------------------------------------
+CONNECT
+LOG-IN
+BROWS
+OPEN-FILE (nuovo o esistente)
+FILE-BODY (contenuto del file di seguito)
 	
 	
 utente: asd

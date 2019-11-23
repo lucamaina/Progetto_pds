@@ -52,6 +52,7 @@
 #ifndef TEXTEDIT_H
 #define TEXTEDIT_H
 
+#include <QShortcut>
 #include <BrowseWindow/browsewindow.h>
 #include <QMainWindow>
 #include <QMap>
@@ -84,6 +85,7 @@ public slots:
     void LoginDialog();
     void LogoutDialog();
     void RegisterDialog();
+    void ConnectDialog();
 
 
 protected:
@@ -92,8 +94,13 @@ protected:
 private slots:
 
     /*************** Comandi per gestione cursore e caratteri **************/
-    void spostaCursor(int& posX,int& posY,char& car,QString& user); //ATTENZIONE: questo oltre al cursore gestisce inserimento caratteri
+    void spostaCursor(int& posX,int& posY,int& anchor,char& car,QString& user); //ATTENZIONE: questo oltre al cursore gestisce inserimento caratteri
+    void cancellaAtCursor(int& posX,int& posY,int& anchor,char& car,QString& user);
     void deleteListSlot();
+    void nuovoFile(QString& filename);
+    void userListClicked(QListWidgetItem* item);
+    void addMeSlot();
+    void nuovoStileSlot(QString& stile,QString& param);
 
     /*************** Comandi per gestione file remoti **************/
     void remoteBrows();
@@ -135,8 +142,12 @@ private:
     void mergeFormatOnWordOrSelection(const QTextCharFormat &format);
     void fontChanged(const QFont &f);
     void colorChanged(const QColor &c);
+    void myColorChange(QString& nome);
     void alignmentChanged(Qt::Alignment a);
+    void myTextAlign(QString& a);
 
+
+    QShortcut* sh;
     QListWidget *list;
     QMap<QString,QTextCursor*> mappaCursori; //mappa con nome utente e relativo cursore;
     QAction* registration;
@@ -162,7 +173,7 @@ private:
     QComboBox *comboStyle;
     QFontComboBox *comboFont;
     QComboBox *comboSize;
-
+    bool remoteStile;
     QToolBar *tb;
     QString fileName;
     QTextEdit *textEdit;
@@ -178,13 +189,15 @@ private:
     bool eventFilter(QObject *obj, QEvent *e) override;
 
 private slots:
-    bool slot_asd();
+    void goPaste();
 
 
 signals:
-    void sig_asd();
-    void cursorChanged (int& posx, int& posy);
+    void cursorChanged (int& posx, int& posy, int& anchor);
     void acceptLogout();
+    void stileTesto(QString& stile,QString& param);
+    void connectSig();
+    void pasteSig(QString& clipboard);
 };
 
 #endif // TEXTEDIT_H

@@ -30,7 +30,7 @@ bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
     this->tipo = tipo;
 
     if (this->tipo == Rem_In || this->tipo == Rem_Del){
-        this->sym = new Symbol(user, car, idx);
+        this->sym = new Symbol(user, car, idx,cursor);
     } else {
         this->sym = nullptr;
         return false;

@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-
+#include <QShortcut>
 #include <QAction>
 #include <QApplication>
 #include <QClipboard>
@@ -125,6 +125,9 @@ TextEdit::TextEdit(QWidget *parent)
     setCentralWidget(centrale);
     miolayout->addWidget(list);
 
+    remoteStile=false;
+
+    connect(this->list, SIGNAL(itemClicked(QListWidgetItem*)),this,SLOT(userListClicked(QListWidgetItem*)));
     //this->layout()->addWidget(list);
 
     Evidenziatore = new Highlighter(textEdit->document());
@@ -187,8 +190,13 @@ TextEdit::TextEdit(QWidget *parent)
     this->textEdit->installEventFilter(this);       // importante
 
     this->client= new Client(this);
-    connect(this, SIGNAL(cursorChanged(int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&)));
-    connect(this->client, SIGNAL(spostaCursSignal(int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,char&,QString&)));
+    connect(this, SIGNAL(cursorChanged(int&,int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&,int&)));
+    connect(this->client, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
+    connect(this, SIGNAL(stileTesto(QString&,QString&)), this->client, SLOT(handleStile(QString&,QString&)));
+    connect(this, SIGNAL(pasteSig(QString&)),this->client, SLOT(pasteSlot(QString&)));
+
+    //this->client->remoteFile=new Editor("1","mio","","io");  DEBUG
+
 }
 
 /*******************************************************************
@@ -199,11 +207,6 @@ void TextEdit::setupStatusBar(){
     //connect(this->textEdit, &QTextEdit::textChanged, this, &TextEdit::testo );
 }
 
-bool TextEdit::slot_asd(){
-    //statusBar()->showMessage(tr("Sono in slot"), 0);
-    this->textEdit->append("_asd_");
-    return true;
-}
 
 void TextEdit::testo(){
     this->statusBar()->showMessage("cambio testo", 1000);
@@ -214,22 +217,46 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
     if (obj == this->textEdit) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *e = static_cast<QKeyEvent*>(event);
-
-            if(e->text()==""){return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
-            //if(e->key()==16777219){ qDebug()<<"bellaaaaaaa"; return false;} // PULSANTE BACKSPACE CHIAMA CANCELLAZIONE REMOTA
-
-            QChar c = e->text().front();
             int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
             int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
+            int anchor=textEdit->textCursor().anchor();
 
-            this->client->remoteInsert(c,posx,posy);
+            if(e->text()==""){ return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
+
+            if(e->key()==16777219 || e->key()==16777223){
+                QChar c=e->key();
+
+                this->client->remoteDelete(c,posx,posy,anchor);    // PULSANTE BACKSPACE CHIAMA CANCELLAZIONE REMOTA
+                return false;
+            }
+
+            QChar c = e->text().front();
+            //qDebug()<<this->client->remoteFile->insertLocal(this->textEdit->textCursor().position(),e->text().front().toLatin1()); DEBUG
+            QTextCharFormat format = textEdit->textCursor().charFormat();
+            //qDebug()<<format.font();
+            this->client->remoteInsert(c,format,posx,posy,anchor); //INSERIMENTO REMOTO
 
             qDebug()<<e->text().front();
+            qDebug()<<e->key();
+
 
             this->statusBar()->showMessage(c, 1000);
         }
+        if(event->type() == QEvent::ShortcutOverride)
+            {
+                QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+                if(keyEvent->modifiers().testFlag(Qt::ControlModifier) == true)
+                {
+                    // allow override of all Ctrl+ shortcuts
+                    if(keyEvent->key()==86){
+                        goPaste();
+                    }
+                    return false;
+                }
+            }
         return false;
     }
+
     return false;
 }
 
@@ -252,6 +279,12 @@ void TextEdit::setupUserActions()
     QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
   //  login->setShortcut(QKeySequence::ZoomIn); tr("Ctrl+a")
     tb->addAction(login);
+    login->setCheckable(true);
+
+    const QIcon connectIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
+    QAction *connect = menu->addAction(connectIcon, tr("&Connect"), this, &TextEdit::ConnectDialog);
+  //  login->setShortcut(QKeySequence::ZoomIn); tr("Ctrl+a")
+    tb->addAction(connect);
     login->setCheckable(true);
 
     const QIcon logoutIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/logout.png"));
@@ -369,12 +402,23 @@ void TextEdit::setupEditActions()
 
     const QIcon pasteIcon = QIcon::fromTheme("edit-paste", QIcon(rsrcPath + "/editpaste.png"));
     actionPaste = menu->addAction(pasteIcon, tr("&Paste"), textEdit, &QTextEdit::paste);
-    actionPaste->setPriority(QAction::LowPriority);
+
+    //actionPaste->setPriority(QAction::LowPriority);
     actionPaste->setShortcut(QKeySequence::Paste);
     tb->addAction(actionPaste);
+
     if (const QMimeData *md = QApplication::clipboard()->mimeData())
         actionPaste->setEnabled(md->hasText());
+    connect(actionPaste,SIGNAL(triggered()),this,SLOT(goPaste()));
+
+
 #endif
+}
+
+void TextEdit::goPaste(){
+    QString s(QApplication::clipboard()->mimeData()->text());
+    emit pasteSig(s);
+    qDebug()<<"lalla";
 }
 
 void TextEdit::setupTextActions()
@@ -565,6 +609,13 @@ void TextEdit::LoginDialog()
     loginDialog->exec();
 }
 
+void TextEdit::ConnectDialog()
+{
+    connect(this, SIGNAL(connectSig()), this->client, SLOT(connectSlot()));
+    emit connectSig();
+
+}
+
 void TextEdit::LogoutDialog()
 {
     connect( this, SIGNAL (acceptLogoff()), this->client, SLOT (handleLogoff()) );
@@ -598,6 +649,7 @@ void TextEdit::fileOpen()
     const QString fn = fileDialog.selectedFiles().first();
     if (load(fn))
         statusBar()->showMessage(tr("Opened \"%1\"").arg(QDir::toNativeSeparators(fn)));
+
     else
         statusBar()->showMessage(tr("Could not open \"%1\"").arg(QDir::toNativeSeparators(fn)));
 }
@@ -715,8 +767,13 @@ void TextEdit::filePrintPdf()
 void TextEdit::textBold()
 {
     QTextCharFormat fmt;
+
     fmt.setFontWeight(actionTextBold->isChecked() ? QFont::Bold : QFont::Normal);
     mergeFormatOnWordOrSelection(fmt);
+
+    QString s="bold";
+    QString p="";
+    if(!remoteStile)emit stileTesto(s,p);
 }
 
 void TextEdit::textUnderline()
@@ -724,6 +781,10 @@ void TextEdit::textUnderline()
     QTextCharFormat fmt;
     fmt.setFontUnderline(actionTextUnderline->isChecked());
     mergeFormatOnWordOrSelection(fmt);
+
+    QString s="underline";
+    QString p="";
+    if(!remoteStile)emit stileTesto(s,p);
 }
 
 void TextEdit::textItalic()
@@ -731,6 +792,10 @@ void TextEdit::textItalic()
     QTextCharFormat fmt;
     fmt.setFontItalic(actionTextItalic->isChecked());
     mergeFormatOnWordOrSelection(fmt);
+
+    QString s="italic";
+    QString p="";
+    if(!remoteStile)emit stileTesto(s,p);
 }
 
 void TextEdit::textFamily(const QString &f)
@@ -738,6 +803,10 @@ void TextEdit::textFamily(const QString &f)
     QTextCharFormat fmt;
     fmt.setFontFamily(f);
     mergeFormatOnWordOrSelection(fmt);
+
+    //TODO da controllare!!!
+    QString p="font";
+    if(!remoteStile)emit stileTesto(p,const_cast<QString&>(f));
 }
 
 void TextEdit::textSize(const QString &p)
@@ -747,7 +816,13 @@ void TextEdit::textSize(const QString &p)
         QTextCharFormat fmt;
         fmt.setFontPointSize(pointSize);
         mergeFormatOnWordOrSelection(fmt);
+
+
+
+
     }
+    QString l="size";
+    if(!remoteStile)emit stileTesto(l,const_cast<QString&>(p));
 }
 
 void TextEdit::textStyle(int styleIndex)
@@ -816,28 +891,89 @@ void TextEdit::textStyle(int styleIndex)
 
     cursor.endEditBlock();
 }
-
-void TextEdit::textColor()
-{
-    QColor col = QColorDialog::getColor(textEdit->textColor(), this);
+void TextEdit::myColorChange(QString& nome){
+    QColor col(nome);
     if (!col.isValid())
         return;
     QTextCharFormat fmt;
     fmt.setForeground(col);
+
+
     mergeFormatOnWordOrSelection(fmt);
     colorChanged(col);
+
+    QString s=col.name();
+    QString p="color";
+}
+void TextEdit::textColor()
+{
+    QColor col = QColorDialog::getColor(textEdit->textColor(), this);
+
+    if (!col.isValid())
+        return;
+    QTextCharFormat fmt;
+    fmt.setForeground(col);
+
+
+    mergeFormatOnWordOrSelection(fmt);
+    colorChanged(col);
+
+    QString s=col.name();
+    QString p="color";
+    emit stileTesto(p,s);
 }
 
 void TextEdit::textAlign(QAction *a)
-{
-    if (a == actionAlignLeft)
+{   QString p="align";
+    if (a == actionAlignLeft){
         textEdit->setAlignment(Qt::AlignLeft | Qt::AlignAbsolute);
-    else if (a == actionAlignCenter)
+
+        QString s="left";
+        if(!remoteStile)emit stileTesto(p,s);
+    }
+
+    else if (a == actionAlignCenter){
         textEdit->setAlignment(Qt::AlignHCenter);
-    else if (a == actionAlignRight)
+
+        QString s="center";
+        if(!remoteStile)emit stileTesto(p,s);
+    }
+
+    else if (a == actionAlignRight){
         textEdit->setAlignment(Qt::AlignRight | Qt::AlignAbsolute);
-    else if (a == actionAlignJustify)
+
+        QString s="rigt";
+        if(!remoteStile)emit stileTesto(p,s);
+    }
+
+    else if (a == actionAlignJustify){
         textEdit->setAlignment(Qt::AlignJustify);
+
+        QString s="giustficato";
+        if(!remoteStile)emit stileTesto(p,s);
+    }
+}
+
+void TextEdit::myTextAlign(QString& a)
+{
+    if (a == "left"){
+        textEdit->setAlignment(Qt::AlignLeft | Qt::AlignAbsolute);
+    }
+
+    else if (a == "center"){
+        textEdit->setAlignment(Qt::AlignHCenter);
+
+    }
+
+    else if (a == "right"){
+        textEdit->setAlignment(Qt::AlignRight | Qt::AlignAbsolute);
+
+    }
+
+    else if (a == "giustificato"){
+        textEdit->setAlignment(Qt::AlignJustify);
+
+    }
 }
 
 void TextEdit::currentCharFormatChanged(const QTextCharFormat &format)
@@ -892,12 +1028,40 @@ void TextEdit::cursorPositionChanged()
     QString str = QString::number(cursore.position());
     int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
     int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
-    qDebug()<<"cursor at:"<<posx<<posy<<"\n";
-    emit cursorChanged(posx,posy);
+    int anchor=textEdit->textCursor().anchor();
+    //qDebug()<<"cursor at:"<<posx<<posy<<"\n"; DEBUG
+
+    /****************** QUA INSERISCO ME STESSO NELLA LISTA DELLE PERSONE ONLINE E DEI CURSORI ************/
+
+
+
+    if(mappaCursori.contains("Me")){
+
+        // muovo il cursore
+        QTextCursor *s1= mappaCursori.find("Me").value();
+
+        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s1->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posx);
+        s1->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posy);
+        int poss=s1->position();
+        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s1->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
+
+        if(anchor<=poss){
+            s1->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
+        }
+       else{
+            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
+        }
+
+    }
+    else{//qDebug()<<"probabilmente sono offline";
+    }
+
+
+    emit cursorChanged(posx,posy,anchor);
     //statusBar()->showMessage(str, 0);
-    /*
-     *
-     */
+
 }
 
 void TextEdit::clipboardDataChanged()
@@ -905,6 +1069,7 @@ void TextEdit::clipboardDataChanged()
 #ifndef QT_NO_CLIPBOARD
     if (const QMimeData *md = QApplication::clipboard()->mimeData())
         actionPaste->setEnabled(md->hasText());
+
 #endif
 }
 
@@ -952,9 +1117,109 @@ void TextEdit::alignmentChanged(Qt::Alignment a)
         actionAlignJustify->setChecked(true);
 }
 
-void TextEdit::spostaCursor(int& posX,int& posY,char& car ,QString& user){ //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
+void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){ //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
 
-    //qDebug()<<posX<<posY<<car<<user;
+    //qDebug()<<posX<<posY<<car<<user; DEBUG
+
+    if(!mappaCursori.contains(user)){
+        //Se non ho mai visto questo user lo metto nella lista di user
+
+        this->list->addItem(user);
+        //Se non ho mai visto questo user creo un nuovo Cursore
+
+        mappaCursori.insert(user,new QTextCursor(textEdit->document()));
+        //muovo il cursore
+
+        QTextCursor *s= mappaCursori.find(user).value();
+
+        disconnect(textEdit, &QTextEdit::cursorPositionChanged,
+                this, &TextEdit::cursorPositionChanged);
+        s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
+        s->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
+        int poss=s->position();
+        s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
+
+        if(anchor<=poss){
+            s->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
+        }
+       else{
+       s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
+        }
+
+
+        connect(textEdit, &QTextEdit::cursorPositionChanged,
+                this, &TextEdit::cursorPositionChanged);
+
+
+    }
+
+    else if(mappaCursori.contains(user)){
+
+        disconnect(textEdit, &QTextEdit::cursorPositionChanged,this, &TextEdit::cursorPositionChanged);
+
+        // muovo il cursore
+
+        QTextCursor *s1= mappaCursori.find(user).value();
+        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s1->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
+        s1->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
+        int poss=s1->position();
+        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s1->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
+
+        if(anchor<=poss){
+            s1->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
+        }
+
+       else{
+            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
+        }
+
+        connect(textEdit, &QTextEdit::cursorPositionChanged,
+                this, &TextEdit::cursorPositionChanged);
+
+
+    }
+QTextCursor *s= mappaCursori.find(user).value();
+
+QChar c(car);
+
+if(c!=0)s->insertText(c);
+return ;
+}
+
+void TextEdit::deleteListSlot(){
+   //svuota la lista perchè non sono più connesso;
+   while(this->list->count()>0){
+       delete this->list->takeItem(0);
+   }
+}
+
+void TextEdit::userListClicked(QListWidgetItem* item){
+    //rendo visibile il cursore appena cliccato
+
+    QString lalla=item->text();
+
+    qDebug()<<lalla;
+
+    textEdit->setFocus(); //rimette il focus al widget che fa text editor altrimenti scompare il cursore
+
+    disconnect(textEdit, &QTextEdit::cursorPositionChanged,
+            this, &TextEdit::cursorPositionChanged);
+
+    if(mappaCursori.contains(lalla)){
+        textEdit->setTextCursor(* mappaCursori.find(lalla).value());
+
+    }
+
+    else{ qDebug()<<"errore utente non trovato";}
+    connect(textEdit, &QTextEdit::cursorPositionChanged,
+            this, &TextEdit::cursorPositionChanged);
+}
+
+void TextEdit::cancellaAtCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){
 
     if(!mappaCursori.contains(user)){
 
@@ -970,12 +1235,28 @@ void TextEdit::spostaCursor(int& posX,int& posY,char& car ,QString& user){ //ATT
         s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
         s->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
         s->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
+        int poss=s->position();
+        s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
 
-        QChar c(car);
+        if(anchor<=poss){
+            s->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
+        }
+       else{
+            s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
+        }
 
-        s->insertText(c);
 
-        textEdit->setTextCursor(* mappaCursori.find(user).value()); //Rende visibile il cursore nel textedit (DEBUG)
+        if(car=='\x3'){
+            s->deletePreviousChar();
+        }
+
+        else if(car=='\x7'){
+            s->deleteChar();
+        }
+
+
+        //textEdit->setTextCursor(* mappaCursori.find(user).value()); //Rende visibile il cursore nel textedit (DEBUG)
 
     }
 
@@ -986,14 +1267,102 @@ void TextEdit::spostaCursor(int& posX,int& posY,char& car ,QString& user){ //ATT
         s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
         s1->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
         s1->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
+        int poss=s1->position();
+        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s1->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
+
+        if(anchor<=poss){
+            s1->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
+        }
+       else{
+            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
+        }
+
+        if(car=='\x3'){
+            s1->deletePreviousChar();
+        }
+
+        else if(car=='\x7'){
+            s1->deleteChar();
+        }
 
     }
 
 }
 
-void TextEdit::deleteListSlot(){
-   //svuota la lista perchè non sono più connesso;
-   while(this->list->count()>0){
-       delete this->list->takeItem(0);
-   }
+void TextEdit::nuovoFile(QString& filename){
+
+    if (load(filename))
+        statusBar()->showMessage(tr("Opened \"%1\"").arg(QDir::toNativeSeparators(filename)));
+    else{
+        statusBar()->showMessage(tr("NOT Opened \"%1\"").arg(QDir::toNativeSeparators(filename)));
+        QMessageBox Messaggio;
+        Messaggio.critical(0,"OpenFile ERROR",filename);
+        Messaggio.setFixedSize(500,200);
+}
+    return;
+}
+
+void TextEdit::addMeSlot(){
+    if(!mappaCursori.contains("Me")){
+
+        int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
+        int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
+        int anchor=textEdit->textCursor().anchor();
+
+        //Se non ho mai visto questo user lo metto nella lista di user
+
+        this->list->addItem("Me");
+        //Se non ho mai visto questo user creo un nuovo Cursore
+        QTextCursor* s=new QTextCursor(textEdit->document());
+        s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posx);
+        s->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posy);
+        int poss=s->position();
+        s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        s->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
+
+        if(anchor<=poss){
+            s->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
+        }
+       else{
+            s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
+        }
+        mappaCursori.insert("Me ",s);
+
+
+    }
+}
+
+void TextEdit::nuovoStileSlot(QString& stile,QString& param){
+    remoteStile=true;
+
+    if(stile=="bold"){
+        this->actionTextBold->toggle();
+        this->textBold();
+    }
+    else if(stile=="underline"){
+        this->actionTextUnderline->toggle();
+        this->textUnderline();
+     }
+    else if(stile=="italic"){
+        this->actionTextItalic->toggle();
+        this->textItalic();
+     }
+    else if(stile=="font"){
+        this->textFamily(param);
+     }
+    else if(stile=="size"){
+        this->textSize(param);
+     }
+    else if(stile=="color"){
+        this->myColorChange(param);
+     }
+
+    else if(stile=="align"){
+        this->myTextAlign(param);
+     }
+
+    remoteStile=false;
+    return;
 }

@@ -1,32 +1,35 @@
 #ifndef CMDSTRING_H
 #define CMDSTRING_H
 
-/****************************************************************************
- * nomi dei comandi definiti ************************************************/
 #define INIT "<INIT>"               // token di inizio messaggio
-#define CMD "CMD"
-
 #define CONN "CONNECT"
-#define DISC "DISCONNETC"
 #define LOGIN "LOG-IN"
 #define LOGOUT "LOG-OUT"
 #define REG "REGISTER"
 
 #define REM_IN "REMOTE-INSERT"
 #define REM_DEL "REMOTE-DELETE"
-
+#define DISC "DISCONNETC"
 #define FILES "FILE"
 #define ADD_FILE "ADD-FILE"
 #define OPEN_FILE "OPEN-FILE"
 #define REMOVE_FILE "REMOVE-FILE"
-
 #define FBODY "FILE-BODY"
+#define CMD "CMD"
 #define BROWS "BROWS"
 #define CRS "CURSOR"
 
 #define OK "OK"
 #define ERR "ERR"
 
+#define MAX_THREAD 8
+
+#define PATH "files/"
+
+/****************************************************************************
+ * dimensioni messaggi definiti *********************************************/
+#define INIT_DIM 6
+#define LEN_NUM 8
 
 /****************************************************************************
  * identificatori di utenti e files definiti ********************************/
@@ -40,9 +43,9 @@
 #define IDX "index"
 #define DIMTOT "dimtot"
 #define BODY "body"
-
 #define MEX "msg"
-
+#define CUR "cursor"
+#define FORMAT "format"
 
 
 /****************************************************************************
@@ -61,12 +64,6 @@
 
 #define FILE_ERR "error - user cannot open file"
 #define FILE_OK "ok - file open"
-
-
-/****************************************************************************
- * dimensioni utili *********************************************************/
-#define INIT_DIM 6
-#define LEN_NUM 8
 
 
 #endif // CMDSTRING_H

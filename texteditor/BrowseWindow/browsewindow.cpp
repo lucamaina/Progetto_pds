@@ -1,10 +1,11 @@
 #include "browsewindow.h"
 #include "textedit.h"
+#include "../Client/client.h"
 
 BrowseWindow::BrowseWindow()
 {
     setUpGUI();
-    setWindowTitle( tr("User Login") );
+    setWindowTitle( tr("Browse directory") );
 }
 
 void BrowseWindow::setUpGUI(){
@@ -13,8 +14,8 @@ void BrowseWindow::setUpGUI(){
 
     comboScelta= new QComboBox(this);
     comboScelta->setEditable(true);
-    comboScelta->addItem("file1");
-    comboScelta->addItem("questo è il numero file1");
+    comboScelta->addItem("test_file1");
+    // comboScelta->addItem("questo è il numero file1");
 
 
     labelScelta= new QLabel(this);
@@ -62,17 +63,32 @@ void BrowseWindow::addScelta(QString& nome)
     this->comboScelta->addItem(nome);
 }
 
+void BrowseWindow::setFileMap(QMap<QString, QString> &fileMap)
+{
+    this->fileMap = fileMap;
+    foreach (QString k, fileMap.keys()){
+        QString val = fileMap.value(k);
+        this->addScelta(val);
+    }
+}
+
 void BrowseWindow::slotOpenFile()
 {
     QString filename = comboScelta->currentText();
+    QString docId = this->fileMap.key(filename);
 
-    emit openFileSignal(filename);
+    emit openFileSignal(filename, docId);
 
 }
 
+/**
+ * @brief BrowseWindow::slotAddFile
+ * invia massaggio di apertura del file selezionato
+ */
 void BrowseWindow::slotAddFile()
 {
     QString filename = comboScelta->currentText();
+    QString docId = this->fileMap.key(filename);
 
     emit addFileSignal(filename);
 

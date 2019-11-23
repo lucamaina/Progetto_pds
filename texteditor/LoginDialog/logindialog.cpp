@@ -90,7 +90,7 @@ void LoginDialog::slotAcceptLogin(){
 
  if(password.size()==0 || username.size()==0){
      QMessageBox q;
-     q.critical(nullptr,"Registration Error","Please, be sure to fill every box!");
+     q.critical(0,"Registration Error","Please, be sure to fill every box!");
      q.setFixedSize(500,200);
      return;
     }

@@ -43,6 +43,8 @@ private:
     // nuova versione ready read
     QByteArray buffer, command;
 
+    void readBody(QByteArray &ba, int dim);
+
 
     /****************************************************************************
      * metodi controllo dei comandi ricevuti ************************************/
@@ -54,6 +56,8 @@ private:
     bool scriviXML(QMap<QString, QString> comando);
     bool clientMsg(QByteArray data);
     bool clientMsg(QMap<QString, QString> comando);
+
+    bool sendBody(QByteArray &ba);
 
     /****************************************************************************
      * metodi accesso a database *************************************************/

@@ -30,17 +30,12 @@ Editor::Editor(QString Id, QString fName)
 
 bool Editor::loadMap()
 {
-    QByteArray ba = this->file->readLine();
-    double idx = 1;
-    while (!ba.isNull()) {
-        for (int i = 0; i< ba.size(); i++){
-            QChar c = ba.at(i);
-            Symbol sym = Symbol("server", c, idx);      // username = server
-            this->symMap.insert(idx, sym);
-            idx++;
-        }
-        ba = this->file->readLine();
-    }
+    // TODO verifica eccezioni
+    QByteArray ba;
+    this->file->open(QIODevice::ReadOnly);
+    QDataStream stream(file);
+    stream >> this->symMap;
+
     return true;
 }
 
@@ -80,27 +75,34 @@ bool Editor::sendMap(QString nomeUtente)
 
 bool Editor::sendBody(QTcpSocket *sock )
 {
-    QString body = this->mapToSend();
-    int totSize = body.size();
-    int dim = totSize;
-    while (dim > 0) {
-        if (dim > 4096){
-
-            int written = static_cast<int>(sock->write(body.toUtf8(), 4096));
-            if (written != 4096){
-                dim = dim - written;
-                body.remove(0, written);
-            }
-        } else {
-            int written = static_cast<int>(sock->write(body.toUtf8(), dim));
-            if (written != 4096){
-                dim = dim - written;
-                body.remove(0, written);
-            }
-        }
-    }
-
+    QByteArray ba;
+    QDataStream stream(&ba, QIODevice::ReadWrite);
+    stream << this->symMap;
+    qDebug() << "size qByteArray = " << ba.size();
+    sock->write(ba);
     return true;
+}
+
+/**
+ * @brief Editor::getSymMap
+ * @return
+ * restituisce QByteArray con mappa di simboli serializzata e pronta all'invio
+ */
+QByteArray Editor::getSymMap()
+{
+    QByteArray ba;
+    QDataStream stream(&ba, QIODevice::ReadWrite);
+    stream << this->symMap;
+    qDebug() << "size qByteArray = " << ba.size();
+
+    /*
+    QFile f("a.txt");
+    f.open(QIODevice::ReadWrite);
+    f.write(ba);
+    f.close();
+    */
+
+    return ba;
 }
 
 QString Editor::mapToSend()
@@ -158,6 +160,24 @@ bool Editor::send(QTcpSocket* t, QByteArray ba)
         return false;
     }
     return true;
+}
+
+bool Editor::deserialise(QByteArray &ba)
+{
+    this->symMap.clear();
+    QDataStream stream(&ba, QIODevice::ReadWrite);
+    stream >> this->symMap;
+    qDebug() << "size qByteArray = " << ba.size();
+    return true;
+}
+
+void Editor::editProva()
+{
+    this->symMap.insert(1, Symbol("asd", 'a', 1, 0, 0, "aaaaaaaaaaaaa"));
+    symMap.insert(2, Symbol("asd", 'b', 2, 0, 1, "bbbbbbbbbbbbb"));
+    symMap.insert(3, Symbol("qwe", 'c', 3, 1, 1, "ccccccccccccccc"));
+    symMap.insert(4, Symbol("qwe", 'd', 4, 2, 1, "ddddddddddd"));
+    symMap.insert(5, Symbol("asd", 'e', 5, 3, 1, "eeeeeeeeeeeeeee"));
 }
 
 

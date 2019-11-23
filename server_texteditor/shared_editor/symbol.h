@@ -3,37 +3,50 @@
 
 #include <QObject>
 #include <QMap>
+// #include <QtGui/QTextCharFormat>
+#include <QDataStream>
 
 #include "../server/cmdstring.h"
+
+// class QTextCharFormat;
+
 
 class Symbol
 {
 private:
     QChar car;
-    int cursor;
     int posX, posY;
-    double num, den;
     double index;
     QString userName;           // identifica utente che inserische il carattere
+    QByteArray formato;
 
 public:
     explicit Symbol();
-    explicit Symbol(QString user, QChar car, uint num, uint den) :  userName(user), car(car), num(num), den(den){}
     explicit Symbol(QString user, QChar car, double idx) :  userName(user), car(car), index(idx){}
-    explicit Symbol(QString user, QChar car, double idx, int cur) :  userName(user), car(car), index(idx), cursor(cur){}
+    explicit Symbol(QString user, QChar car, double idx, int posX, int posY, QByteArray formato) :  userName(user), car(car), index(idx), posX(posX), posY(posY), formato(formato){}
+
     QChar getChar(){return this->car;}
     QMap<QString, QString> toMap();
 
-    double getNum() const;
-    void setNum(const double &value);
-    double getDen() const;
-    void setDen(const double &value);
     QString getUserName() const;
     void setUserName(const QString &value);
     double getIndex() const;
     void setIndex(const double &value);
 
+    friend QDataStream &operator <<(QDataStream &out, const Symbol &sym);
+    friend QDataStream &operator >>(QDataStream &in, Symbol &sym);
+
+
+    QChar getCar() const;
+    void setCar(const QChar &value);
+    int getPosX() const;
+    void setPosX(int value);
+    int getPosY() const;
+    void setPosY(int value);
+    QByteArray getFormato() const;
+    void setFormato(const QByteArray &value);
 };
+
 
 
 #endif // SYMBOL_H

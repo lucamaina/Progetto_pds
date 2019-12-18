@@ -11,7 +11,7 @@
  * @brief db::db
  * @param parent
  */
-db::db(int connName, QObject *parent) : QObject(parent)
+db::db(int connName)
 {
     this->myDb = QSqlDatabase::addDatabase("QMYSQL", QString::number(connName));
     myDb.setHostName("localhost");

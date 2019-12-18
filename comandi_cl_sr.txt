@@ -69,7 +69,7 @@ Formato messaggi ricevuti dal server.
 
 ## comandi relativi all'editor
 
-// messaggio di apertura di file giÃ  presente
+// messaggio di apertura di file già presente
 <?xml version="1.0" encoding="UTF-8"?>
 <OPEN-FILE>
 	<username>val1</username>
@@ -157,16 +157,16 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 		CLIENT							|		SERVER
 ------------------------|----------------------------------		
-connessione					->	| 										all'avvio il client si collega al server che risponde se Ã¨ possibile collegarsi al db
+connessione					->	| 										all'avvio il client si collega al server che risponde se è possibile collegarsi al db
 												|	<- OK / ERR								
 ------------------------|----------------------------------						
 LOG-IN							->	|										quando utente richiama il LOG-IN client invia comando e server risponde						
 												|	<- OK / ERR
 ------------------------|----------------------------------	
-REGISTER						->	|										dopo la registrazione l'utente Ã¨ giÃ  loggato
+REGISTER						->	|										dopo la registrazione l'utente è già loggato
 												|	<- OK / ERR						
 ------------------------|----------------------------------	
-BROWS								->	|										l'utente richiede elenco dei documenti che puÃ² aprire e il server risponde con lista
+BROWS								->	|										l'utente richiede elenco dei documenti che può aprire e il server risponde con lista
 												|	<- BROWS
 ------------------------|----------------------------------	
 OPEN-FILE						->	|	
@@ -214,3 +214,14 @@ utente: qwe
 
 dd121e36961a04627eacff629765dd35
 dd121e36961a04627eacff629765dd3528471ed745c1e32222db4a8a5f3421c4
+
+<INIT>00000067<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>user</username><password>10</password></LOG-IN>		
+<INIT>00000084<?xml version="1.0" encoding="UTF-8"?><OPEN-FILE><username>user</username><docid>2</docid><filename>file1.txt</filename></OPEN-FILE>
+<INIT>0000007A<?xml version="1.0" encoding="UTF-8"?><FILE-BODY><dimtot>149</dimtot><filename>nome</filename><docid>2</docid></FILE-BODY>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+<INIT>00000035<?xml version="1.0" encoding="UTF-8"?><BROWS></BROWS>
+<INIT>0000007A<?xml version="1.0" encoding="UTF-8"?><FILE-BODY><dimtot>176</dimtot><filename>nome</filename><docid>2</docid></FILE-BODY>000000013ff00000000000000000000a0070006900700070006f00000001001600000002000000020000200100000006004024000000000000000020000000000a0000000012004100670065006e00630079002000460042
+
+<INIT>00000067<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>user</username><password>10</password></LOG-IN>		
+<INIT>00000084<?xml version="1.0" encoding="UTF-8"?><OPEN-FILE><username>user</username><docid>2</docid><filename>file1.txt</filename></OPEN-FILE>
+<INIT>0000007A<?xml version="1.0" encoding="UTF-8"?><FILE-BODY><dimtot>832</dimtot><filename>nome</filename><docid>2</docid></FILE-BODY>AAAAC0AmAAAAAAAAAAAACgBwAGkAcABwAG8AAAALAHMAAAACAAAAAQAAIAAAAAAKAAAAABAAQQBsAGcAZQByAGkAYQBuQCQAAAAAAAAAAAAKAHAAaQBwAHAAbwAAAAoAcwAAAAIAAAABAAAgAAAAAAoAAAAAEABBAGwAZwBlAHIAaQBhAG5AIgAAAAAAAAAAAAoAcABpAHAAcABvAAAACQBhAAAAAgAAAAEAACAAAAAACgAAAAAQAEEAbABnAGUAcgBpAGEAbkAgAAAAAAAAAAAACgBwAGkAcABwAG8AAAAIACAAAAACAAAAAgAAIAMAAAACAAAAAEsAACABAAAABgBAHAAAAAAAAEAcAAAAAAAAAAAACgBwAGkAcABwAG8AAAAHAHMAAAACAAAAAQAAIAMAAAACAAAAAEtAGAAAAAAAAAAAAAoAcABpAHAAcABvAAAABgBzAAAAAgAAAAEAACADAAAAAgAAAABLQBQAAAAAAAAAAAAKAHAAaQBwAHAAbwAAAAUAYQAAAAIAAAABAAAgAwAAAAIAAAAAS0AQAAAAAAAAAAAACgBwAGkAcABwAG8AAAAEACAAAAACAAAAAQAAIAEAAAAGAEAkAAAAAAAAQAgAAAAAAAAAAAAKAHAAaQBwAHAAbwAAAAMAcwAAAAIAAAABAAAgAQAAAAYAQCQAAAAAAABAAAAAAAAAAAAAAAoAcABpAHAAcABvAAAAAgBhAAAAAgAAAAEAACABAAAABgBAJAAAAAAAAD/wAAAAAAAAAAAACgBwAGkAcABwAG8AAAABAGEAAAACAAAAAQAAIAEAAAAGAEAkAAAAAAAA
+

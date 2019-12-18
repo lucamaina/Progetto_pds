@@ -21,7 +21,7 @@ Client::Client(QObject *parent) : QObject(parent)
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
 //    connect(this, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
     connect(this, SIGNAL(cancellaSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(cancellaAtCursor(int&,int&,int&,char&,QString&)));
-    connect(this, SIGNAL(cambiaFile(QString&)),this->parent(),SLOT(nuovoFile(QString&)));
+    connect(this, SIGNAL(cambiaFile(QString&)),this->parent(),SLOT(loadFile(QString&)));
     connect(this, SIGNAL(addMe()),this->parent(),SLOT(addMeSlot()));
     connect(this, SIGNAL(nuovoStile(QString&,QString&)), this->parent(),SLOT(nuovoStileSlot(QString&,QString&)));
     connect(this, SIGNAL(openFileSignal(QString&)), this, SLOT(handleNuovoFile(QString&)));
@@ -148,7 +148,7 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
      }
 
      else if (comando.value() == FBODY) {
-        nuovoFile(cmd);
+        loadFile(cmd);
 
      }
     //TODO
@@ -168,14 +168,18 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         Messaggio.information(nullptr,"Coonection","Connection to server in successfully");
         Messaggio.setFixedSize(500,200);*/
         qDebug() << "Connesso";
-    } else if(comando.value()==LOGIN_OK){
+    }
+
+    else if(comando.value()==LOGIN_OK){
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"Login","Logged in successfully");
         Messaggio.setFixedSize(500,200);
 
         emit addMe();
         this->logged=true;
-    } else if(comando.value()==LOGOUT_OK){
+    }
+
+    else if(comando.value()==LOGOUT_OK){
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"Logout","Logged out successfully");
         Messaggio.setFixedSize(500,200);
@@ -185,7 +189,9 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
 
         this->logged=false;
 
-    } else if(comando.value()==REG_OK){
+    }
+
+    else if(comando.value()==REG_OK){
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"Registration","Registered & Logged in successfully");
         Messaggio.setFixedSize(500,200);
@@ -310,12 +316,21 @@ void Client::handleBrowse(QMap<QString,QString> cmd){
  * @param cmd
  * gestisce apertura di un file ricevuto dal server
  */
-void Client::nuovoFile(QMap<QString,QString> cmd){
+void Client::loadFile(QMap<QString,QString> cmd){
 
     int dim = cmd.find(BODY).value().toInt();
 
+    disconnect(this,SIGNAL(readyRead()),this,SLOT(readyRead()));
+
+    //lettura socket
+
+
+
+    connect(this,SIGNAL(readyRead()),this,SLOT(readyRead()));
+
+
     this->remoteFile=new Editor(this->docID,this->filename,buffer,username);
-    emit cambiaFile(this->filename);
+    //emit cambiaFile(this->filename);
     // TODO ricezione body del file
 }
 
@@ -332,7 +347,7 @@ void Client::inserimento(QMap<QString,QString> cmd){
 
     if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; }
 
-    this->remoteFile->insertLocal(index,c);
+    this->remoteFile->insertLocal(index,c, charform);
 
     if(c=='\x3' || c=='\x7'){
 

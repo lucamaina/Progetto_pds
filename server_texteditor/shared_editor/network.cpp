@@ -46,6 +46,9 @@ bool Network::createEditor(QString fileId, QString nomeFile, utente &user)
     Editor *ed = new Editor(fileId, nomeFile);
     ed->addUser(user);
     this->editorMap.insert(fileId, ed);
+
+    // TODO leggi file e carica symMap
+
     return true;
 }
 

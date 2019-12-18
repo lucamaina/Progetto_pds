@@ -10,26 +10,6 @@ void Symbol::setCar(const QChar &value)
     car = value;
 }
 
-int Symbol::getPosX() const
-{
-    return posX;
-}
-
-void Symbol::setPosX(int value)
-{
-    posX = value;
-}
-
-int Symbol::getPosY() const
-{
-    return posY;
-}
-
-void Symbol::setPosY(int value)
-{
-    posY = value;
-}
-
 QByteArray Symbol::getFormato() const
 {
     return formato;
@@ -77,14 +57,30 @@ void Symbol::setIndex(const double &value)
 
 QDataStream &operator<<(QDataStream &out, const Symbol &sym)
 {
-    out << sym.getUserName() << sym.getIndex() << sym.getCar() << sym.getPosX() << sym.getPosY() << sym.getFormato();
+    out.setVersion(QDataStream::Qt_5_12);
+    out.setFloatingPointPrecision(QDataStream::FloatingPointPrecision::DoublePrecision);
+    out << sym.getUserName() << sym.getIndex() << sym.getCar() << sym.getFormato();
     return out;
 }
 
 QDataStream &operator >>(QDataStream &in, Symbol &sym)
 {
+    in.setVersion(QDataStream::Qt_5_12);
     in.setFloatingPointPrecision(QDataStream::DoublePrecision);
-    in >> sym.userName >> sym.index >> sym.car >> sym.posX >> sym.posY >> sym.formato;
+    in >> sym.userName >> sym.index >> sym.car >> sym.formato;
     return in;
 }
 
+QJsonObject Symbol::toJson(){
+  QJsonObject j;
+  /*
+    j.insert("char",QJsonValue(car));
+    j.insert("index",QJsonValue(index));
+    j.insert("user",QJsonValue(userName));
+    j.insert("font",QJsonValue(ff.fontFamily()));
+    j.insert("size",QJsonValue(ff.fontWeight()));
+    j.insert("italic",QJsonValue(ff.fontItalic()));
+    j.insert("underline",QJsonValue(ff.fontUnderline()));
+*/
+    return j;
+}

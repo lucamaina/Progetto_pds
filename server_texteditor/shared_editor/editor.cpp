@@ -32,10 +32,14 @@ bool Editor::loadMap()
 {
     // TODO verifica eccezioni
     QByteArray ba;
-    this->file->open(QIODevice::ReadOnly);
-    QDataStream stream(file);
-    stream >> this->symMap;
+    this->file->open(QIODevice::ReadWrite);
 
+    ba = file->readAll();
+    ba = ba.fromBase64(ba, QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals);
+
+    QDataStream out(&ba, QIODevice::ReadWrite);
+
+    out >> this->symMap;
     return true;
 }
 
@@ -93,15 +97,8 @@ QByteArray Editor::getSymMap()
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::ReadWrite);
     stream << this->symMap;
-    qDebug() << "size qByteArray = " << ba.size();
-
-    /*
-    QFile f("a.txt");
-    f.open(QIODevice::ReadWrite);
-    f.write(ba);
-    f.close();
-    */
-
+    ba = ba.toBase64(QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals);
+    qDebug() << "size qByteArray to send = " << ba.size();
     return ba;
 }
 
@@ -164,20 +161,72 @@ bool Editor::send(QTcpSocket* t, QByteArray ba)
 
 bool Editor::deserialise(QByteArray &ba)
 {
-    this->symMap.clear();
-    QDataStream stream(&ba, QIODevice::ReadWrite);
-    stream >> this->symMap;
+    //TODO
+    // problemi in serilizzare mappa
+    // this->symMap.clear();
+    QMap<double, Symbol> map;
+    map.clear();
+    QByteArray p;
+    QDataStream o(&p, QIODevice::ReadWrite);
+    o << this->symMap;
+
+    QDataStream i(&p, QIODevice::ReadWrite);
+    i >> map;
+    p = p.toBase64(QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals);
+    QByteArray _new = QByteArray::fromBase64(ba);
+    QDataStream stream(&_new, QIODevice::ReadWrite);
+    map.clear();
+    stream >> map;
     qDebug() << "size qByteArray = " << ba.size();
     return true;
 }
 
 void Editor::editProva()
 {
-    this->symMap.insert(1, Symbol("asd", 'a', 1, 0, 0, "aaaaaaaaaaaaa"));
-    symMap.insert(2, Symbol("asd", 'b', 2, 0, 1, "bbbbbbbbbbbbb"));
-    symMap.insert(3, Symbol("qwe", 'c', 3, 1, 1, "ccccccccccccccc"));
-    symMap.insert(4, Symbol("qwe", 'd', 4, 2, 1, "ddddddddddd"));
-    symMap.insert(5, Symbol("asd", 'e', 5, 3, 1, "eeeeeeeeeeeeeee"));
+    /*
+    this->symMap.clear();
+    this->symMap.insert(1, Symbol("asd", 'a', 1, "aaaaaaaaaaaa"));
+    symMap.insert(2, Symbol("asd", 'b', 2, "bbbbbbbbbbbbb"));
+    symMap.insert(3, Symbol("qwe", 'c', 3, "ccccccccccccccc"));
+    symMap.insert(4, Symbol("qwe", 'd', 4, "ddddddddddd"));
+    symMap.insert(5, Symbol("asd", 'e', 5, "eeeeeeeeeeeeeee"));
+
+    QJsonObject json;
+    QByteArray s;
+
+    QMapIterator<double, Symbol> i(symMap);
+    while (i.hasNext()) {
+        i.next();
+        s.clear();
+        QDataStream out(&s, QIODevice::WriteOnly);
+        QJsonValue jval( QString(s.toBase64()) );
+        qDebug() << jval.toString();
+        json.insert(QString::number(i.key()), jval.toString());
+    }
+
+    QJsonDocument Doc(json);
+
+
+    QFile *f= new QFile("mappa_sv");
+    f->open(QIODevice::ReadWrite | QIODevice::Text);
+    //QByteArray s;
+    s.clear();
+    QDataStream out(&s, QIODevice::WriteOnly);
+    out << symMap;
+
+    QMap<double,Symbol> deserial;
+    QDataStream in(&s, QIODevice::ReadWrite);
+    in >> deserial;
+
+    f->write(s);
+    f->write("\n\n");
+    f->write(s.toHex());
+    f->write("\n\n");
+    f->write(s.toBase64(QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals));
+    f->write("\n\n");
+    f->write(Doc.toJson());
+    f->close();
+    */
 }
 
 
@@ -267,17 +316,12 @@ bool Editor::cursorChange(Message msg)
  */
 bool Editor::save()
 {
-    QString s = "";
-    Symbol sym;
+    QByteArray ba;
+    QDataStream out (&ba, QIODevice::ReadWrite);
+    out << this->symMap;
     file->open(QIODevice::WriteOnly | QIODevice::Text);
-    foreach (sym, this->symMap.values()){
-        s.append(sym.getChar());
-        if (s.size() == 4096){
-            this->file->write(s.toUtf8());
-            s.clear();
-        }
-    }
-    file->write(s.toUtf8());
+
+    file->write(ba.toBase64(QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals));
     file->close();
     return true;
 }

@@ -3,7 +3,8 @@
 
 #include <QObject>
 #include <QMap>
-// #include <QtGui/QTextCharFormat>
+#include <QtGui/QTextCharFormat>
+#include <QJsonObject>
 #include <QDataStream>
 
 #include "../server/cmdstring.h"
@@ -15,15 +16,15 @@ class Symbol
 {
 private:
     QChar car;
-    int posX, posY;
     double index;
     QString userName;           // identifica utente che inserische il carattere
     QByteArray formato;
+    //QTextCharFormat ff;
 
 public:
     explicit Symbol();
     explicit Symbol(QString user, QChar car, double idx) :  userName(user), car(car), index(idx){}
-    explicit Symbol(QString user, QChar car, double idx, int posX, int posY, QByteArray formato) :  userName(user), car(car), index(idx), posX(posX), posY(posY), formato(formato){}
+    explicit Symbol(QString user, QChar car, double idx, QByteArray ba) :  userName(user), car(car), index(idx), formato(ba){}
 
     QChar getChar(){return this->car;}
     QMap<QString, QString> toMap();
@@ -45,6 +46,9 @@ public:
     void setPosY(int value);
     QByteArray getFormato() const;
     void setFormato(const QByteArray &value);
+
+    QJsonObject toJson();
+    Symbol fromJson(QJsonObject j);
 };
 
 

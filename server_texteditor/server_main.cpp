@@ -10,30 +10,20 @@
 #include "QMap"
 #include <QtGui/QTextCharFormat>
 #include <QtFontDatabaseSupport/QtFontDatabaseSupport>
-
+#include <memory>
 #include <QDataStream>
 void scriviXML();
-
+void sum(int& a){
+    qDebug() <<"sum: " << a+a;
+}
 server_main::server_main(QObject *parent) : QObject(parent)
 {
-
-    //scriviXML();
 /*
-    // serialize
-    QString s = "asd";
-    QByteArray b;
-    QDataStream d(&b, QIODevice::ReadWrite);
-    d << s;
-    qDebug() << "s = "<< s;
-    qDebug()<< "out = "<< b;
+    std::unique_ptr<int> p = std::make_unique<int>(int(18));
+    qDebug() <<"int: " << *p;
+    sum(*p.get());
+    return;
 
-
-    // deserialize
-    QString a;
-    QByteArray b2;
-    QDataStream d2(&b, QIODevice::ReadWrite);
-    d2 >> a;
-    qDebug() << "out2= " << a;
 */
 
 
@@ -44,6 +34,7 @@ server_main::server_main(QObject *parent) : QObject(parent)
 
     //mydb = new db();
 }
+
 
 
 void scriviXML(){

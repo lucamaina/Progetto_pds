@@ -13,6 +13,7 @@
 #include "cmdstring.h"
 
 #include <QXmlStreamWriter>
+#include <memory>
 
 #include "../shared_editor/editor.h"
 #include "../shared_editor/network.h"
@@ -37,8 +38,10 @@ signals:
 private:
     int sockID;
     QTcpSocket *socket = nullptr;
-    utente *user = nullptr;
-    db *conn;
+    //utente *user = nullptr;     // usare unique_ptr
+    std::unique_ptr<utente> up_user;
+    //db *conn;
+    std::unique_ptr<db> up_conn;
 
     // nuova versione ready read
     QByteArray buffer, command;
@@ -58,6 +61,7 @@ private:
     bool clientMsg(QMap<QString, QString> comando);
 
     bool sendBody(QByteArray &ba);
+
 
     /****************************************************************************
      * metodi accesso a database *************************************************/

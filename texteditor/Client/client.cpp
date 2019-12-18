@@ -168,18 +168,14 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         Messaggio.information(nullptr,"Coonection","Connection to server in successfully");
         Messaggio.setFixedSize(500,200);*/
         qDebug() << "Connesso";
-    }
-
-    else if(comando.value()==LOGIN_OK){
+    } else if(comando.value()==LOGIN_OK){
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"Login","Logged in successfully");
         Messaggio.setFixedSize(500,200);
 
         emit addMe();
         this->logged=true;
-    }
-
-    else if(comando.value()==LOGOUT_OK){
+    } else if(comando.value()==LOGOUT_OK){
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"Logout","Logged out successfully");
         Messaggio.setFixedSize(500,200);
@@ -189,9 +185,7 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
 
         this->logged=false;
 
-    }
-
-    else if(comando.value()==REG_OK){
+    } else if(comando.value()==REG_OK){
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"Registration","Registered & Logged in successfully");
         Messaggio.setFixedSize(500,200);
@@ -588,6 +582,7 @@ void Client::remoteInsert(QChar& c, QTextCharFormat format, int posx, int posy,i
     cmd.insert("docid",docID);
 
     qDebug() << cmd;
+//    send
 
     // TODO invio messaggio
 }

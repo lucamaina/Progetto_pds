@@ -8,6 +8,9 @@
 #include <mutex>
 #include <QDebug>
 #include <QTcpSocket>
+#include <QJsonObject>
+#include <QJsonDocument>
+
 #include "message.h"
 #include "symbol.h"
 

@@ -234,7 +234,12 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
             //qDebug()<<this->client->remoteFile->insertLocal(this->textEdit->textCursor().position(),e->text().front().toLatin1()); DEBUG
             QTextCharFormat format = textEdit->textCursor().charFormat();
             //qDebug()<<format.font();
-            this->client->remoteInsert(c,format,posx,posy,anchor); //INSERIMENTO REMOTO
+            //this->client->remoteInsert(c,format,posx,posy,anchor); //INSERIMENTO REMOTO
+
+            QFile f("mappa.txt");
+            f.open(QIODevice::ReadWrite);
+            f.write("qwe");
+            f.close();
 
             qDebug()<<e->text().front();
             qDebug()<<e->key();

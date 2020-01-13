@@ -317,19 +317,35 @@ void Client::handleBrowse(QMap<QString,QString> cmd){
  * gestisce apertura di un file ricevuto dal server
  */
 void Client::loadFile(QMap<QString,QString> cmd){
-
+    qDebug() << cmd.toStdMap();
     int dim = cmd.find(BODY).value().toInt();
 
+    QByteArray qba;
+    char v[4096];
     disconnect(this,SIGNAL(readyRead()),this,SLOT(readyRead()));
-
+    qba.clear();
+    qba = this->buffer;
     //lettura socket
-
-
+    dim = dim - qba.size();
+    while (dim > 0){
+        if (socket->bytesAvailable() > 0){
+            int read = socket->read(v, 4096);
+            if ( read < 0){
+                qDebug() << "errore in socket::read()";
+                return;
+            }
+            qba.append( v );
+            dim = dim - read;
+        } else {
+            return;
+        }
+    }
+    qDebug () << qba;
 
     connect(this,SIGNAL(readyRead()),this,SLOT(readyRead()));
 
-
-    this->remoteFile=new Editor(this->docID,this->filename,buffer,username);
+    emit clearEditor();
+    this->remoteFile=new Editor(this->docID,this->filename,qba,username);
     //emit cambiaFile(this->filename);
     // TODO ricezione body del file
 }
@@ -417,16 +433,9 @@ void Client::connectSlot(){
 /****************************************************************************
  ***************** metodi controllo dell'utente *****************************/
 
-void Client::handleLogin(QString& username, QString& password){
-
-    int i=2,j=0,k=2;
-
-    QString s="useer-test";
-    char c='S';
-    c='T';i=3;k=3;
-    emit spostaCursSignal(i,j,k,c,s);
-
-    //emit addMe();
+void Client::handleLogin(QString& username, QString& password)
+{
+    emit addMe(); //PROVA
 
     QMap<QString, QString> comando;
     if(socket->state() != QTcpSocket::ConnectedState || !connectedDB){
@@ -533,6 +542,8 @@ void Client::remoteOpen(QString& name, QString& docID){
     comando.insert(UNAME,username);
     comando.insert(DOCID,docID);
     comando.insert(FNAME,name);
+    this->docID = docID;
+    this->filename = name;
 
     sendMsg(comando);
 }
@@ -599,6 +610,7 @@ void Client::remoteInsert(QChar& c, QTextCharFormat format, int posx, int posy,i
     qDebug() << cmd;
 
     // TODO invio messaggio
+    this->sendMsg(cmd);
 }
 
 void Client::remoteDelete(QChar& c, int posx, int posy, int anchor){

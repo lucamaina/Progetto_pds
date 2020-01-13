@@ -29,7 +29,7 @@ public:
     QMap<double, Symbol> symMap;
 
     explicit Editor(QObject *parent = nullptr);
-    explicit Editor(QString Id, QString nome, QString body, QString username);
+    explicit Editor(QString Id, QString nome, QByteArray body, QString username);
 
     static Editor& getFile();
     bool loadMap();

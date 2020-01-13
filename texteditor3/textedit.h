@@ -63,6 +63,8 @@
 #include <RegisterDialog/registerdialog.h>
 #include <QListWidgetItem>
 #include <shared_editor/editor.h>
+#include <QPainter>
+#include <QAbstractTextDocumentLayout>
 
 class QAction;
 class QComboBox;
@@ -80,6 +82,7 @@ public:
     TextEdit(QWidget *parent = nullptr);
 
     bool load(const QString &f);
+
 
 public slots:
     void fileNew();
@@ -152,6 +155,7 @@ private:
     QShortcut* sh;
     QListWidget *list;
     QMap<QString,QTextCursor*> mappaCursori; //mappa con nome utente e relativo cursore;
+    QMap<QString,QLabel*> mappaEtichette; //mappa con nome utente e relativo cursore;
     QAction* registration;
     Highlighter* Evidenziatore;
     Client *client;
@@ -192,6 +196,8 @@ private:
 
 private slots:
     void goPaste();
+    void clear();
+    void refresh();
 
 
 signals:

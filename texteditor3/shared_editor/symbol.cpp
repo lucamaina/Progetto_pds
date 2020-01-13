@@ -1,35 +1,5 @@
 #include "symbol.h"
 
-QByteArray Symbol::getQbformat() const
-{
-    return qbformat;
-}
-
-void Symbol::setQbformat(const QByteArray &value)
-{
-    qbformat = value;
-}
-
-QChar Symbol::getCar() const
-{
-    return car;
-}
-
-void Symbol::setCar(const QChar &value)
-{
-    car = value;
-}
-
-double Symbol::getIndex() const
-{
-    return index;
-}
-
-void Symbol::setIndex(double value)
-{
-    index = value;
-}
-
 Symbol::Symbol()
 {
 
@@ -70,20 +40,24 @@ void Symbol::setUserName(const QString &value)
     userName = value;
 }
 
-
-QDataStream &operator<<(QDataStream &out, const Symbol &sym)
+int Symbol::getIndex() const
 {
-    out.setVersion(QDataStream::Qt_5_12);
-    out.setFloatingPointPrecision(QDataStream::FloatingPointPrecision::DoublePrecision);
-    out << sym.getUserName() << sym.getIndex() << sym.getCar() << sym.getQbformat();
+    return index;
+}
+
+void Symbol::setIndex(const int &value)
+{
+    index = value;
+}
+
+QDataStream &operator<<(QDataStream& out, const Symbol &sym){
+    out<<sym.getUserName()<<sym.getIndex()<<sym.car<<sym.qbformat;
     return out;
 }
 
-QDataStream &operator >>(QDataStream &in, Symbol &sym)
-{
-    in.setVersion(QDataStream::Qt_5_12);
-    in.setFloatingPointPrecision(QDataStream::DoublePrecision);
-    in >> sym.userName >> sym.index >> sym.car >> sym.qbformat;
+QDataStream &operator>>(QDataStream& in, Symbol &sym){
+    in>>sym.userName>>sym.index>>sym.car>>sym.qbformat;
+
     return in;
 }
 

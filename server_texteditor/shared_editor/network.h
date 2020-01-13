@@ -22,6 +22,8 @@ public:
     bool sendToUsers(Message & msg);
     bool filePresent(QString fileId);
     bool addRefToEditor(QString fileId, utente& user);
+    bool remRefToEditor(QString fileId, QString user);
+
     Editor& getEditor(QString docId);
 
 signals:
@@ -34,6 +36,7 @@ private:
     std::mutex mQueue;
     // TODO usa sharedPointer
     QMap<QString, Editor*> editorMap;   // chiave = DocId
+    QMap<QString, QPointer<Editor>> eMap;
     QQueue<Message> msgQueue;
 
     explicit Network(QObject *parent = nullptr);

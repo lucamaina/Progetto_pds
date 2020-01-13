@@ -37,7 +37,9 @@ signals:
 
 private:
     int sockID;
+    QString docID = "";
     QTcpSocket *socket = nullptr;
+//    std::shared_ptr<QTcpSocket> socket;
     //utente *user = nullptr;     // usare unique_ptr
     std::unique_ptr<utente> up_user;
     //db *conn;

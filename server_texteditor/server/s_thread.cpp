@@ -14,11 +14,11 @@ void s_thread::run()
     qDebug() << "Thread running, ID: " << QString::number(this->sockID);
     this->socket = new QTcpSocket();
     socket->setSocketDescriptor(sockID);
-    connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
-    connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
+    connect(this->socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
+    connect(this->socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
     qDebug() << "Client connesso";
     this->up_user = std::make_unique<utente>( utente() );
-    this->up_user.get()->setSocket(socket);
+    this->up_user.get()->setSocket(this->socket);
     this->connectDB();
 }
 
@@ -37,7 +37,12 @@ void s_thread::disconnected()
 s_thread::~s_thread()
 {
     qDebug() << "Distruttore s_thread.";
-    if (this->up_user.get()->isConnected()) this->disconnectDB();
+    if (this->up_user.get()->isConnected()){
+        QMap<QString, QString> cmd;
+        cmd.insert(CMD, LOGOUT);
+        this->logoffDB(cmd);
+        this->disconnectDB();
+    }
 }
 \
 /*********************************************************************************************************
@@ -407,7 +412,13 @@ void s_thread::openFile(QMap<QString, QString> &comando)
         qDebug() <<"connessione non aperta: " << up_conn->isOpen();
         this->connectDB();
     }
+
+    if(!docID.isEmpty())
+        Network::getNetwork().remRefToEditor(this->docID, this->up_user->getUsername());
+
+
     QMap<QString,QString> risp;
+
 
     // accedo a db e verifico file apribile dall'utente
     QString logStr;
@@ -445,7 +456,7 @@ void s_thread::openFile(QMap<QString, QString> &comando)
     QByteArray ba = net.getEditor(comando.value(DOCID)).getSymMap();
 
     this->sendBody(ba);
-
+    qDebug() << ba;
     // net.getEditor(comando.value(DOCID)).deserialise(ba);
 
 

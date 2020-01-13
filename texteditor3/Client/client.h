@@ -40,6 +40,7 @@ signals:
     void cambiaFile(QString& file);
     void nuovoStile(QString& stile,QString& param);
     void openFileSignal(QString& filename);
+    void clearEditor();
 
 public slots:
     void connected();

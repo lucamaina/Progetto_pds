@@ -78,7 +78,7 @@ void BrowseWindow::slotOpenFile()
     QString docId = this->fileMap.key(filename);
 
     emit openFileSignal(filename, docId);
-
+    close();
 }
 
 /**

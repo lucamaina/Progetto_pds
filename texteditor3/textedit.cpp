@@ -125,6 +125,7 @@ TextEdit::TextEdit(QWidget *parent)
     setCentralWidget(centrale);
     miolayout->addWidget(list);
 
+
     remoteStile=false;
 
     connect(this->list, SIGNAL(itemClicked(QListWidgetItem*)),this,SLOT(userListClicked(QListWidgetItem*)));
@@ -190,11 +191,13 @@ TextEdit::TextEdit(QWidget *parent)
     setupStatusBar();
     this->textEdit->installEventFilter(this);       // importante
 
+
     this->client= new Client(this);
     connect(this, SIGNAL(cursorChanged(int&,int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&,int&)));
     connect(this->client, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
     connect(this, SIGNAL(stileTesto(QString&,QString&)), this->client, SLOT(handleStile(QString&,QString&)));
     connect(this, SIGNAL(pasteSig(QString&)),this->client, SLOT(pasteSlot(QString&)));
+    connect(this->client, SIGNAL(clearEditor() ), this, SLOT(clear() ));
 
     //this->client->remoteFile=new Editor("1","mio","","io");  DEBUG
 
@@ -255,6 +258,7 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
             QTextCursor s=textEdit->textCursor();
 
             QTextCharFormat formato= s.charFormat();
+            //qDebug()<<"formato"<<formato.fontFamily(); DEBUG
             if(s.hasSelection()){
 
                 int poscurs=s.position();
@@ -286,7 +290,8 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 //                        goPaste();
 //                    }
                     if(keyEvent->key()==86){
-                        salvaMappa();
+                        //salvaMappa();
+                        this->textEdit->clear();
                     }
                     return false;
                 }
@@ -456,6 +461,20 @@ void TextEdit::goPaste(){
     QString s(QApplication::clipboard()->mimeData()->text());
     emit pasteSig(s);
     qDebug()<<"lalla";
+}
+
+void TextEdit::clear()
+{
+    this->textEdit->clear();
+}
+
+/**
+ * @brief TextEdit::refresh
+ * scrive sull'editor dopo cambiamenti in symMap
+ */
+void TextEdit::refresh()
+{
+
 }
 
 void TextEdit::setupTextActions()
@@ -1096,6 +1115,11 @@ void TextEdit::cursorPositionChanged()
     }
 
 
+    if(mappaEtichette.contains("Me")){
+        QLabel* l=mappaEtichette.find("Me").value();
+        QRect s=textEdit->cursorRect();
+        l->move(s.left(), s.bottom());
+    }
     emit cursorChanged(posx,posy,anchor);
     //statusBar()->showMessage(str, 0);
 
@@ -1128,6 +1152,23 @@ void TextEdit::mergeFormatOnWordOrSelection(const QTextCharFormat &format)
 
         for(int i=anch; i<=curs; i++){
             this->editor->updateFormat(i+1,format);
+        }
+    }
+
+    else{
+        int pos=cursor.position();
+        int anchor=cursor.anchor();
+
+        if(pos>anchor){
+            for(int i=anchor; i<pos; i++){
+                this->editor->updateFormat(i+1,format);
+                                            }
+                     }
+        else{
+                for(int i=pos; i<anchor; i++){
+                    this->editor->updateFormat(i+1,format);
+            }
+
         }
     }
 
@@ -1165,7 +1206,7 @@ void TextEdit::alignmentChanged(Qt::Alignment a)
 
 void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){ //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
 
-    //qDebug()<<posX<<posY<<car<<user; DEBUG
+    qDebug()<<posX<<posY<<car<<user;
 
     if(!mappaCursori.contains(user)){
         //Se non ho mai visto questo user lo metto nella lista di user
@@ -1174,12 +1215,14 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
         //Se non ho mai visto questo user creo un nuovo Cursore
 
         mappaCursori.insert(user,new QTextCursor(textEdit->document()));
+
         //muovo il cursore
 
         QTextCursor *s= mappaCursori.find(user).value();
 
         disconnect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
+
         s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
         s->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
         s->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
@@ -1194,6 +1237,13 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
        s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
         }
 
+        QLabel *lab=new QLabel(user, textEdit);
+        mappaEtichette.insert(user,lab);
+        QRect r=textEdit->cursorRect();
+        lab->move(r.left(), r.bottom());
+        lab->setFont(QFont("Arial",6,12,true));
+        lab->setStyleSheet("QLabel { background-color : rgba(255, 0, 0,64); color : blue; }");
+        lab->show();
 
         connect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
@@ -1222,6 +1272,12 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
        else{
             s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
         }
+
+        QLabel *lab=mappaEtichette.find(user).value();
+        mappaEtichette.insert(user,lab);
+        QRect r=textEdit->cursorRect();
+        lab->move(r.left(), r.bottom());
+        lab->show();
 
         connect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
@@ -1330,6 +1386,7 @@ void TextEdit::cancellaAtCursor(int& posX,int& posY,int& anchor,char& car ,QStri
 
         else if(car=='\x7'){
             s1->deleteChar();
+
         }
 
     }
@@ -1374,10 +1431,21 @@ void TextEdit::addMeSlot(){
        else{
             s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
         }
-        mappaCursori.insert("Me ",s);
+        mappaCursori.insert("Me",s);
+
+        QLabel *lab=new QLabel(QString("Me"), textEdit);
+        mappaEtichette.insert("Me",lab);
+        QRect r=textEdit->cursorRect();
+        lab->move(r.left(), r.bottom());
+        lab->setFont(QFont("Arial",6,12,true));
+        lab->setStyleSheet("QLabel { background-color : rgba(255, 0, 0,64); color : blue; }");
+
+        lab->show();
 
 
     }
+
+
 }
 
 void TextEdit::nuovoStileSlot(QString& stile,QString& param){
@@ -1416,13 +1484,22 @@ void TextEdit::nuovoStileSlot(QString& stile,QString& param){
 void TextEdit::salvaMappa(){
     QFile *f= new QFile("mappa");
     f->open(QIODevice::ReadWrite | QIODevice::Text);
-    QByteArray s=serialize(this->editor->symMap);
+
+    QByteArray s;
+    QDataStream out(&s, QIODevice::WriteOnly);
+    QDataStream in(&s, QIODevice::ReadOnly);
+
+    out << this->editor->symMap;
+
     QMap<double,Symbol> deserial;
-    QDataStream in(&s, QIODevice::ReadWrite);
-//    in >> deserial;                  // DEBUG
-//    qDebug()<<deserial.keys();       // DEBUG
-    f->write(s.toBase64(QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals));
+    in >> deserial;                  // DEBUG
+
+    qDebug()<<deserial.keys();
+    f->write(s);
+
 
 
     f->close();
 }
+
+

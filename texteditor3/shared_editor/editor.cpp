@@ -12,24 +12,25 @@ Editor::Editor(QObject *parent) : QObject(parent)
 
 }
 
-Editor::Editor(QString Id, QString fName,QString body,QString username)
+Editor::Editor(QString Id, QString fName, QByteArray body, QString username)
 {
     this->nomeFile = fName;
-    this->username=username;
+    this->username = username;
     this->DocId = Id;
-    this->file = new QFile(this->nomeFile);
-    file->open(QIODevice::ReadWrite | QIODevice::Text);
 
-    if (this->file->isOpen()){
-        QTextStream stream(this->file);
-        stream << body<<endl;
-        this->loadMap();
-
-
+    if (!body.isEmpty()){
+        QDataStream out(&body, QIODevice::ReadWrite);
+        out >> this->symMap;
     }
-    file->close();
+    qDebug() << symMap.keys();
+
 }
 
+/**
+ * @brief Editor::loadMap
+ * @return
+ * old code
+ */
 bool Editor::loadMap()
 {
     QByteArray ba = this->file->readLine();
@@ -37,7 +38,7 @@ bool Editor::loadMap()
     while (!ba.isNull()) {
         for (int i = 0; i< ba.size(); i++){
             QChar c = ba.at(i);
-            Symbol sym = Symbol("Client", c, idx,"");      // username = server
+            Symbol sym = Symbol("Client", c, idx,1);      // username = server
             this->symMap.insert(idx, sym);
             //this->_symbols.push_back(sym);
             idx++;

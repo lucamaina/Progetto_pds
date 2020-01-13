@@ -66,6 +66,7 @@ void Network::sendToEdit(Message &msg)
         // utente non ha permesso di scrivere
         return;
     }
+    delete ed;
 }
 
 /**
@@ -105,6 +106,21 @@ bool Network::addRefToEditor(QString fileId, utente &user)
     }
 }
 
+bool Network::remRefToEditor(QString fileId, QString user)
+{
+    if (this->editorMap.contains(fileId)){
+        Editor *ed = editorMap.value(fileId);
+        ed->removeUser(user);
+        if(ed->isEmpty()){
+            ed->save();
+            this->editorMap.remove(fileId);
+        }
+        return true;
+    } else {
+        return false;
+    }
+}
+
 Editor &Network::getEditor(QString docId)
 {
     return *this->editorMap.value(docId);
@@ -123,6 +139,7 @@ void Network::dispatch()
             // leggo messaggio e lo consegno
             sendToEdit(msg);
             // send to altri utenti
+
 
         }
     }

@@ -8,8 +8,7 @@
 #include <mutex>
 #include <QDebug>
 #include <QTcpSocket>
-#include <QJsonObject>
-#include <QJsonDocument>
+#include <QPointer>
 
 #include "message.h"
 #include "symbol.h"
@@ -24,8 +23,10 @@ private:
     // std::mutex m;
     QString nomeFile;
     QString DocId;      // id usato nel db
+
     QFile *file;
     int refCount;
+
     QMap<double, Symbol> symMap;
     QVector<utente> userList;
     QMap<QString, QTcpSocket*> sendList;
@@ -45,6 +46,9 @@ public:
     QString mapToSend();
     bool loadFile(const QString &nomeUser, const int dimFile);        // leggo socket dell'utente e carico il file
     ~Editor();
+
+        bool save();
+        bool isEmpty();
 
     /****************************************************************************
      * metodi controllo utenti **************************************************/
@@ -71,7 +75,7 @@ public:
     void editProva(void);
 
 private:
-    bool save();
+
 
     // metodi non definiti
     Editor(const Editor & hold) = delete;

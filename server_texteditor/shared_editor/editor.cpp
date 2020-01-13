@@ -37,9 +37,11 @@ bool Editor::loadMap()
     ba = file->readAll();
     ba = ba.fromBase64(ba, QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals);
 
-    QDataStream out(&ba, QIODevice::ReadWrite);
+    if (!ba.isEmpty()){
+        QDataStream out(&ba, QIODevice::ReadWrite);
+        out >> this->symMap;
+    }
 
-    out >> this->symMap;
     return true;
 }
 
@@ -140,14 +142,13 @@ bool Editor::process(Message &msg)
         // call localDel
         this->localDelete(msg);
         this->remoteSend(msg);
-    }
-    else if(tipo == Message::msgType::Cur_Cng){
+    } else if(tipo == Message::msgType::Cur_Cng){
         this->cursorChange(msg);
         this->remoteSend(msg);
-    }
-    else {
+    } else {
         return false;
     }
+
     return false;
 }
 
@@ -255,6 +256,9 @@ bool Editor::removeUser(const QString &nomeUser)
 {
     if (this->sendList.contains(nomeUser)){
         this->sendList.remove(nomeUser);
+
+
+
         return true;
     }
     return false;
@@ -263,6 +267,11 @@ bool Editor::removeUser(const QString &nomeUser)
 bool Editor::findUser(const QString &nomeUser)
 {
     return this->sendList.contains(nomeUser);
+}
+
+bool Editor::isEmpty()
+{
+    return this->userList.isEmpty();
 }
 
 
@@ -323,5 +332,7 @@ bool Editor::save()
 
     file->write(ba.toBase64(QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals));
     file->close();
+
+    qDebug() << "Salvataggio di: " << this->nomeFile << endl;
     return true;
 }

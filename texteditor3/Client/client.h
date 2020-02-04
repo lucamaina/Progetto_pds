@@ -20,12 +20,15 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = nullptr);
     void handleBrowse(QMap<QString,QString> cmd);
-    void remoteInsert(QChar& c, QTextCharFormat format, int posx, int posy, int anchor);
+    bool remoteInsert(QChar& c, QTextCharFormat format, int posx, int posy, int anchor);
     void remoteDelete(QChar& c, int posx, int posy, int anchor);
     void inserimento(QMap<QString,QString> cmd);
     void loadFile(QMap<QString,QString> cmd);
     QString serialize(const QTextCharFormat &format);
     QTextCharFormat deserialize(QByteArray &s);
+    bool isLogged(void){
+        return this->logged;
+    }
 
 
 
@@ -75,7 +78,7 @@ private:
     /****************************************************************************
      ***************** metodi controllo dei comandi ricevuti ********************/
 
-    void leggiXML(QByteArray data);
+    bool leggiXML(QByteArray data);
     void dispatchCmd(QMap<QString, QString> cmd);
     void dispatchOK(QMap <QString, QString> cmd);
     void dispatchERR(QMap <QString,QString> cmd);

@@ -97,6 +97,7 @@ void RegisterDialog::setPassword2(QString &password){
 void RegisterDialog::slotAcceptRegistration(){
  QString username = comboUsername->currentText();
  QString password1 = editPassword1->text();
+
  QString password2 = editPassword2->text();
  int index = comboUsername->currentIndex();
 

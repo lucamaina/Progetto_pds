@@ -19,8 +19,9 @@ void Network::push(Message &msg)
 {
     std::unique_lock<std::mutex> lg(mQueue);
     this->msgQueue.push_back(msg);
-    lg.unlock();
+
     emit sigSend();
+    return;
 }
 
 /**
@@ -66,7 +67,6 @@ void Network::sendToEdit(Message &msg)
         // utente non ha permesso di scrivere
         return;
     }
-    delete ed;
 }
 
 /**
@@ -132,7 +132,7 @@ Editor &Network::getEditor(QString docId)
  */
 void Network::dispatch()
 {
-    std::lock_guard<std::mutex> lg(mQueue);
+    //std::lock_guard<std::mutex> lg(mQueue);
     if (!msgQueue.isEmpty()){
         while (msgQueue.size() > 0){
             Message msg = msgQueue.dequeue();
@@ -143,4 +143,5 @@ void Network::dispatch()
 
         }
     }
+    return;
 }

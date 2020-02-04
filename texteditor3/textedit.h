@@ -194,6 +194,8 @@ private:
     void testo();
     bool eventFilter(QObject *obj, QEvent *e) override;
 
+    bool inserimento(QKeyEvent &e, int posCursor, QChar car, QTextCharFormat format, int posx, int anchor);
+
 private slots:
     void goPaste();
     void clear();

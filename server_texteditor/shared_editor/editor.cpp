@@ -136,8 +136,11 @@ bool Editor::process(Message &msg)
 {
     Message::msgType tipo = msg.getTipo();
     if (tipo == Message::msgType::Rem_In){
-        this->localInsert(msg);
-        this->remoteSend(msg);
+        if (this->localInsert(msg) == true) {
+            this->remoteSend(msg);
+        } else {
+            // rispondi con err
+        }
     } else if (tipo == Message::msgType::Rem_Del) {
         // call localDel
         this->localDelete(msg);
@@ -157,7 +160,14 @@ bool Editor::send(QTcpSocket* t, QByteArray ba)
     if (t->write(ba, ba.length()) == -1){
         return false;
     }
+    qDebug() << "To client: " << ba;
     return true;
+}
+
+bool Editor::rispErr(Message &msg)
+{
+    return this->send(this->sendList.value(msg.getUser()),
+                      Comando(Comando::Insert_Err).toByteArray());
 }
 
 bool Editor::deserialise(QByteArray &ba)
@@ -305,9 +315,13 @@ bool Editor::localDelete(Message msg)
 bool Editor::remoteSend(Message msg)
 {
     QByteArray ba = msg.toQByteArray();
+
     foreach (QString ut, this->sendList.keys()){
         if (ut != msg.getUser()){
             this->send(sendList.value(ut), ba);
+        } else {
+            // invia messaggio di ok
+            this->send(sendList.value(ut), Comando(Comando::Insert_Ok).toByteArray());
         }
     }
     return true;

@@ -218,8 +218,24 @@ void TextEdit::testo(){
 
 bool TextEdit::eventFilter(QObject *obj, QEvent *event){
     //this->statusBar()->showMessage("textedit event", 1000);
+    if (!this->client->isLogged()){
+        this->statusBar()->showMessage("Utente non loggato", 2000);
+        return false;   // eseguo normalmente
+    }
+
     if (obj == this->textEdit) {
+        QTextCursor s = textEdit->textCursor();
+        int poss = s.position();
+
         if (event->type() == QEvent::KeyPress) {
+
+            // verifica key di interesse
+
+            // verifica non delete -> delete
+
+            // chiama localinsert
+            // chiama remoteinsert
+
             QKeyEvent *e = static_cast<QKeyEvent*>(event);
             int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
             int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
@@ -227,8 +243,10 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 
             if(e->text()==""){ return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
 
-            if(e->key()==16777219 || e->key()==16777223){
-                QChar c=e->key();
+            if(e->key()==Qt::Key_Backspace || e->key()==Qt::Key_Delete){    // 16777219 , 16777223
+                // PULSANTI DI CANCELLAZIONE
+                this->statusBar()->showMessage("Press key = " + QKeySequence(e->key()).toString() , 1000);
+                QChar c = e->key();
 
                 this->client->remoteDelete(c,posx,posy,anchor);    // PULSANTE BACKSPACE CHIAMA CANCELLAZIONE REMOTA
                 QTextCursor s=textEdit->textCursor();
@@ -237,7 +255,7 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 
                     int poscurs=s.position();
                     int posanch=s.anchor();
-                    qDebug()<<poscurs<<"agafgafga"<<posanch;
+                    qDebug()<<"poscurs: "<<poscurs<<", posanchor: "<<posanch;
                     for(int i=poscurs+1; i<=posanch; i++){
                         this->editor->deleteLocal(poscurs+1);
                     }
@@ -247,39 +265,57 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 
                 return false;
 
-            }
+            } else {
+                // PULSANTI DI INSERIMENTO
 
-            QChar c = e->text().front();
-            //qDebug()<<this->client->remoteFile->insertLocal(this->textEdit->textCursor().position(),e->text().front().toLatin1()); DEBUG
-            QTextCharFormat format = textEdit->textCursor().charFormat();
-            //qDebug()<<format.font();
+                QChar c = e->text().front();        // carattere da inserire
+                QTextCharFormat format = textEdit->textCursor().charFormat();   // formato del carattere
 
-            this->client->remoteInsert(c,format,posx,posy,anchor); //INSERIMENTO REMOTO
-            QTextCursor s=textEdit->textCursor();
+                this->inserimento(*e, poss, c, format, posx, anchor);
+                /*
+                // INSERIMENTO REMOTO
+                qDebug()<<"chiavi: "<< this->editor->symMap.keys();
 
-            QTextCharFormat formato= s.charFormat();
-            //qDebug()<<"formato"<<formato.fontFamily(); DEBUG
-            if(s.hasSelection()){
+                this->client->remoteInsert(c,format,posx,poss,anchor); //INSERIMENTO REMOTO
+                QTextCursor s=textEdit->textCursor();
 
-                int poscurs=s.position();
-                int posanch=s.anchor();
-                qDebug()<<poscurs<<"agafgafga"<<posanch;
-                for(int i=poscurs+1; i<=posanch; i++){
-                    this->editor->deleteLocal(poscurs+1);
+                QTextCharFormat formato= s.charFormat();
+                //qDebug()<<"formato"<<formato.fontFamily(); DEBUG
+                if(s.hasSelection()){
+
+                    int poscurs=s.position();
+                    int posanch=s.anchor();
+                    qDebug()<<poscurs<<"agafgafga"<<posanch;
+                    for(int i=poscurs+1; i<=posanch; i++){
+                        this->editor->deleteLocal(poscurs+1);
+                    }
                 }
+
+                // VERIFICA RISPOSTA SERVER
+
+                // INSERIMENTO LOCALE
+                int poss=s.position();
+                double in = this->editor->insertLocal(poss,c.toLatin1(),format);
+
+                if (in < 0){
+                    this->statusBar()->showMessage("impossibile inserire", 1000);
+                } else {
+                    this->statusBar()->showMessage("At position: " + QString::number(poss) +
+                                                   " Key pressed: " + QKeySequence(e->key()).toString() +
+                                                   " Text insert: " + e->text().front(), 1000);
+                    s.insertText(c, format);
+                }
+*/
+                return true;
+
             }
-            int poss=s.position();
-            this->editor->insertLocal(poss,c.toLatin1(),formato);
 
-            qDebug()<<poss;
-            qDebug()<<e->text().front();
-            qDebug()<<e->key();
-
-
-            this->statusBar()->showMessage(c, 1000);
-            qDebug()<<"chiavi: "<<this->editor->symMap.keys();
 
         }
+
+        /*
+         * modifica shortcut di copia e incolla
+         */
         if(event->type() == QEvent::ShortcutOverride)
             {
                 QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
@@ -299,6 +335,37 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
         return false;
     }
 
+    return false;
+}
+
+bool TextEdit::inserimento(QKeyEvent &e, int posCursor, QChar car, QTextCharFormat format, int posx, int anchor)
+{
+    QTextCursor s = textEdit->textCursor();
+    int poss=s.position();
+    double in = this->editor->insertLocal(poss,car.toLatin1(),format);
+
+    if (in < 0){
+        this->statusBar()->showMessage("impossibile inserire in locale", 1000);
+    } else if (this->client->remoteInsert(car,format,posx,posCursor,anchor)) {// INSERIMENTO REMOTO, manda comando a server
+        // true se server risp OK, eseguo localInsert
+
+        if(s.hasSelection()){
+            int poscurs=s.position();
+            int posanch=s.anchor();
+            qDebug()<<poscurs<<"agafgafga"<<posanch;
+            for(int i=poscurs+1; i<=posanch; i++){
+                this->editor->deleteLocal(poscurs+1);
+            }
+        }
+        this->statusBar()->showMessage("At position: " + QString::number(poss) +
+                                       " Key pressed: " + QKeySequence(e.key()).toString() +
+                                       " Text insert: " + e.text().front(), 1000);
+
+        s.insertText(car, format);
+        return true;
+    } else {
+        this->statusBar()->showMessage("impossibile inserire da remoto", 1000);
+    }
     return false;
 }
 
@@ -1204,7 +1271,8 @@ void TextEdit::alignmentChanged(Qt::Alignment a)
         actionAlignJustify->setChecked(true);
 }
 
-void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){ //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
+void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){
+    //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
 
     qDebug()<<posX<<posY<<car<<user;
 
@@ -1284,12 +1352,12 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
 
 
     }
-QTextCursor *s= mappaCursori.find(user).value();
+    QTextCursor *s= mappaCursori.find(user).value();
 
-QChar c(car);
+    QChar c(car);
 
-if(c!=0)s->insertText(c);
-return ;
+    if(c!=nullptr)s->insertText(c);
+    return ;
 }
 
 void TextEdit::deleteListSlot(){
@@ -1400,7 +1468,7 @@ void TextEdit::nuovoFile(QString& filename){
     else{
         statusBar()->showMessage(tr("NOT Opened \"%1\"").arg(QDir::toNativeSeparators(filename)));
         QMessageBox Messaggio;
-        Messaggio.critical(0,"OpenFile ERROR",filename);
+        Messaggio.critical(nullptr,"OpenFile ERROR",filename);
         Messaggio.setFixedSize(500,200);
 }
     return;

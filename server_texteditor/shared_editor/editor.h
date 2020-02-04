@@ -12,6 +12,7 @@
 
 #include "message.h"
 #include "symbol.h"
+#include "../server/comando.h"
 
 class s_thread;
 
@@ -62,9 +63,10 @@ public:
     bool localDelete(Message msg);
     bool cursorChange(Message msg);
     bool remoteSend(Message msg);
-    bool process(Message& msg);
-    bool send(QTcpSocket *t, QByteArray ba);
 
+    bool send(QTcpSocket *t, QByteArray ba);
+    bool rispErr(Message &msg);
+    bool process(Message& msg);
 
     /****************************************************************************
      * metodi di serialize e deserialize ****************************************/

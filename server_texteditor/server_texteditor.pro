@@ -22,6 +22,7 @@ SOURCES += \
         database/db.cpp \
         logger/logger.cpp \
         main.cpp \
+        server/comando.cpp \
         server/s_thread.cpp \
         server/server.cpp \
         server_main.cpp \
@@ -44,6 +45,7 @@ HEADERS += \
     database/db.h \
     logger/logger.h \
     server/cmdstring.h \
+    server/comando.h \
     server/s_thread.h \
     server/server.h \
     server_main.h \

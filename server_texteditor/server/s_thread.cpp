@@ -57,7 +57,7 @@ s_thread::~s_thread()
  */
 void s_thread::leggiXML(QByteArray qb)
 {
-    qDebug() << "Leggo XML";
+    qDebug() << endl << "Leggo XML from client:";
     QMap<QString, QString> command;
 
     qDebug() << qb;
@@ -66,9 +66,9 @@ void s_thread::leggiXML(QByteArray qb)
     while (!stream.atEnd() && !stream.hasError() ){
         QXmlStreamReader::TokenType token = stream.readNext();
         // leggo start document
-        if (token == QXmlStreamReader::StartDocument){
+        /*if (token == QXmlStreamReader::StartDocument){
             qDebug() << "start doc: " << QString(token) << " - " << stream.readElementText();
-        }
+        }*/
         token = stream.readNext();
         // leggo elemento con nome del comando
         if (token == QXmlStreamReader::StartElement){
@@ -81,7 +81,7 @@ void s_thread::leggiXML(QByteArray qb)
         while ( token == QXmlStreamReader::StartElement ){
             QString name = stream.name().toString(), text = stream.readElementText();
             command.insert(name, text);
-            qDebug() << "start elem: " << name << " val: " << text;
+            qDebug() << "   start elem: " << name << " val: " << text;
             token = stream.readNext();
         }
     }
@@ -121,7 +121,7 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
     } else if (comando.value() == OPEN_FILE) {
         this->openFile(cmd);
     } else if (comando.value() == REM_IN || comando.value() == REM_DEL || comando.value() == CRS) {
-    this->sendMsg(cmd);
+        this->sendMsg(cmd);
     }
 }
 

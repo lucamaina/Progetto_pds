@@ -68,6 +68,10 @@
 #define FILE_ERR "error - user cannot open file"
 #define FILE_OK "ok - file open"
 
+#define INS_ERR "error - inert not possible"
+#define INS_OK "ok - insert done"
 
+#define REM_ERR "error - remove not possible"
+#define REM_OK "ok - remove done"
 
 #endif // CMDSTRING_H

@@ -90,6 +90,7 @@ double Editor::fmed(double num1, double num2) {
 
 double Editor::insertLocal(double index,char value, QTextCharFormat formato){
     Symbol s;
+
     auto lista=symMap.keys();
      if(symMap.empty()){  // il primo parte da 1
           s=Symbol(username,value,1,formato);
@@ -110,7 +111,7 @@ double Editor::insertLocal(double index,char value, QTextCharFormat formato){
          return 0;
 
      }
-     else{  // (prima+dopo) / 2
+     else if ( index != 0){  // (prima+dopo) / 2
          double tempmin=0,tempmax=0;
 
              while(index>1){
@@ -123,12 +124,13 @@ double Editor::insertLocal(double index,char value, QTextCharFormat formato){
              tempmax=lista.front();
 
          double tmpidx = fmed(tempmin,tempmax);
+         // se tmpidx == tempmin o tempmax
           s=Symbol(username,value,tmpidx,formato);
          symMap.insert(tmpidx,s);
          return tmpidx;
      }
-
-};
+    return -1;
+}
 
 
 void Editor::deleteLocal(double index){

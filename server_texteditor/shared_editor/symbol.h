@@ -19,6 +19,7 @@ private:
     double index;
     QString userName;           // identifica utente che inserische il carattere
     QByteArray formato;
+    // campo anchor int
 
 public:
     explicit Symbol();

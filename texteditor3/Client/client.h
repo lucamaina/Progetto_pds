@@ -20,8 +20,8 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = nullptr);
     void handleBrowse(QMap<QString,QString> cmd);
-    bool remoteInsert(QChar& c, QTextCharFormat format, int posx, int posy, int anchor);
-    void remoteDelete(QChar& c, int posx, int posy, int anchor);
+    bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
+    bool remoteDelete(QChar& c, double index, int anchor);
     void inserimento(QMap<QString,QString> cmd);
     void loadFile(QMap<QString,QString> cmd);
     QString serialize(const QTextCharFormat &format);

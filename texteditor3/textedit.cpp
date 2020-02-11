@@ -248,7 +248,7 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
                 this->statusBar()->showMessage("Press key = " + QKeySequence(e->key()).toString() , 1000);
                 QChar c = e->key();
 
-                this->client->remoteDelete(c,posx,posy,anchor);    // PULSANTE BACKSPACE CHIAMA CANCELLAZIONE REMOTA
+                this->client->remoteDelete(c,posx,anchor);    // PULSANTE BACKSPACE CHIAMA CANCELLAZIONE REMOTA
                 QTextCursor s=textEdit->textCursor();
                 int poss=s.position();
                 if(s.hasSelection()){
@@ -342,19 +342,22 @@ bool TextEdit::inserimento(QKeyEvent &e, int posCursor, QChar car, QTextCharForm
 {
     QTextCursor s = textEdit->textCursor();
     int poss=s.position();
-    double in = this->editor->insertLocal(poss,car.toLatin1(),format);
+    double index = this->editor->localIndex(poss);
 
-    if (in < 0){
+    if (index < 0){
         this->statusBar()->showMessage("impossibile inserire in locale", 1000);
-    } else if (this->client->remoteInsert(car,format,posx,posCursor,anchor)) {// INSERIMENTO REMOTO, manda comando a server
-        // true se server risp OK, eseguo localInsert
+        return false;
+    } else if (this->client->remoteInsert(car,format,index,posCursor,anchor)) {// INSERIMENTO REMOTO, manda comando a server
+        // true se server risp OK
 
         if(s.hasSelection()){
             int poscurs=s.position();
             int posanch=s.anchor();
-            qDebug()<<poscurs<<"agafgafga"<<posanch;
+//            qDebug()<<poscurs<<"agafgafga"<<posanch;
             for(int i=poscurs+1; i<=posanch; i++){
-                this->editor->deleteLocal(poscurs+1);
+              //  this->editor->deleteLocal(poscurs+1);
+                //TODO remote delete per ogni carattere
+                this->client->remoteDelete(car, index, anchor);
             }
         }
         this->statusBar()->showMessage("At position: " + QString::number(poss) +
@@ -365,8 +368,14 @@ bool TextEdit::inserimento(QKeyEvent &e, int posCursor, QChar car, QTextCharForm
         return true;
     } else {
         this->statusBar()->showMessage("impossibile inserire da remoto", 1000);
+        this->editor->deleteLocal(posx); // TODO verifica index
     }
     return false;
+}
+
+bool TextEdit::cancellamento(int posCursor)
+{
+
 }
 
 /**************************************************************/

@@ -599,20 +599,19 @@ QTextCharFormat Client::deserialize(QByteArray &s)
     return frm;
 }
 
-bool Client::remoteInsert(QChar& c, QTextCharFormat format, int posx, int posy,int anchor){
+bool Client::remoteInsert(QChar& c, QTextCharFormat format, double index, int posy,int anchor){
 
     //if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
 
 
     QMap<QString,QString> cmd;
     cmd.insert(CMD, REM_IN);
-    cmd.insert("char", c);
-    cmd.insert(CRS, QString::number(posx));
-    cmd.insert("format", QString(this->serialize(format)));
-    cmd.insert("index", QString::number(posy));     //
+    cmd.insert(CAR, c);
+    cmd.insert(IDX, QString::number(index));
+    cmd.insert(FORMAT, QString(this->serialize(format)));
     cmd.insert("anchor", QString::number(anchor));
     cmd.insert(UNAME,username);
-    cmd.insert("docid",docID);
+    cmd.insert(DOCID,docID);
 
     qDebug() << cmd;
 
@@ -622,7 +621,7 @@ bool Client::remoteInsert(QChar& c, QTextCharFormat format, int posx, int posy,i
     // verifica risposta da server
     char v[4096];
     this->socket->waitForReadyRead(100);
-    int read = socket->read(v, 4096);
+    qint64 read = socket->read(v, 4096);
     if ( read < 0){
         qDebug() << "errore in socket::read()";
         return false;
@@ -633,18 +632,31 @@ bool Client::remoteInsert(QChar& c, QTextCharFormat format, int posx, int posy,i
 
 }
 
-void Client::remoteDelete(QChar& c, int posx, int posy, int anchor){
-
-    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
-
+bool Client::remoteDelete(QChar& c, double index, int anchor)
+{
     QMap<QString,QString> cmd;
     cmd.insert(CMD, REM_DEL);
-    cmd.insert("char", c);
-    cmd.insert(CRS, QString::number(posx));
-    cmd.insert("index", QString::number(posy));
+    cmd.insert(CAR, c);
+    cmd.insert(IDX, QString::number(index));
     cmd.insert("anchor", QString::number(anchor));
     cmd.insert(UNAME,username);
-    cmd.insert("docid",docID);
+    cmd.insert(DOCID,docID);
+
+    this->disconnect(this->socket, SIGNAL(readyRead()));
+    this->sendMsg(cmd);
+
+    // verifica risposta da server
+    char v[4096];
+    this->socket->waitForReadyRead(100);
+    qint64 read = socket->read(v, 4096);
+    if ( read < 0){
+        qDebug() << "errore in socket::read()";
+        return false;
+    }
+    this->connect(this->socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+
+    return this->leggiXML(v);
+
 }
 
 void Client::readyRead(){

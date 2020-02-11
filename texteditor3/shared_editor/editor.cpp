@@ -57,6 +57,57 @@ Editor::~Editor()
     this->file->remove();
 }
 
+double Editor::localIndex(int posCursor)
+{
+    double index = 0;
+    auto lista = symMap.keys();
+    lista.prepend(0);
+
+     if(symMap.empty()){  // il primo parte da 1
+         index=1;
+         return index;
+     }
+
+     if(lista.size()<=posCursor){ //prendi l ultimo index float e fai +1
+        index = posCursor + 1;
+        return index;
+     }
+     else {
+        double tempmin=0,tempmax=0;
+        tempmin = lista.takeAt(posCursor);
+        tempmax = lista.takeAt(posCursor + 1);
+        double tmpidx = fmed(tempmin,tempmax);
+        if (tmpidx == tempmin || tmpidx == tempmax) // TODO comparazione migliore
+            return -1;
+        return tmpidx;
+     }
+
+     /*
+     else if(posCursor==0){ //tra 0 e il primo
+         double tmpidx = fmed(0,symMap.firstKey());
+         index = tmpidx;
+         return index;
+     }
+     else if ( posCursor != 0){  // (prima+dopo) / 2
+         double tempmin=0,tempmax=0;
+
+             while(posCursor>1){
+                 posCursor--;
+                 lista.pop_front();
+             }
+             tempmin=lista.front();
+             lista.pop_front();
+             //qDebug()<<tempmin;   DEBUG
+             tempmax=lista.front();
+
+         double tmpidx = fmed(tempmin,tempmax);
+         // se tmpidx == tempmin o tempmax
+         index = tmpidx;
+         return tmpidx;
+     }
+    return -1;*/
+}
+
 
 
 

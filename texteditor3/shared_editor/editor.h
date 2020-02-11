@@ -41,6 +41,9 @@ public:
      * metodi di insert e delete ************************************************/
     bool localInsert(Message msg);
     void localDelete(int index);
+
+    double localIndex(int posCursor);
+
     bool cursorChange(Message msg);
     bool remoteSend(Message msg);
     double insertLocal(double index,char value, QTextCharFormat formato);

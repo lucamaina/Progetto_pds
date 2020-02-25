@@ -20,7 +20,7 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = nullptr);
     void handleBrowse(QMap<QString,QString> cmd);
-    bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
+    bool remoteInsert(QChar& c, QTextCharFormat format, double index);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
     bool remoteDelete(QChar& c, double index, int anchor);
     void inserimento(QMap<QString,QString> cmd);
     void loadFile(QMap<QString,QString> cmd);
@@ -31,7 +31,7 @@ public:
     }
 
 
-
+    // puntatore all'editor remoto
     Editor* remoteFile;
 
 
@@ -44,6 +44,8 @@ signals:
     void nuovoStile(QString& stile,QString& param);
     void openFileSignal(QString& filename);
     void clearEditor();
+    void toStatusBar(QString s);
+    void s_setText(QChar c, QTextCharFormat f, int posCur);
 
 public slots:
     void connected();

@@ -12,6 +12,7 @@ Client::Client(QObject *parent) : QObject(parent)
     filename="";
     tempUser="";
     tempPass="";
+    remoteFile = nullptr;
 
     socket = new QTcpSocket(this);
     socket->connectToHost(QHostAddress::LocalHost, 2000);
@@ -25,6 +26,7 @@ Client::Client(QObject *parent) : QObject(parent)
     connect(this, SIGNAL(addMe()),this->parent(),SLOT(addMeSlot()));
     connect(this, SIGNAL(nuovoStile(QString&,QString&)), this->parent(),SLOT(nuovoStileSlot(QString&,QString&)));
     connect(this, SIGNAL(openFileSignal(QString&)), this, SLOT(handleNuovoFile(QString&)));
+
 }
 
 
@@ -204,10 +206,12 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
 
         this->logged=true;
     } else if(comando.value()==FILE_OK){
+        /*
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"File open","File opened successfully");
         Messaggio.setFixedSize(500,200);
-
+        */
+        emit this->toStatusBar("File opened successfully");
         this->logged=true;
     } else {
         qDebug() << comando.key();
@@ -324,7 +328,7 @@ void Client::handleBrowse(QMap<QString,QString> cmd){
  */
 void Client::loadFile(QMap<QString,QString> cmd){
     qDebug() << cmd.toStdMap();
-    int dim = cmd.find(BODY).value().toInt();
+    qint64 dim = cmd.find(BODY).value().toInt();
 
     QByteArray qba;
     char v[4096];
@@ -335,7 +339,7 @@ void Client::loadFile(QMap<QString,QString> cmd){
     dim = dim - qba.size();
     while (dim > 0){
         if (socket->bytesAvailable() > 0){
-            int read = socket->read(v, 4096);
+            qint64 read = socket->read(v, 4096);
             if ( read < 0){
                 qDebug() << "errore in socket::read()";
                 return;
@@ -356,27 +360,24 @@ void Client::loadFile(QMap<QString,QString> cmd){
     // TODO ricezione body del file
 }
 
-
-void Client::inserimento(QMap<QString,QString> cmd){
-    QString user=cmd.find(UNAME).value();
-    double index=cmd.find("index").value().toInt();
-    QByteArray format=cmd.find("format").value().toUtf8();
+/**
+ * @brief Client::inserimento
+ * @param cmd
+ * esegue inserimento nella mappa locale ed emette signal per visualizzare il carattere in texteditor
+ */
+void Client::inserimento(QMap<QString,QString> cmd)
+{
+    qDebug() << cmd;
+    QString user = cmd.find(UNAME).value();
+    double index = cmd.find(IDX).value().toDouble();
+    QByteArray format = QByteArray::fromHex(cmd.find(FORMAT).value().toUtf8());
     QTextCharFormat charform = deserialize(format);
-    int posX=cmd.find("posX").value().toInt();
-    int posY=cmd.find("posY").value().toInt();
-    int anchor=cmd.find("anchor").value().toInt();
-    char c=cmd.find("char").value().at(0).toLatin1();
-
-    if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; }
+    char c = cmd.find(CAR).value().at(0).toLatin1();
 
     this->remoteFile->insertLocal(index,c, charform);
 
-    if(c=='\x3' || c=='\x7'){
-
-        emit cancellaSignal(posX,posY,anchor,c,user);
-    }
-
-    emit spostaCursSignal(posX,posY,anchor,c,user);
+    int posCursor = remoteFile->localPosCursor(index);
+    emit s_setText(c, charform, posCursor);
 }
 
 void Client::spostaCursori(QMap <QString,QString>cmd){
@@ -448,6 +449,7 @@ void Client::handleLogin(QString& username, QString& password)
         QMessageBox Messaggio;
         Messaggio.critical(nullptr,"Login Error","User not connected to the server");
         Messaggio.setFixedSize(500,200);
+
         return;
     }
     this->username=username;
@@ -514,6 +516,7 @@ void Client::handleMyCursorChange(int& posX,int& posY, int& anchor){
     qDebug()<<comando;
     this->sendMsg(comando);
 }
+
 void Client::pasteSlot(QString& clipboard){
     //if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
 
@@ -528,6 +531,7 @@ void Client::pasteSlot(QString& clipboard){
 void Client::remoteOpen(QString& name, QString& docID){
 
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
+
         QMessageBox Messaggio;
         Messaggio.critical(nullptr,"Network Error","User not connected or not logged to the server");
         Messaggio.setFixedSize(500,200);
@@ -594,42 +598,24 @@ QTextCharFormat Client::deserialize(QByteArray &s)
 {
     QTextCharFormat frm;
     QDataStream out(&s,QIODevice::ReadWrite);
-
     out >> frm;
     return frm;
 }
 
-bool Client::remoteInsert(QChar& c, QTextCharFormat format, double index, int posy,int anchor){
-
-    //if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
-
-
+bool Client::remoteInsert(QChar& c, QTextCharFormat format, double index)
+{
     QMap<QString,QString> cmd;
     cmd.insert(CMD, REM_IN);
     cmd.insert(CAR, c);
     cmd.insert(IDX, QString::number(index));
     cmd.insert(FORMAT, QString(this->serialize(format)));
-    cmd.insert("anchor", QString::number(anchor));
+//    cmd.insert("anchor", QString::number(anchor));
     cmd.insert(UNAME,username);
     cmd.insert(DOCID,docID);
 
     qDebug() << cmd;
 
-    this->disconnect(this->socket, SIGNAL(readyRead()));
     this->sendMsg(cmd);
-
-    // verifica risposta da server
-    char v[4096];
-    this->socket->waitForReadyRead(100);
-    qint64 read = socket->read(v, 4096);
-    if ( read < 0){
-        qDebug() << "errore in socket::read()";
-        return false;
-    }
-    this->connect(this->socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
-
-    return this->leggiXML(v);
-
 }
 
 bool Client::remoteDelete(QChar& c, double index, int anchor)

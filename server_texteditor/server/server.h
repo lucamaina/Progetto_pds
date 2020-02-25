@@ -5,6 +5,7 @@
 #include <database/db.h>
 #include <QTcpServer>
 #include <QDebug>
+#include <exception>
 
 #include "../database/db.h"
 #include "s_thread.h"

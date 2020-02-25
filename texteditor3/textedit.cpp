@@ -178,7 +178,7 @@ TextEdit::TextEdit(QWidget *parent)
 
     textEdit->setFocus();
     setCurrentFileName(QString());
-    this->editor= new Editor("1","prova.txt","","pippo");
+//    this->editor= new Editor("1","prova.txt","","pippo");
 
 #ifdef Q_OS_MACOS
     // Use dark text on light background on macOS, also in dark mode.
@@ -188,18 +188,20 @@ TextEdit::TextEdit(QWidget *parent)
     textEdit->setPalette(pal);
 #endif
 
-    setupStatusBar();
     this->textEdit->installEventFilter(this);       // importante
 
 
-    this->client= new Client(this);
+    this->client = new Client(this);
     connect(this, SIGNAL(cursorChanged(int&,int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&,int&)));
     connect(this->client, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
     connect(this, SIGNAL(stileTesto(QString&,QString&)), this->client, SLOT(handleStile(QString&,QString&)));
     connect(this, SIGNAL(pasteSig(QString&)),this->client, SLOT(pasteSlot(QString&)));
     connect(this->client, SIGNAL(clearEditor() ), this, SLOT(clear() ));
+    connect(this->client, &Client::s_setText, this, &TextEdit::setText, Qt::ConnectionType::DirectConnection);
+
 
     //this->client->remoteFile=new Editor("1","mio","","io");  DEBUG
+    setupStatusBar();
 
 }
 
@@ -208,38 +210,32 @@ TextEdit::TextEdit(QWidget *parent)
  * */
 void TextEdit::setupStatusBar(){
     statusBar()->showMessage(tr("Status message: bentornato"), 2000);   // 2 secondi
-    //connect(this->textEdit, &QTextEdit::textChanged, this, &TextEdit::testo );
-}
-
-
-void TextEdit::testo(){
-    this->statusBar()->showMessage("cambio testo", 1000);
+    connect(client,&Client::toStatusBar, this, &TextEdit::statusBarOutput);
 }
 
 bool TextEdit::eventFilter(QObject *obj, QEvent *event){
-    //this->statusBar()->showMessage("textedit event", 1000);
-    if (!this->client->isLogged()){
-        this->statusBar()->showMessage("Utente non loggato", 2000);
-        return false;   // eseguo normalmente
-    }
-
     if (obj == this->textEdit) {
+        if (!this->client->isLogged()){
+            this->statusBar()->showMessage("Utente non loggato", 2000);
+            return false;   // eseguo normalmente
+        }
+
+        if (this->client->remoteFile == nullptr){
+            return false;
+        }
+
         QTextCursor s = textEdit->textCursor();
         int poss = s.position();
 
-        if (event->type() == QEvent::KeyPress) {
-
-            // verifica key di interesse
-
-            // verifica non delete -> delete
-
-            // chiama localinsert
-            // chiama remoteinsert
-
+        if (event->type() == QEvent::KeyPress) {    // verifica key di interesse
             QKeyEvent *e = static_cast<QKeyEvent*>(event);
             int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
             int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
             int anchor=textEdit->textCursor().anchor();
+
+            if (e->isAutoRepeat()){
+                return true;       // salta le azioni ripetute
+            }
 
             if(e->text()==""){ return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
 
@@ -257,11 +253,11 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
                     int posanch=s.anchor();
                     qDebug()<<"poscurs: "<<poscurs<<", posanchor: "<<posanch;
                     for(int i=poscurs+1; i<=posanch; i++){
-                        this->editor->deleteLocal(poscurs+1);
+                        this->client->remoteFile->deleteLocal(poscurs+1);
                     }
                 }
-                else{this->editor->deleteLocal(poss);}
-                qDebug()<<"chiavi: "<<this->editor->symMap.keys();
+                else{this->client->remoteFile->deleteLocal(poss);}
+                qDebug()<<"chiavi: "<<this->client->remoteFile->symMap.keys();
 
                 return false;
 
@@ -272,42 +268,8 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
                 QTextCharFormat format = textEdit->textCursor().charFormat();   // formato del carattere
 
                 this->inserimento(*e, poss, c, format, posx, anchor);
-                /*
-                // INSERIMENTO REMOTO
-                qDebug()<<"chiavi: "<< this->editor->symMap.keys();
 
-                this->client->remoteInsert(c,format,posx,poss,anchor); //INSERIMENTO REMOTO
-                QTextCursor s=textEdit->textCursor();
-
-                QTextCharFormat formato= s.charFormat();
-                //qDebug()<<"formato"<<formato.fontFamily(); DEBUG
-                if(s.hasSelection()){
-
-                    int poscurs=s.position();
-                    int posanch=s.anchor();
-                    qDebug()<<poscurs<<"agafgafga"<<posanch;
-                    for(int i=poscurs+1; i<=posanch; i++){
-                        this->editor->deleteLocal(poscurs+1);
-                    }
-                }
-
-                // VERIFICA RISPOSTA SERVER
-
-                // INSERIMENTO LOCALE
-                int poss=s.position();
-                double in = this->editor->insertLocal(poss,c.toLatin1(),format);
-
-                if (in < 0){
-                    this->statusBar()->showMessage("impossibile inserire", 1000);
-                } else {
-                    this->statusBar()->showMessage("At position: " + QString::number(poss) +
-                                                   " Key pressed: " + QKeySequence(e->key()).toString() +
-                                                   " Text insert: " + e->text().front(), 1000);
-                    s.insertText(c, format);
-                }
-*/
                 return true;
-
             }
 
 
@@ -340,42 +302,40 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 
 bool TextEdit::inserimento(QKeyEvent &e, int posCursor, QChar car, QTextCharFormat format, int posx, int anchor)
 {
-    QTextCursor s = textEdit->textCursor();
-    int poss=s.position();
-    double index = this->editor->localIndex(poss);
+    QTextCursor s = this->textEdit->textCursor();
+    double index = this->client->remoteFile->localIndex(posCursor);
 
     if (index < 0){
         this->statusBar()->showMessage("impossibile inserire in locale", 1000);
         return false;
-    } else if (this->client->remoteInsert(car,format,index,posCursor,anchor)) {// INSERIMENTO REMOTO, manda comando a server
+    } else if (this->client->remoteInsert(car,format,index)) {// INSERIMENTO REMOTO, manda comando a server
         // true se server risp OK
 
         if(s.hasSelection()){
             int poscurs=s.position();
             int posanch=s.anchor();
-//            qDebug()<<poscurs<<"agafgafga"<<posanch;
-            for(int i=poscurs+1; i<=posanch; i++){
-              //  this->editor->deleteLocal(poscurs+1);
+            for( int i=poscurs+1; i<=posanch; i++){
                 //TODO remote delete per ogni carattere
                 this->client->remoteDelete(car, index, anchor);
             }
         }
-        this->statusBar()->showMessage("At position: " + QString::number(poss) +
+
+        this->statusBar()->showMessage("At position: " + QString::number(posCursor) +
                                        " Key pressed: " + QKeySequence(e.key()).toString() +
                                        " Text insert: " + e.text().front(), 1000);
 
-        s.insertText(car, format);
+        // s.insertText(car, format);
         return true;
     } else {
         this->statusBar()->showMessage("impossibile inserire da remoto", 1000);
-        this->editor->deleteLocal(posx); // TODO verifica index
+        this->client->remoteFile->deleteLocal(posx); // TODO verifica index
     }
     return false;
 }
 
 bool TextEdit::cancellamento(int posCursor)
 {
-
+    return false;
 }
 
 /**************************************************************/
@@ -551,6 +511,18 @@ void TextEdit::clear()
 void TextEdit::refresh()
 {
 
+}
+
+void TextEdit::statusBarOutput(QString s)
+{
+    this->statusBar()->showMessage(s, 2000);
+}
+
+void TextEdit::setText(QChar c, QTextCharFormat f, int posCursor)
+{
+    QTextCursor s = textEdit->textCursor();
+    s.setPosition(posCursor, QTextCursor::MoveAnchor);
+    s.insertText(c, f);
 }
 
 void TextEdit::setupTextActions()
@@ -1116,6 +1088,9 @@ void TextEdit::currentCharFormatChanged(const QTextCharFormat &format)
 
 void TextEdit::cursorPositionChanged()
 {
+    //
+    // qDebug() << "Cursore at: " << this->textEdit->textCursor().position();
+    //
     alignmentChanged(textEdit->alignment());
     QTextList *list = textEdit->textCursor().currentList();
     if (list) {
@@ -1180,10 +1155,10 @@ void TextEdit::cursorPositionChanged()
         s1->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
 
         if(anchor<=poss){
-            s1->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
+            s1->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor, poss-anchor);
         }
-       else{
-            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
+        else{
+            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor, anchor-poss);
         }
 
     }
@@ -1227,7 +1202,7 @@ void TextEdit::mergeFormatOnWordOrSelection(const QTextCharFormat &format)
         qDebug()<<"curs: "<<curs<<" anch: "<<anch;
 
         for(int i=anch; i<=curs; i++){
-            this->editor->updateFormat(i+1,format);
+            this->client->remoteFile->updateFormat(i+1,format);
         }
     }
 
@@ -1237,12 +1212,12 @@ void TextEdit::mergeFormatOnWordOrSelection(const QTextCharFormat &format)
 
         if(pos>anchor){
             for(int i=anchor; i<pos; i++){
-                this->editor->updateFormat(i+1,format);
+                this->client->remoteFile->updateFormat(i+1,format);
                                             }
                      }
         else{
                 for(int i=pos; i<anchor; i++){
-                    this->editor->updateFormat(i+1,format);
+                    this->client->remoteFile->updateFormat(i+1,format);
             }
 
         }
@@ -1566,7 +1541,7 @@ void TextEdit::salvaMappa(){
     QDataStream out(&s, QIODevice::WriteOnly);
     QDataStream in(&s, QIODevice::ReadOnly);
 
-    out << this->editor->symMap;
+    out << this->client->remoteFile->symMap;
 
     QMap<double,Symbol> deserial;
     in >> deserial;                  // DEBUG

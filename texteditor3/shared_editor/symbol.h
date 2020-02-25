@@ -35,7 +35,7 @@ public:
     void setDen(const int &value);
     QString getUserName() const;
     void setUserName(const QString &value);
-    int getIndex() const;
+    double getIndex() const;
     void setIndex(const int &value);
 
 };

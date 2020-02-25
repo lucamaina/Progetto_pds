@@ -6,6 +6,7 @@ server::server(QObject *parent) : QTcpServer (parent)
     this->log = &lg;
     log->write("Start server con "+ QString::number(MAX_THREAD) + " thread");
     qDebug() << "Start server con "+ QString::number(MAX_THREAD) + " thread";
+    qDebug() << "Password Hash3-256";
     mioDB = new db(1);
     if (!mioDB->conn()){
         log->write("Impossibilile aprire db");
@@ -54,8 +55,13 @@ void server::incomingConnection(int socketID)
 
         connect(newThread, &s_thread::deleteThreadSig, this, &server::deleteThread, Qt::ConnectionType::DirectConnection);
         // TODO exception
+        try {
+            newThread->run();
+        } catch (std::exception &e) {
+            // TODO migliorare gestione
+            log->write(e.what());
 
-        newThread->run();
+        }
 
     } else {
         qDebug() << "connessione rifiutata, max utenti raggiunti";

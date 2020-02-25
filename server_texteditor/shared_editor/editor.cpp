@@ -157,7 +157,9 @@ bool Editor::process(Message &msg)
 
 bool Editor::send(QTcpSocket* t, QByteArray ba)
 {
+    t->waitForBytesWritten(100);
     if (t->write(ba, ba.length()) == -1){
+        qDebug() << "Errore in scrittura al client" << ba;
         return false;
     }
     qDebug() << "To client: " << ba;
@@ -255,6 +257,7 @@ void Editor::editProva()
 bool Editor::addUser(utente &user)
 {
     if (this->sendList.contains(user.getUsername())){
+        sendList.insert(user.getUsername(), user.getSocket());
         return true;
     } else {
         this->sendList.insert(user.getUsername(), user.getSocket());
@@ -317,12 +320,7 @@ bool Editor::remoteSend(Message msg)
     QByteArray ba = msg.toQByteArray();
 
     foreach (QString ut, this->sendList.keys()){
-        if (ut != msg.getUser()){
-            this->send(sendList.value(ut), ba);
-        } else {
-            // invia messaggio di ok
-            this->send(sendList.value(ut), Comando(Comando::Insert_Ok).toByteArray());
-        }
+        this->send(sendList.value(ut), ba);
     }
     return true;
 }

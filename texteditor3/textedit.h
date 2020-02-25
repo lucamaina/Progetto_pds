@@ -151,7 +151,8 @@ private:
     void alignmentChanged(Qt::Alignment a);
     void myTextAlign(QString& a);
 
-    Editor* editor;
+    //Editor* editor;
+
     QShortcut* sh;
     QListWidget *list;
     QMap<QString,QTextCursor*> mappaCursori; //mappa con nome utente e relativo cursore;
@@ -191,15 +192,17 @@ public:
 
 private:
     void setupStatusBar();
-    void testo();
     bool eventFilter(QObject *obj, QEvent *e) override;
 
     bool inserimento(QKeyEvent &e, int posCursor, QChar car, QTextCharFormat format, int posx, int anchor);
+    bool cancellamento(int posCursor);
 
-private slots:
+public slots:
     void goPaste();
     void clear();
     void refresh();
+    void statusBarOutput(QString s);
+    void setText(QChar c, QTextCharFormat f, int posCursor);   // inserisce in editor il carattere ricevuto
 
 
 signals:
@@ -208,6 +211,7 @@ signals:
     void stileTesto(QString& stile,QString& param);
     void connectSig();
     void pasteSig(QString& clipboard);
+
 };
 
 #endif // TEXTEDIT_H

@@ -31,6 +31,7 @@ QMap<QString, QString> Symbol::toMap()
     map.insert(UNAME, this->userName);
     map.insert(CAR, this->car);
     map.insert(IDX, QString::number(this->index));
+    map.insert(FORMAT, QString(this->formato));
     return map;
 }
 

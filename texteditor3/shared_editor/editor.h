@@ -43,6 +43,7 @@ public:
     void localDelete(int index);
 
     double localIndex(int posCursor);
+    int localPosCursor(double index);
 
     bool cursorChange(Message msg);
     bool remoteSend(Message msg);
@@ -51,6 +52,7 @@ public:
     void updateFormat(double index, QTextCharFormat formato);
 
     double fmed(double num1, double num2);
+    bool fequal(double a, double b);
 
 
 

@@ -1,8 +1,6 @@
 
 /*
  * Classe implementa l'editor condiviso
- * 
- * prova di git
  */
 
 #include "editor.h"
@@ -48,10 +46,9 @@ bool Editor::loadMap()
     return true;
 }
 
-
-
-
-
+/**
+ * @brief Editor::~Editor
+ */
 Editor::~Editor()
 {
     this->file->remove();
@@ -59,53 +56,43 @@ Editor::~Editor()
 
 double Editor::localIndex(int posCursor)
 {
-    double index = 0;
+    double index = posCursor;
     auto lista = symMap.keys();
-    lista.prepend(0);
 
-     if(symMap.empty()){  // il primo parte da 1
-         index=1;
-         return index;
-     }
-
-     if(lista.size()<=posCursor){ //prendi l ultimo index float e fai +1
-        index = posCursor + 1;
+    if(symMap.empty()){  // il primo parte da 1
+        index=1;
         return index;
      }
-     else {
+
+    if(lista.size()<=posCursor){ //prendi l ultimo index float e fai +1
+        index = posCursor+1;
+        return index;
+    } else {
         double tempmin=0,tempmax=0;
-        tempmin = lista.takeAt(posCursor);
-        tempmax = lista.takeAt(posCursor + 1);
+        if (posCursor > 0){
+            tempmin = lista.at(posCursor-1);
+        }
+        tempmax = lista.at(posCursor);
+
+
         double tmpidx = fmed(tempmin,tempmax);
-        if (tmpidx == tempmin || tmpidx == tempmax) // TODO comparazione migliore
-            return -1;
-        return tmpidx;
-     }
 
-     /*
-     else if(posCursor==0){ //tra 0 e il primo
-         double tmpidx = fmed(0,symMap.firstKey());
-         index = tmpidx;
-         return index;
-     }
-     else if ( posCursor != 0){  // (prima+dopo) / 2
-         double tempmin=0,tempmax=0;
+        if ( fequal(tmpidx, tempmin) || fequal(tmpidx, tempmax)){
+            return -1;   // spazio tra i double insufficiente, ricaricare il file e l'editor
+        }
 
-             while(posCursor>1){
-                 posCursor--;
-                 lista.pop_front();
-             }
-             tempmin=lista.front();
-             lista.pop_front();
-             //qDebug()<<tempmin;   DEBUG
-             tempmax=lista.front();
+       return tmpidx;
+    }
+}
 
-         double tmpidx = fmed(tempmin,tempmax);
-         // se tmpidx == tempmin o tempmax
-         index = tmpidx;
-         return tmpidx;
-     }
-    return -1;*/
+int Editor::localPosCursor(double index)
+{
+    auto keyList = this->symMap.keys();
+
+    if (keyList.contains(index)){
+        return keyList.indexOf(index);
+    }
+    return -1;
 }
 
 
@@ -129,70 +116,50 @@ double Editor::localIndex(int posCursor)
 //}
 
 
-
+/**
+ * @brief Editor::fmed
+ * @param num1
+ * @param num2
+ * @return indice medio tra precedente e successivo
+ */
 double Editor::fmed(double num1, double num2) {
-    double division=2.0;
-    num1 = (num1+num2)/division;
-    qDebug()<<num1<<num2;
-
-    return num1;
+    double mid = (num1 + num2)/static_cast<double>(2);
+    qDebug()<< "Num1: "<<num1
+            << " mid: "<<mid
+            << " Num2: "<< num2;
+    return mid;
 }
+
+/**
+ * @brief Editor::fequal
+ * @param a
+ * @param b
+ * @return verifica l'uguaglianza tra double
+ */
+bool Editor::fequal(double a, double b)
+{    return qFuzzyCompare(a, b);    }
 
 
 double Editor::insertLocal(double index,char value, QTextCharFormat formato){
-    Symbol s;
+    Symbol s = Symbol(username,value,1,formato);
 
-    auto lista=symMap.keys();
-     if(symMap.empty()){  // il primo parte da 1
-          s=Symbol(username,value,1,formato);
-          symMap.insert(1,s);
-         return 0;
-     }
+    symMap.insert(index, s);
 
-     if(lista.size()<=index){ //prendi l ultimo index float e fai +1
-        s=Symbol(username,value,index+1,formato);
-        symMap.insert(index+1,s);
-        return index;
-     }
-
-     else if(index==0){ //tra 0 e il primo
-         double tmpidx = fmed(0,symMap.firstKey());
-         s=Symbol(username,value,tmpidx,formato);
-         symMap.insert(tmpidx,s);
-         return 0;
-
-     }
-     else if ( index != 0){  // (prima+dopo) / 2
-         double tempmin=0,tempmax=0;
-
-             while(index>1){
-                 index--;
-                 lista.pop_front();
-             }
-             tempmin=lista.front();
-             lista.pop_front();
-             //qDebug()<<tempmin;   DEBUG
-             tempmax=lista.front();
-
-         double tmpidx = fmed(tempmin,tempmax);
-         // se tmpidx == tempmin o tempmax
-          s=Symbol(username,value,tmpidx,formato);
-         symMap.insert(tmpidx,s);
-         return tmpidx;
-     }
-    return -1;
+    return index;
 }
 
 
 void Editor::deleteLocal(double index){
-    if(index==0){return;}
+    if( fequal(index, 0)){return;}
     else{
         double i=0;
         for(double d : symMap.keys()){
             i++;
             qDebug()<<"indice: "<<i<<"  "<<d;
-            if(i==index){symMap.remove(d);
-                         break;}
+            if( fequal(i, index)){
+                symMap.remove(d);
+                return;
+            }
         }
 
     }
@@ -200,18 +167,20 @@ void Editor::deleteLocal(double index){
 }
 
 void Editor::updateFormat(double index, QTextCharFormat formato){
-    if(index==0){return;}
-    else{
-        double i=0;
+    if( fequal(index, 0) ){
+        return;
+    } else{
+        double i = 0;
         for(double d : symMap.keys()){
             i++;
-            if(i==index){auto t=symMap.find(d);
-                         t->setFormat(formato);
-                         Symbol s=symMap.take(d);
-                         s.setFormat(formato);
-                         symMap.insert(d,s);
-                         break;}
+            if( fequal(i, index) ){
+                auto t=symMap.find(d);
+                t->setFormat(formato);
+                Symbol s = symMap.take(d);
+                s.setFormat(formato);
+                symMap.insert(d,s);
+                return;
+            }
         }
     }
-    //for(double d : symMap.keys()){qDebug()<<symMap.find(d)->getFormat().fontFamily();} //DEBUG
 }

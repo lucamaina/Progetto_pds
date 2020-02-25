@@ -40,7 +40,7 @@ void Symbol::setUserName(const QString &value)
     userName = value;
 }
 
-int Symbol::getIndex() const
+double Symbol::getIndex() const
 {
     return index;
 }
@@ -51,13 +51,12 @@ void Symbol::setIndex(const int &value)
 }
 
 QDataStream &operator<<(QDataStream& out, const Symbol &sym){
-    out<<sym.getUserName()<<sym.getIndex()<<sym.car<<sym.qbformat;
+    out << sym.getUserName()<<sym.getIndex()<<sym.car<<sym.qbformat;
     return out;
 }
 
 QDataStream &operator>>(QDataStream& in, Symbol &sym){
-    in>>sym.userName>>sym.index>>sym.car>>sym.qbformat;
-
+    in >> sym.userName>>sym.index>>sym.car>>sym.qbformat;
     return in;
 }
 

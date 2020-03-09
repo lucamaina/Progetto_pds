@@ -198,6 +198,8 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this, SIGNAL(pasteSig(QString&)),this->client, SLOT(pasteSlot(QString&)));
     connect(this->client, SIGNAL(clearEditor() ), this, SLOT(clear() ));
     connect(this->client, &Client::s_setText, this, &TextEdit::setText, Qt::ConnectionType::DirectConnection);
+    connect(this->client, &Client::s_removeText, this, &TextEdit::removeText, Qt::ConnectionType::DirectConnection);
+    connect(this->client, &Client::s_loadEditor, this, &TextEdit::loadEditor, Qt::ConnectionType::DirectConnection);
 
 
     //this->client->remoteFile=new Editor("1","mio","","io");  DEBUG
@@ -241,6 +243,10 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 
             if(e->key()==Qt::Key_Backspace || e->key()==Qt::Key_Delete){    // 16777219 , 16777223
                 // PULSANTI DI CANCELLAZIONE
+
+                this->cancellamento(poss, e->key());
+
+                /*
                 this->statusBar()->showMessage("Press key = " + QKeySequence(e->key()).toString() , 1000);
                 QChar c = e->key();
 
@@ -258,8 +264,9 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
                 }
                 else{this->client->remoteFile->deleteLocal(poss);}
                 qDebug()<<"chiavi: "<<this->client->remoteFile->symMap.keys();
+                */
 
-                return false;
+                return true;
 
             } else {
                 // PULSANTI DI INSERIMENTO
@@ -267,7 +274,7 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
                 QChar c = e->text().front();        // carattere da inserire
                 QTextCharFormat format = textEdit->textCursor().charFormat();   // formato del carattere
 
-                this->inserimento(*e, poss, c, format, posx, anchor);
+                this->inserimento(poss, c, format, posx);
 
                 return true;
             }
@@ -300,18 +307,17 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
     return false;
 }
 
-bool TextEdit::inserimento(QKeyEvent &e, int posCursor, QChar car, QTextCharFormat format, int posx, int anchor)
+bool TextEdit::inserimento(int posCursor, QChar car, QTextCharFormat format, int posx)
 {
     QTextCursor s = this->textEdit->textCursor();
-    double index = this->client->remoteFile->localIndex(posCursor);
+    double index = this->client->remoteFile->getLocalIndexInsert(posCursor);
 
     if (index < 0){
         this->statusBar()->showMessage("impossibile inserire in locale", 1000);
-        return false;
     } else if (this->client->remoteInsert(car,format,index)) {// INSERIMENTO REMOTO, manda comando a server
         // true se server risp OK
 
-        if(s.hasSelection()){
+/*        if(s.hasSelection()){
             int poscurs=s.position();
             int posanch=s.anchor();
             for( int i=poscurs+1; i<=posanch; i++){
@@ -319,23 +325,43 @@ bool TextEdit::inserimento(QKeyEvent &e, int posCursor, QChar car, QTextCharForm
                 this->client->remoteDelete(car, index, anchor);
             }
         }
+*/
+        this->statusBar()->showMessage("At position: " + QString::number(posCursor) + " Text insert: " + car, 1000);
 
-        this->statusBar()->showMessage("At position: " + QString::number(posCursor) +
-                                       " Key pressed: " + QKeySequence(e.key()).toString() +
-                                       " Text insert: " + e.text().front(), 1000);
-
-        // s.insertText(car, format);
-        return true;
     } else {
         this->statusBar()->showMessage("impossibile inserire da remoto", 1000);
-        this->client->remoteFile->deleteLocal(posx); // TODO verifica index
     }
-    return false;
+    return true;
 }
 
-bool TextEdit::cancellamento(int posCursor)
+bool TextEdit::cancellamento(int posCursor, int key)
 {
-    return false;
+    if (key == Qt::Key_Backspace){
+        posCursor--;
+    } else if (key == Qt::Key_Delete){
+        // Qt::key_delete
+    }
+
+    QTextCursor s = this->textEdit->textCursor();
+    s.setPosition(posCursor);
+    s.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor);
+    QChar car = s.selectedText().front();
+
+    double index = this->client->remoteFile->getLocalIndexDelete(posCursor);
+
+
+    if (index < 0){
+        this->statusBar()->showMessage("impossibile cancellare in locale", 1000);
+    } else if (this->client->remoteDelete(car, index)) {// INSERIMENTO REMOTO, manda comando a server
+        // true se server risp OK
+
+        this->statusBar()->showMessage("At position: " + QString::number(posCursor) + " Text delete: " + car, 1000);
+
+    } else {
+        this->statusBar()->showMessage("impossibile inserire da remoto", 1000);
+    }
+
+    return true;
 }
 
 /**************************************************************/
@@ -523,6 +549,21 @@ void TextEdit::setText(QChar c, QTextCharFormat f, int posCursor)
     QTextCursor s = textEdit->textCursor();
     s.setPosition(posCursor, QTextCursor::MoveAnchor);
     s.insertText(c, f);
+}
+
+void TextEdit::removeText(int posCursor)
+{
+    QTextCursor s = textEdit->textCursor();
+    s.setPosition(posCursor, QTextCursor::MoveAnchor);
+    s.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor);
+    s.removeSelectedText();
+
+}
+
+void TextEdit::loadEditor(QString str)
+{
+    this->clear();
+    this->textEdit->setText(str);
 }
 
 void TextEdit::setupTextActions()

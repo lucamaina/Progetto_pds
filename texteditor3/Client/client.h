@@ -20,9 +20,11 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = nullptr);
     void handleBrowse(QMap<QString,QString> cmd);
-    bool remoteInsert(QChar& c, QTextCharFormat format, double index);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
-    bool remoteDelete(QChar& c, double index, int anchor);
+    bool remoteInsert(QChar c, QTextCharFormat format, double index);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
+    bool remoteDelete(QChar c, double index);
     void inserimento(QMap<QString,QString> cmd);
+    void cancellamento(QMap<QString,QString> cmd);
+
     void loadFile(QMap<QString,QString> cmd);
     QString serialize(const QTextCharFormat &format);
     QTextCharFormat deserialize(QByteArray &s);
@@ -43,9 +45,13 @@ signals:
     void cambiaFile(QString& file);
     void nuovoStile(QString& stile,QString& param);
     void openFileSignal(QString& filename);
-    void clearEditor();
+    void s_clearEditor();
     void toStatusBar(QString s);
+
     void s_setText(QChar c, QTextCharFormat f, int posCur);
+    void s_removeText(int posCur);
+
+    void s_loadEditor(QString& str);
 
 public slots:
     void connected();

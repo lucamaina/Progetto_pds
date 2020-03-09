@@ -36,10 +36,10 @@ bool Client::sendMsg(QByteArray ba){
         if (this->socket->write(ba, ba.size()) == -1){
             // errore
             qDebug() << "errore scrittura verso server";
+            return false;
         }
     }
-
-    return false;
+    return true;
 }
 
 void Client::handleNuovoFile(QString &filename)
@@ -150,10 +150,11 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
         dispatchStile(cmd);
      }
 
-     else if (comando.value() == REM_IN || comando.value() == REM_DEL) {
+     else if (comando.value() == REM_IN){
         inserimento(cmd);
-
-     }
+    } else if ( comando.value() == REM_DEL) {
+        cancellamento(cmd);
+    }
 
      else if (comando.value() == FBODY) {
         loadFile(cmd);
@@ -354,10 +355,10 @@ void Client::loadFile(QMap<QString,QString> cmd){
 
     connect(this,SIGNAL(readyRead()),this,SLOT(readyRead()));
 
-    emit clearEditor();
-    this->remoteFile=new Editor(this->docID,this->filename,qba,username);
-    //emit cambiaFile(this->filename);
-    // TODO ricezione body del file
+    //emit clearEditor();
+    this->remoteFile = new Editor(this->docID,this->filename,qba,username);
+    QString testo = this->remoteFile->getTesto();
+    emit this->s_loadEditor(testo);
 }
 
 /**
@@ -367,7 +368,6 @@ void Client::loadFile(QMap<QString,QString> cmd){
  */
 void Client::inserimento(QMap<QString,QString> cmd)
 {
-    qDebug() << cmd;
     QString user = cmd.find(UNAME).value();
     double index = cmd.find(IDX).value().toDouble();
     QByteArray format = QByteArray::fromHex(cmd.find(FORMAT).value().toUtf8());
@@ -378,6 +378,16 @@ void Client::inserimento(QMap<QString,QString> cmd)
 
     int posCursor = remoteFile->localPosCursor(index);
     emit s_setText(c, charform, posCursor);
+}
+
+void Client::cancellamento(QMap<QString, QString> cmd)
+{
+    double index = cmd.find(IDX).value().toDouble();
+    char c = cmd.find(CAR).value().at(0).toLatin1();
+
+    int posCursor = this->remoteFile->deleteLocal(index, c);
+
+    emit s_removeText(posCursor);
 }
 
 void Client::spostaCursori(QMap <QString,QString>cmd){
@@ -602,48 +612,35 @@ QTextCharFormat Client::deserialize(QByteArray &s)
     return frm;
 }
 
-bool Client::remoteInsert(QChar& c, QTextCharFormat format, double index)
+bool Client::remoteInsert(QChar c, QTextCharFormat format, double index)
 {
     QMap<QString,QString> cmd;
     cmd.insert(CMD, REM_IN);
     cmd.insert(CAR, c);
     cmd.insert(IDX, QString::number(index));
     cmd.insert(FORMAT, QString(this->serialize(format)));
-//    cmd.insert("anchor", QString::number(anchor));
     cmd.insert(UNAME,username);
     cmd.insert(DOCID,docID);
 
     qDebug() << cmd;
 
-    this->sendMsg(cmd);
+    return this->sendMsg(cmd);
 }
 
-bool Client::remoteDelete(QChar& c, double index, int anchor)
+bool Client::remoteDelete(QChar c, double index)
 {
     QMap<QString,QString> cmd;
     cmd.insert(CMD, REM_DEL);
     cmd.insert(CAR, c);
     cmd.insert(IDX, QString::number(index));
-    cmd.insert("anchor", QString::number(anchor));
     cmd.insert(UNAME,username);
     cmd.insert(DOCID,docID);
 
-    this->disconnect(this->socket, SIGNAL(readyRead()));
-    this->sendMsg(cmd);
-
-    // verifica risposta da server
-    char v[4096];
-    this->socket->waitForReadyRead(100);
-    qint64 read = socket->read(v, 4096);
-    if ( read < 0){
-        qDebug() << "errore in socket::read()";
-        return false;
-    }
-    this->connect(this->socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
-
-    return this->leggiXML(v);
-
+    return this->sendMsg(cmd);
 }
+
+
+
 
 void Client::readyRead(){
     QByteArray out;

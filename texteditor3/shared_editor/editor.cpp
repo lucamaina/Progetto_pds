@@ -15,13 +15,9 @@ Editor::Editor(QString Id, QString fName, QByteArray body, QString username)
     this->nomeFile = fName;
     this->username = username;
     this->DocId = Id;
-
-    if (!body.isEmpty()){
-        QDataStream out(&body, QIODevice::ReadWrite);
-        out >> this->symMap;
-    }
-    qDebug() << symMap.keys();
-
+    QByteArray b = QByteArray::fromBase64(body);
+    QDataStream out(&b, QIODevice::ReadWrite);
+    out >> this->symMap;
 }
 
 /**
@@ -54,7 +50,17 @@ Editor::~Editor()
     this->file->remove();
 }
 
-double Editor::localIndex(int posCursor)
+double Editor::getLocalIndexDelete(int posCursor)
+{
+    auto lista = symMap.keys();
+    if (posCursor > lista.size() + 1 || posCursor < 0){
+        return -1;
+    }
+    double tempmax = lista.at(posCursor);
+    return tempmax;
+}
+
+double Editor::getLocalIndexInsert(int posCursor)
 {
     double index = posCursor;
     auto lista = symMap.keys();
@@ -104,18 +110,6 @@ int Editor::localPosCursor(double index)
  *********************************************************************************************************/
 
 
-
-//void Editor::localDelete(int index) {
-//    if ( index < _symbols.size() ){
-//        // verifico indice presente nel vettore
-//        Symbol sym = _symbols.at(index);
-//        _symbols.erase( _symbols.begin()+index );
-//    } else {
-//        // possibile msg errore
-//    }
-//}
-
-
 /**
  * @brief Editor::fmed
  * @param num1
@@ -139,7 +133,24 @@ double Editor::fmed(double num1, double num2) {
 bool Editor::fequal(double a, double b)
 {    return qFuzzyCompare(a, b);    }
 
+QString Editor::getTesto()
+{
+    QString testo;
+    QList<Symbol> lista = this->symMap.values();
+    for(Symbol s : lista){
+        testo.append(s.car);
+    }
+    return testo;
+}
 
+/**
+ * @brief Editor::insertLocal
+ * @param index
+ * @param value
+ * @param formato
+ * @return
+ * nuova versione
+ */
 double Editor::insertLocal(double index,char value, QTextCharFormat formato){
     Symbol s = Symbol(username,value,1,formato);
 
@@ -149,21 +160,15 @@ double Editor::insertLocal(double index,char value, QTextCharFormat formato){
 }
 
 
-void Editor::deleteLocal(double index){
-    if( fequal(index, 0)){return;}
-    else{
-        double i=0;
-        for(double d : symMap.keys()){
-            i++;
-            qDebug()<<"indice: "<<i<<"  "<<d;
-            if( fequal(i, index)){
-                symMap.remove(d);
-                return;
-            }
+int Editor::deleteLocal(double index, char car){
+    if( this->symMap.contains(index) ){
+        if (symMap.value(index).car == car){
+            auto lista = symMap.keys();
+            int posCur = lista.lastIndexOf(index);
+            symMap.remove(index);
+            return posCur;
         }
-
     }
-    return;
 }
 
 void Editor::updateFormat(double index, QTextCharFormat formato){

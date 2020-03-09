@@ -194,8 +194,8 @@ private:
     void setupStatusBar();
     bool eventFilter(QObject *obj, QEvent *e) override;
 
-    bool inserimento(QKeyEvent &e, int posCursor, QChar car, QTextCharFormat format, int posx, int anchor);
-    bool cancellamento(int posCursor);
+    bool inserimento(int posCursor, QChar car, QTextCharFormat format, int posx);
+    bool cancellamento(int posCursor, int key);
 
 public slots:
     void goPaste();
@@ -203,6 +203,8 @@ public slots:
     void refresh();
     void statusBarOutput(QString s);
     void setText(QChar c, QTextCharFormat f, int posCursor);   // inserisce in editor il carattere ricevuto
+    void removeText(int posCursor);
+    void loadEditor(QString str);
 
 
 signals:

@@ -39,21 +39,23 @@ public:
 
     /****************************************************************************
      * metodi di insert e delete ************************************************/
-    bool localInsert(Message msg);
-    void localDelete(int index);
+    double getLocalIndexInsert(int posCursor);
+    double getLocalIndexDelete(int posCursor);
 
-    double localIndex(int posCursor);
     int localPosCursor(double index);
 
     bool cursorChange(Message msg);
     bool remoteSend(Message msg);
+
     double insertLocal(double index,char value, QTextCharFormat formato);
-    void deleteLocal(double index);
+    int deleteLocal(double index, char car);
+
     void updateFormat(double index, QTextCharFormat formato);
 
     double fmed(double num1, double num2);
     bool fequal(double a, double b);
 
+    QString getTesto();
 
 
 

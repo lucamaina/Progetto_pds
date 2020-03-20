@@ -173,12 +173,18 @@ bool db::disconn(utente &user){
  * @return
  * verifica presenza di user e assenza di file con stesso nome, aggiunge file e lo collega a user
  */
-bool db::addFile(utente &user, QString nomefile)
+bool db::addFile(utente &user, QString nomefile, int& errorCode)
 {
-    bool connesso;
-    this->myDb.transaction();
-    // verifica utente
+    if (this->myDb.transaction() ){
+        qDebug() << "db supporta transaction";
+    } else {
+        qDebug() << "db NON supporta transaction";
+    }
+
     QVector<QString> val;
+    QSqlQuery res;
+    // verifica utente (superfluo ??)
+    /*
     val.push_back(user.getUsername());
     val.push_back(user.getPass());
     QSqlQuery res = this->query(queryLOGIN, val);
@@ -196,6 +202,7 @@ bool db::addFile(utente &user, QString nomefile)
         return false;
     }
     val.clear();
+    */
 
     // verifica file
     val.push_back(nomefile);
@@ -205,6 +212,7 @@ bool db::addFile(utente &user, QString nomefile)
         if (count != 0){
             qDebug() << "file già presente" << user.getUsername();
             this->myDb.rollback();
+            errorCode = 0;  // nome già presente
             return false;
         } else {
             qDebug() << "file aggiungibile" << user.getUsername();
@@ -216,15 +224,33 @@ bool db::addFile(utente &user, QString nomefile)
     val.push_back(nomefile);
     val.push_back(nomefile);
     res = this->query(queryFILEadd, val);
-    if (!res.isValid()){
+    // verifica ?
+    val.clear();
+
+    // recupero DocId
+    int tmpDocId;
+    val.push_back(nomefile);
+    res = this->query(queryFILEGetDocId, val);
+    if (res.first()){
+        tmpDocId = res.value(0).toInt();
+        qDebug() << tmpDocId;
+    } else {
         this->myDb.rollback();
+        errorCode = -1;
         return false;
     }
     val.clear();
 
-    // collega file - utente
+    // metto in relazione utente a file
+    res.prepare(queryRELAZIONEadd);
+    res.bindValue(":DocId", tmpDocId);
+    res.bindValue(":UserName", user.getUsername());
+    res.exec();
+    qDebug()<<"---- " << res.lastQuery();
 
-
+    this->myDb.commit();
+    val.clear();
+    errorCode = 1;
     return true;
 }
 
@@ -277,6 +303,54 @@ QString db::getDocId(const QString nomeFile, const QString nomeUtente)
         return dociID;
     }
     return "";
+}
+
+QList<QString> db::getUsers(const QString docId)
+{
+    QList<QString> lista;
+    QVector<QString> values = QVector<QString>(1, docId);
+
+    QSqlQuery res = this->query(queryRELAZIONIGetUsers, values);
+    while (res.next()){
+        lista.append(res.value(0).toString());
+    }
+    qDebug() << lista;
+    return lista;
+}
+
+bool db::addUser(utente &user, QString docId, QString &newUser)
+{
+    // verifica docId e user
+    QVector<QString> values;
+    values.push_back(user.getUsername());
+    values.push_back(docId);
+    QSqlQuery res = this->query(queryOPEN, values);
+    int valid = 0;
+    if (res.first()){
+        valid = res.value(0).toInt();
+    }
+    if (valid != 1){
+        return false;
+    }
+
+    // verifica newUser
+    values.clear();
+    values.push_back(newUser);
+    res = this->query(queryUTENTIFind, values);
+    if (res.first()){
+        valid = res.value(0).toInt();
+    }
+    if (valid != 1){
+        return false;
+    }
+
+    // aggiungi relazione
+    values.clear();
+    values.push_back(docId);
+    values.push_back(newUser);
+    res = this->query(queryRELAZIONEadd, values);
+
+    return true;
 }
 
 void db::setUpUtenti()

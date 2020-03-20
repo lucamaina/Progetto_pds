@@ -49,6 +49,7 @@ private:
     QByteArray buffer, command;
 
     void readBody(QByteArray &ba, int dim);
+    QStringList toQStringList(QMap<QString, QString> cmd);
 
 
     /****************************************************************************
@@ -76,6 +77,8 @@ private:
     void browsFile(QMap<QString, QString> &comando);
     void openFile(QMap<QString, QString> &comando);
     void loadFile(QMap<QString, QString> &comando);
+    void getUsers(QMap<QString, QString> &comando);
+    void addUsersDB(QMap<QString, QString> &comando);
 
     /****************************************************************************
      * metodi accesso a netowrk *************************************************/

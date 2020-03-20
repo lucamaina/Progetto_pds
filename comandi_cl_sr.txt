@@ -1,4 +1,4 @@
-Formato messaggi ricevuti dal server.
+ 2000Formato messaggi ricevuti dal server.
 
 
 ## comandi relativi aal'utente
@@ -89,7 +89,7 @@ Formato messaggi ricevuti dal server.
 	<docid>val2</docid>
 </REMOTE-INSERT>
 
-// messaggio di eeliminazione di carattere
+// messaggio di eliminazione di carattere
 <?xml version="1.0" encoding="UTF-8"?>
 <REMOTE-DELETE>
 	<char>a</char>
@@ -98,6 +98,20 @@ Formato messaggi ricevuti dal server.
 	<docid>val2</docid>   
 </REMOTE-DELETE>
 
+// messaggio di richiesta ustenti condivisi
+<?xml version="1.0" encoding="UTF-8"?>
+<USER-LIST>
+	<docid>val2</docid>   
+</USER-LIST>
+
+// messaggio di risposta ustenti condivisi
+<?xml version="1.0" encoding="UTF-8"?>
+<USER-LIST>
+	<docid>val2</docid>   
+	<username>nome1</username>
+	<username>nome1</username>
+	<username>...</username>
+</USER-LIST>
 
 ### !!!!!!!!!!!!!!!!!!!!!!!! ###
 // messaggio di invio contenuto file
@@ -195,9 +209,12 @@ utente: asd
 <INIT>00000082<?xml version="1.0" encoding="UTF-8"?><OPEN-FILE><username>asd</username><docid>1</docid><filename>file.txt</filename></OPEN-FILE>
 <INIT>00000073<?xml version="1.0" encoding="UTF-8"?><REMOTE-INSERT><char>a</char><index>1</index><cursor>1</cursor><docid>1</docid></REMOTE-INSERT>			
 
-utente: qwe
+utente: user
 <INIT>00000039<?xml version="1.0" encoding="UTF-8"?><CONNECT></CONNECT>
 <INIT>00000067<?xml version="1.0" encoding="UTF-8"?><LOG-IN><username>user</username><password>10</password></LOG-IN>		
+
+<INIT>0000005F<?xml version="1.0" encoding="UTF-8"?><ADD-FILE><filename>file_remoto.txt</filename></ADD-FILE>
+
 <INIT>00000082<?xml version="1.0" encoding="UTF-8"?><OPEN-FILE><username>qwe</username><docid>1</docid><filename>file.txt</filename></OPEN-FILE>
 <INIT>00000073<?xml version="1.0" encoding="UTF-8"?><REMOTE-INSERT><char>b</char><index>1</index><docid>2</docid></REMOTE-INSERT>
 

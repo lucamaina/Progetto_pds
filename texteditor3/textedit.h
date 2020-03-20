@@ -66,6 +66,8 @@
 #include <QPainter>
 #include <QAbstractTextDocumentLayout>
 
+#include"NuovoFileRemotoWindoow/nuovofileremoto.h"
+
 class QAction;
 class QComboBox;
 class QFontComboBox;
@@ -110,6 +112,7 @@ private slots:
     /*************** Comandi per gestione file remoti **************/
     void remoteBrows();
     void remoteAddFile();
+    void remoteAddUser();
     void remoteRemoveFile();
 
     /***************************************************************/

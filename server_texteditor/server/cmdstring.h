@@ -20,6 +20,8 @@
 #define CMD "CMD"
 #define BROWS "BROWS"
 #define CRS "CURSOR"
+#define ULIST "USER-LIST"
+#define ADD_USER "ADD-USER"
 
 #define OK "OK"
 #define ERR "ERR"

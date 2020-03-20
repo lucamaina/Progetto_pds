@@ -18,6 +18,8 @@ HEADERS         = textedit.h \
     Client/cmdstring.h \
     Highlighter/highlighter.h \
     LoginDialog/logindialog.h \
+    NuovoFileRemotoWindoow/nuovofileremoto.h \
+    NuovoFileRemotoWindoow/usermanager.h \
     RegisterDialog/registerdialog.h \
     Utils/utils.h \
     shared_editor/editor.h \
@@ -28,6 +30,8 @@ SOURCES         = textedit.cpp \
                   BrowseWindow/browsewindow.cpp \
                   Highlighter/highlighter.cpp \
                   LoginDialog/logindialog.cpp \
+                  NuovoFileRemotoWindoow/nuovofileremoto.cpp \
+                  NuovoFileRemotoWindoow/usermanager.cpp \
                   RegisterDialog/registerdialog.cpp \
                   Utils/utils.cpp \
                   main.cpp \

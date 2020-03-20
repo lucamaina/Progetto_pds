@@ -115,13 +115,17 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
     } else if (comando.value() == FBODY) {
         this->loadFile(cmd);
     } else if (comando.value() == ADD_FILE) {
-        // this->addFileDB(cmd);
+        this->addFileDB(cmd);
     } else if (comando.value() == BROWS) {
         this->browsFile(cmd);
     } else if (comando.value() == OPEN_FILE) {
         this->openFile(cmd);
     } else if (comando.value() == REM_IN || comando.value() == REM_DEL || comando.value() == CRS) {
         this->sendMsg(cmd);
+    } else if (comando.value() == ULIST){
+        this->getUsers(cmd);
+    } else if (comando.value() == ADD_USER) {
+        this->addUsersDB(cmd);
     }
 }
 
@@ -358,6 +362,45 @@ void s_thread::registerDB(QMap<QString, QString> &comando){
     clientMsg(risp);
 }
 
+
+/**
+ * @brief s_thread::addFileDB
+ * @param comando
+ * crea tupla in db per nuovo file creato da utente
+ */
+void s_thread::addFileDB(QMap<QString, QString> &comando)
+{
+    QList<QString> list = {CMD, FNAME};
+    QMap<QString,QString> risp;
+
+    if (!verifyCMD(comando, list)){ return;   }
+    if (!this->up_conn->isOpen()){
+        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
+        this->connectDB();
+    }
+
+    if (!this->up_user->isConnected())
+        return;
+
+    QString nomeFile = comando.take(FNAME);
+    int errorCode;
+    if (this->up_conn->addFile(*this->up_user, nomeFile, errorCode)){
+        // file inserito
+        risp.insert(CMD, OK);
+        risp.insert(MEX, "file inserito");
+    } else if (errorCode == 0){
+        // nome presente
+        risp.insert(CMD, ERR);
+        risp.insert(MEX, "nome file già presente");
+    } else {
+        // errore inserimento
+        risp.insert(CMD, ERR);
+        risp.insert(MEX, "errore in inserimento");
+    }
+    // TODO stringa di log
+    clientMsg(risp);
+}
+
 /**
  * @brief s_thread::disconnectDB
  * @param comando
@@ -414,7 +457,7 @@ void s_thread::openFile(QMap<QString, QString> &comando)
     }
 
     if(!docID.isEmpty())
-        Network::getNetwork().remRefToEditor(this->docID, this->up_user->getUsername());
+        Network::getNetwork().remRefToEditor(this->docID, this->up_user->getUsername());    //  ???
 
 
     QMap<QString,QString> risp;
@@ -494,6 +537,64 @@ void s_thread::loadFile(QMap<QString, QString> &comando)
 
 }
 
+void s_thread::getUsers(QMap<QString, QString> &comando)
+{
+    if (!this->up_user->isConnected()){ return; }
+    QList<QString> list = {CMD, DOCID }; // DOCID
+    if (!verifyCMD(comando, list)){ return;   }
+    if (up_user->isConnected() == false) return;
+    if (!this->up_conn->isOpen()){
+        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
+        this->connectDB();
+    }
+    QString docId = comando.value(DOCID);
+    QString logStr;
+    QList<QString> lista = this->up_conn->getUsers(docId);
+
+    clientMsg("getUsers effettuato");
+    logStr = QString::number(this->sockID) + "getUsers con utente: " + up_user->getUsername();
+    Logger::getLog().write(logStr);
+
+    QMap<QString, QString> map;
+    map.insert(CMD, ULIST);
+    map.insert(DOCID, docId);
+    int i = 1;
+    for (QString user : lista) {
+        map.insert(UNAME + QString::number(i), user);
+        i++;
+    }
+    this->clientMsg(map);
+
+}
+
+void s_thread::addUsersDB(QMap<QString, QString> &comando)
+{
+    qDebug() << "sono in s_thread::addUsersDB";
+    if (!this->up_user->isConnected()){ return; }
+    QList<QString> list = {CMD, DOCID }; // DOCID
+    if (!verifyCMD(comando, list)){ return;   }
+    if (up_user->isConnected() == false) return;
+    if (!this->up_conn->isOpen()){
+        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
+        this->connectDB();
+    }
+    QString docId = comando.value(DOCID);
+    QString logStr;
+    QString rispOk, rispErr;
+    QStringList lista = toQStringList(comando);
+    for (QString utente : lista){
+        if ( this->up_conn->addUser(*this->up_user, docId, utente) == true ){
+            rispOk.append(utente+" ; ");
+        } else {
+            rispErr.append(utente+ " ; ");
+        }
+    }
+    QMap<QString, QString> risp;
+    risp.insert(CMD, OK);
+    risp.insert(MEX, "Utenti aggiunti: " + rispOk + "\nUtenti non aggiunti: " + rispErr);
+    this->clientMsg(risp);
+}
+
 
 void s_thread::readBody(QByteArray &ba, int dim)
 {
@@ -525,6 +626,19 @@ void s_thread::readBody(QByteArray &ba, int dim)
     }
     // togliere dopo debug
     qDebug() << "body: " << ba;
+}
+
+QStringList s_thread::toQStringList(QMap<QString, QString> cmd)
+{
+    int i = 1;
+    QStringList lista;
+    for (QString key : cmd.keys()){
+        if (key == UNAME + QString::number(i)){
+            lista.append(cmd.value(key));
+            i++;
+        }
+    }
+    return lista;
 }
 /*********************************************************************************************************
  ************************ metodi di accesso a Network ********************************************************

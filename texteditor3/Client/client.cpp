@@ -2,6 +2,7 @@
 #include <RegisterDialog/registerdialog.h>
 #include <LoginDialog/logindialog.h>
 #include "../BrowseWindow/browsewindow.h"
+#include "../NuovoFileRemotoWindoow/nuovofileremoto.h"
 
 Client::Client(QObject *parent) : QObject(parent)
 {
@@ -13,6 +14,7 @@ Client::Client(QObject *parent) : QObject(parent)
     tempUser="";
     tempPass="";
     remoteFile = nullptr;
+    finestraAddFile = new nuovoFileRemoto();
 
     socket = new QTcpSocket(this);
     socket->connectToHost(QHostAddress::LocalHost, 2000);
@@ -25,8 +27,7 @@ Client::Client(QObject *parent) : QObject(parent)
     connect(this, SIGNAL(cambiaFile(QString&)),this->parent(),SLOT(loadFile(QString&)));
     connect(this, SIGNAL(addMe()),this->parent(),SLOT(addMeSlot()));
     connect(this, SIGNAL(nuovoStile(QString&,QString&)), this->parent(),SLOT(nuovoStileSlot(QString&,QString&)));
-    connect(this, SIGNAL(openFileSignal(QString&)), this, SLOT(handleNuovoFile(QString&)));
-
+    connect(finestraAddFile, SIGNAL(s_addNewFile(QString&)), this, SLOT(remoteAdd(QString&)));
 }
 
 
@@ -42,10 +43,78 @@ bool Client::sendMsg(QByteArray ba){
     return true;
 }
 
-void Client::handleNuovoFile(QString &filename)
+void Client::sendAddUsers(QStringList &lista)
 {
-    QString docId;
-    qDebug() << "chiamo open";
+    qDebug() << "sono in Client::sendAddUsers >> " << lista;
+    QMap<QString, QString> cmd;
+    cmd.insert(CMD, ADD_USER);
+    cmd.insert(DOCID, this->docID);
+    int i = 1;
+    for (QString utente: lista){
+        cmd.insert(UNAME + QString::number(i), utente);
+    }
+    this->sendMsg(cmd);
+}
+
+
+/**
+ * @brief Client::handleNuovoFile
+ * @param filename
+ * slot per inviare al server addNewFile
+ */
+void Client::handleNuovoFile()
+{  
+    qDebug() << "sono in Client::handleNuovoFile";
+
+    finestraAddFile->exec();
+
+    finestraAddFile->close();
+
+}
+
+/**
+ * @brief Client::handleAddUser
+ * chiama finestra per invitare users
+ */
+void Client::handleAddUser()
+{
+    qDebug() << "sono in Client::handleAddUser";
+
+    if (!this->docID.isEmpty()){
+
+        QMap<QString, QString> cmd;
+        cmd.insert(CMD, ULIST);
+        cmd.insert(DOCID, this->docID);
+        this->sendMsg(cmd);
+
+        finestraUsers = new UserManager(this->username);
+        connect(this, SIGNAL(s_userList(QList<QString>&)), finestraUsers, SLOT(caricaUsers(QList<QString>&)));
+        connect(finestraUsers, SIGNAL(s_addUsers(QStringList&)), this, SLOT(sendAddUsers(QStringList&)));
+
+        this->finestraUsers->exec();
+
+
+    } else {
+        QMessageBox Messaggio;
+        Messaggio.information(nullptr,"Alert","Nessun documento selezionato");
+        Messaggio.setFixedSize(500,200);
+    }
+
+
+}
+
+void Client::listUser(QMap<QString, QString> cmd)
+{
+    qDebug() << "sono in Client::listUser";
+    QList<QString> lista;
+    int i = 1;
+    for (QString key : cmd.keys() ){
+        if (key == UNAME + QString::number(i)){
+            lista.append(cmd.value(key));
+            i++;
+        }
+    }
+    emit this->s_userList(lista);
 }
 
 bool Client::sendMsg(QMap<QString, QString> cmd){
@@ -154,12 +223,11 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
         inserimento(cmd);
     } else if ( comando.value() == REM_DEL) {
         cancellamento(cmd);
-    }
-
-     else if (comando.value() == FBODY) {
+    } else if (comando.value() == FBODY) {
         loadFile(cmd);
-
-     }
+    } else if (comando.value() == ULIST) {
+        listUser(cmd);
+    }
     //TODO
 }
 
@@ -173,9 +241,6 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
 
     if(comando.value()== CONN_OK){
         this->connectedDB=true;
-       /* QMessageBox Messaggio;
-        Messaggio.information(nullptr,"Coonection","Connection to server in successfully");
-        Messaggio.setFixedSize(500,200);*/
         qDebug() << "Connesso";
     }
 
@@ -207,11 +272,6 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
 
         this->logged=true;
     } else if(comando.value()==FILE_OK){
-        /*
-        QMessageBox Messaggio;
-        Messaggio.information(nullptr,"File open","File opened successfully");
-        Messaggio.setFixedSize(500,200);
-        */
         emit this->toStatusBar("File opened successfully");
         this->logged=true;
     } else {
@@ -570,6 +630,7 @@ void Client::remoteOpen(QString& name, QString& docID){
 }
 
 void Client::remoteAdd(QString& name){
+    qDebug() << "sono in Client::remoteAdd";
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
         QMessageBox Messaggio;
         Messaggio.critical(nullptr, "Network Error","User not connected or not logged to the server");
@@ -578,19 +639,8 @@ void Client::remoteAdd(QString& name){
     }
 
     QMap<QString, QString> comando;
-    QString delimiter="==>";
-
-    /****** name contiene docID==>filename, qui lo splitto nelle due stringhe e mando il messaggio ********/
-
-    int pos = name.indexOf(delimiter);
-    int pos2 = pos+delimiter.size();
-
-    this->docID=name.mid(0,pos);
-    this->filename=name.mid( pos2 , name.size()-pos2 );
-
-    comando.insert(CMD,"ADD-File");
-    comando.insert(UNAME,username);
-    comando.insert("filename",filename);
+    comando.insert(CMD, ADD_FILE);
+    comando.insert(FNAME, name);
 
     sendMsg(comando);
 }

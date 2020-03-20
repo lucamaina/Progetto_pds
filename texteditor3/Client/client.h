@@ -1,16 +1,19 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#include <BrowseWindow/browsewindow.h>
 #include <QObject>
 #include <QtNetwork/qhostaddress.h>
 #include <QtNetwork/QTcpSocket>
-#include "cmdstring.h"
 #include <QXmlStreamWriter>
 #include <QMessageBox>
 #include <QTextEdit>
-#include "shared_editor/editor.h"
 #include <QTextCharFormat>
+
+#include "BrowseWindow/browsewindow.h"
+#include "../NuovoFileRemotoWindoow/nuovofileremoto.h"
+#include "../NuovoFileRemotoWindoow/usermanager.h"
+#include "cmdstring.h"
+#include "shared_editor/editor.h"
 
 class Client : public QObject
 {
@@ -19,7 +22,14 @@ class Client : public QObject
 
 public:
     explicit Client(QObject *parent = nullptr);
+
+    // gestori chiamate da icone di texteditor
     void handleBrowse(QMap<QString,QString> cmd);
+    void handleNuovoFile();
+    void handleAddUser();
+    void listUser(QMap<QString,QString> cmd);
+
+
     bool remoteInsert(QChar c, QTextCharFormat format, double index);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
     bool remoteDelete(QChar c, double index);
     void inserimento(QMap<QString,QString> cmd);
@@ -53,6 +63,8 @@ signals:
 
     void s_loadEditor(QString& str);
 
+    void s_userList(QList<QString> &list);
+
 public slots:
     void connected();
     void disconnected();
@@ -66,10 +78,13 @@ public slots:
     void pasteSlot(QString& clipboard);
     void handleMyCursorChange(int& posX,int& posY, int& anchor);
     void remoteOpen(QString& name, QString &docID);
+
     void remoteAdd(QString& name);
+
     bool sendMsg(QMap<QString, QString> cmd);
     bool sendMsg(QByteArray ba);
-    void handleNuovoFile(QString& filename);
+
+    void sendAddUsers(QStringList& lista);
 
 private:
     QMap<QString,QString> files;
@@ -83,6 +98,10 @@ private:
     QString tempPass;
     // nuova versione ready read
     QByteArray buffer_, command;
+
+    nuovoFileRemoto *finestraAddFile;
+    UserManager *finestraUsers;
+
     /****************************************************************************
      ***************** metodi controllo dei comandi ricevuti ********************/
 

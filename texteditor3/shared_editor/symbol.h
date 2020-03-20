@@ -22,8 +22,8 @@ friend QDataStream &operator >>(QDataStream& in, Symbol& sym);
 
 public:
     explicit Symbol();
-    explicit Symbol(QString user, QChar car, double idx, QTextCharFormat format) :  userName(user), car(car), index(idx){qbformat=serialize(format);}
-    explicit Symbol(QString user, QChar car, double idx, int cur) :  userName(user), car(car), index(idx){}
+    explicit Symbol(QString user, QChar car, double idx, QTextCharFormat format) : car(car), index(idx),  userName(user){qbformat=serialize(format);}
+    explicit Symbol(QString user, QChar car, double idx, int cur = 0) :  car(car), index(idx), userName(user){}
     QChar getChar(){return this->car;}
     QMap<QString, QString> toMap();
 

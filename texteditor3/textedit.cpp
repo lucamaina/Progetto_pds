@@ -178,7 +178,6 @@ TextEdit::TextEdit(QWidget *parent)
 
     textEdit->setFocus();
     setCurrentFileName(QString());
-//    this->editor= new Editor("1","prova.txt","","pippo");
 
 #ifdef Q_OS_MACOS
     // Use dark text on light background on macOS, also in dark mode.
@@ -201,8 +200,6 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this->client, &Client::s_removeText, this, &TextEdit::removeText, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_loadEditor, this, &TextEdit::loadEditor, Qt::ConnectionType::DirectConnection);
 
-
-    //this->client->remoteFile=new Editor("1","mio","","io");  DEBUG
     setupStatusBar();
 
 }
@@ -431,19 +428,26 @@ void TextEdit::setupFileActions()
     actionSave->setEnabled(false);
     tb->addAction(actionSave);
 
+
     a = menu->addAction(tr("Save &As..."), this, &TextEdit::fileSaveAs);
     a->setPriority(QAction::LowPriority);
     menu->addSeparator();
+
+    const QIcon remoteAddFile = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/newOnServer.png"));
+    a = menu->addAction(remoteAddFile, tr("&Remote Add..."), this, &TextEdit::remoteAddFile);
+    a->setShortcut(QKeySequence::Open);
+    tb->addAction(a);
+
+    const QIcon addUser = QIcon::fromTheme("addUser", QIcon(rsrcPath + "/addUserIcon.png"));
+    a = menu->addAction(addUser, tr("&add User to File..."), this, &TextEdit::remoteAddUser);
+    tb->addAction(a);
 
     const QIcon remoteBrows = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/remoteBrows.png"));
     a = menu->addAction(remoteBrows, tr("&Remote Brows..."), this, &TextEdit::remoteBrows);
     a->setShortcut(QKeySequence::Open);
     tb->addAction(a);
 
-    const QIcon remoteAddFile = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/newOnServer.png"));
-    a = menu->addAction(remoteAddFile, tr("&Remote Add..."), this, &TextEdit::remoteAddFile);
-    a->setShortcut(QKeySequence::Open);
-    tb->addAction(a);
+
 
     const QIcon remoteRemoveFile = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/remoteDelete.png"));
     a = menu->addAction(remoteRemoveFile, tr("&Remote Remove..."), this, &TextEdit::remoteRemoveFile);
@@ -774,7 +778,9 @@ void TextEdit::RegisterDialog()
 }
 
 
-
+/**
+ * @brief TextEdit::fileNews
+ */
 void TextEdit::fileNew()
 {
     if (maybeSave()) {
@@ -820,25 +826,36 @@ bool TextEdit::fileSave()
 
 void TextEdit::remoteBrows()
 {
-
-    QMap<QString, QString> comando;
-    comando.insert("CMD","BROWS");
-    this->client->sendMsg(comando);
+    if (this->client->isLogged()){
+        QMap<QString, QString> comando;
+        comando.insert("CMD","BROWS");
+        this->client->sendMsg(comando);
+    }
 }
 
+/**
+ * @brief TextEdit::remoteAddFile
+ * invia messaggio di add file al server\
+ */
 void TextEdit::remoteAddFile()
 {
-    QMap<QString, QString> comando;
-    comando.insert("CMD","ADD-FILE");
-    this->client->sendMsg(comando);
+    qDebug() << "Sono in TextEdit::remoteAddFile";
+    if (this->client->isLogged()){
+        client->handleNuovoFile();
+    }
+
+}
+
+void TextEdit::remoteAddUser()
+{
+    if (this->client->isLogged()){
+        this->client->handleAddUser();
+    }
 }
 
 void TextEdit::remoteRemoveFile()
 {
-    QMap<QString, QString> comando;
-    comando.insert("CMD","ADD-FILE");
-    this->client->sendMsg(comando);
-
+    // TODO
 }
 
 

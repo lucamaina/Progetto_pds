@@ -14,9 +14,6 @@ void BrowseWindow::setUpGUI(){
 
     comboScelta= new QComboBox(this);
     comboScelta->setEditable(true);
-    comboScelta->addItem("test_file1");
-    // comboScelta->addItem("questo è il numero file1");
-
 
     labelScelta= new QLabel(this);
     labelScelta->setText( tr( "Choose a file:" ) );
@@ -26,6 +23,7 @@ void BrowseWindow::setUpGUI(){
     buttons->addButton( QDialogButtonBox::Ok );
     buttons->addButton( QDialogButtonBox::Cancel );
     buttons->addButton( QDialogButtonBox::Open);
+
     buttons->button( QDialogButtonBox::Ok )->setText( tr("Open") );
     buttons->button( QDialogButtonBox::Open )->setText( tr("New File") );
     buttons->button( QDialogButtonBox::Cancel )->setText( tr("Cancel") );

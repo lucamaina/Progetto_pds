@@ -27,5 +27,6 @@
         <file>images/win/newOnServer.png</file>
         <file>images/win/remoteBrows.png</file>
         <file>images/win/remoteDelete.png</file>
+        <file>images/win/addUserIcon.png</file>
     </qresource>
 </RCC>

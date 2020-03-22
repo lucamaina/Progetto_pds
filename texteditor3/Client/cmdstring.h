@@ -20,6 +20,7 @@
 #define CRS "CURSOR"
 #define ULIST "USER-LIST"
 #define ADD_USER "ADD-USER"
+#define REM_USER "REM-USER"
 
 #define OK "OK"
 #define ERR "ERR"
@@ -67,5 +68,6 @@
 #define FILE_ERR "error - user cannot open file"
 #define FILE_OK "ok - file open"
 
+#define ADD_USER_ERR "error - add user"
 
 #endif // CMDSTRING_H

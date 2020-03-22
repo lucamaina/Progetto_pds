@@ -79,6 +79,7 @@ private:
     void loadFile(QMap<QString, QString> &comando);
     void getUsers(QMap<QString, QString> &comando);
     void addUsersDB(QMap<QString, QString> &comando);
+    void remUsersDB(QMap<QString, QString> &comando);
 
     /****************************************************************************
      * metodi accesso a netowrk *************************************************/

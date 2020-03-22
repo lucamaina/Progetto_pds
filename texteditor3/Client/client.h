@@ -85,6 +85,7 @@ public slots:
     bool sendMsg(QByteArray ba);
 
     void sendAddUsers(QStringList& lista);
+    void sendRemoveUsers(QStringList& lista);
 
 private:
     QMap<QString,QString> files;
@@ -113,7 +114,7 @@ private:
     /****************************************************************************
      ***************** metodi controllo dei comandi inviati ********************/
 
-
+    void showUserError(QMap<QString, QString> cmd);
 
 
 };

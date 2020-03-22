@@ -56,6 +56,19 @@ void Client::sendAddUsers(QStringList &lista)
     this->sendMsg(cmd);
 }
 
+void Client::sendRemoveUsers(QStringList &lista)
+{
+    qDebug() << "sono in Client::sendRemoveUsers >> " << lista;
+    QMap<QString, QString> cmd;
+    cmd.insert(CMD, REM_USER);
+    cmd.insert(DOCID, this->docID);
+    int i = 1;
+    for (QString utente: lista){
+        cmd.insert(UNAME + QString::number(i), utente);
+    }
+    this->sendMsg(cmd);
+}
+
 
 /**
  * @brief Client::handleNuovoFile
@@ -90,6 +103,7 @@ void Client::handleAddUser()
         finestraUsers = new UserManager(this->username);
         connect(this, SIGNAL(s_userList(QList<QString>&)), finestraUsers, SLOT(caricaUsers(QList<QString>&)));
         connect(finestraUsers, SIGNAL(s_addUsers(QStringList&)), this, SLOT(sendAddUsers(QStringList&)));
+        connect(finestraUsers, SIGNAL(s_removeUsers(QStringList&)), this, SLOT(sendRemoveUsers(QStringList&)));
 
         this->finestraUsers->exec();
 
@@ -327,6 +341,9 @@ void Client::dispatchERR(QMap <QString,QString>cmd){
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"File open", comando.value());
         Messaggio.setFixedSize(500,200);
+    }
+    else if (comando.value() == ADD_USER_ERR) {
+        this->showUserError(cmd);
 
     }
 }
@@ -460,6 +477,28 @@ void Client::spostaCursori(QMap <QString,QString>cmd){
     if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; }
 
     emit spostaCursSignal(posX,posY,anchor,c,user);
+}
+
+/**
+ * @brief Client::showUserError
+ * @param cmd
+ * mostra utenti con errore di ADD_USER
+ */
+void Client::showUserError(QMap<QString, QString> cmd)
+{
+    int i = 1;
+    QString nome, str;
+    do {
+        if (cmd.contains(UNAME+QString::number(i))){
+            nome = cmd.value(UNAME+QString::number(i), "");
+            str += nome + "; ";
+        }
+    } while (nome != "");
+
+    QMessageBox Messaggio;
+    Messaggio.setText("Errore inserimento utenti");
+    Messaggio.information(nullptr,"Errore: ", str);
+    Messaggio.setFixedSize(500,200);
 }
 
 void Client::dispatchStile(QMap <QString,QString>cmd){

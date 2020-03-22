@@ -37,9 +37,11 @@ public slots:
     void caricaUsers(QList<QString>&lista);
     void checkItem(QListWidgetItem *item);
     void addUser();
+    void removeUser();
 
 signals:
     void s_addUsers(QStringList &);
+    void s_removeUsers(QStringList &);
 };
 
 #endif // USERMANAGER_H

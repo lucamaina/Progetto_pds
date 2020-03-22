@@ -126,6 +126,8 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
         this->getUsers(cmd);
     } else if (comando.value() == ADD_USER) {
         this->addUsersDB(cmd);
+    } else if (comando.value() == REM_USER) {
+        this->remUsersDB(cmd);
     }
 }
 
@@ -582,9 +584,49 @@ void s_thread::addUsersDB(QMap<QString, QString> &comando)
     QString logStr;
     QString rispOk, rispErr;
     QStringList lista = toQStringList(comando);
+
+    QMap<QString, QString> risp;
+    risp.insert(CMD, ERR);
+    risp.insert(MEX, "Utenti aggiunti: " + rispOk + "\nUtenti non aggiunti: " + rispErr);
+    int i = 1;
     for (QString utente : lista){
         if ( this->up_conn->addUser(*this->up_user, docId, utente) == true ){
+            // utente aggiunto correttamente
+        } else {
+            risp.insert(UNAME+QString::number(i++), utente);
+        }
+    }
+    this->clientMsg(risp);
+
+    // ritorno list autenti aggiornata
+    comando.clear();
+    comando.insert(CMD, ULIST);
+    comando.insert(DOCID, docId);
+    this->getUsers(comando);
+
+}
+
+void s_thread::remUsersDB(QMap<QString, QString> &comando)
+{
+    qDebug() << "sono in s_thread::remUsersDB = " << Q_FUNC_INFO;
+    if (!this->up_user->isConnected()){ return; }
+    QList<QString> list = {CMD, DOCID }; // DOCID
+    if (!verifyCMD(comando, list)){ return;   }
+    if (up_user->isConnected() == false) return;
+    if (!this->up_conn->isOpen()){
+        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
+        this->connectDB();
+    }
+    QString docId = comando.value(DOCID);
+    QString logStr;
+    QString rispOk, rispErr;
+    QStringList lista = toQStringList(comando);
+    for (QString utente : lista){
+        if ( this->up_conn->remUser(*this->up_user, docId, utente) == true ){
             rispOk.append(utente+" ; ");
+            // rimuovi utente dal documento
+            Network &net = Network::getNetwork();
+
         } else {
             rispErr.append(utente+ " ; ");
         }
@@ -593,6 +635,14 @@ void s_thread::addUsersDB(QMap<QString, QString> &comando)
     risp.insert(CMD, OK);
     risp.insert(MEX, "Utenti aggiunti: " + rispOk + "\nUtenti non aggiunti: " + rispErr);
     this->clientMsg(risp);
+
+    // ritorno list autenti aggiornata
+    comando.clear();
+    comando.insert(CMD, ULIST);
+    comando.insert(DOCID, docId);
+    this->getUsers(comando);
+
+
 }
 
 

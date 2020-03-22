@@ -15,6 +15,7 @@
 #define queryFILEexist "SELECT Count(*) FROM documenti AS d WHERE d.FileSysPath = :FileSysPath;"
 #define queryFILEadd "INSERT INTO documenti(FileSysPath, LinkPath) VALUE (:FileSysPath, :LinkPath);"
 #define queryRELAZIONEadd "INSERT INTO relazioni(DocId, UserName) VALUE (:DocId, :UserName);"
+#define queryRELAZIONErem "DELETE FROM relazioni WHERE DocId = :DocId and UserName = :UserName;"
 
 #define queryBROWS "SELECT * FROM documenti WHERE DocId IN (SELECT DocId FROM relazioni WHERE UserName = :UserName);"
 #define queryOPEN "SELECT Count(*) FROM relazioni WHERE UserName = :UserName AND DocId = :DocId;"
@@ -60,6 +61,7 @@ public:
     QString getDocId(const QString nomeFile, const QString nomeUtente);
     QList<QString> getUsers(const QString docId);
     bool addUser(utente& user, QString docId, QString& newUser);
+    bool remUser(utente& user, QString docId, QString& newUser);
 
 
 

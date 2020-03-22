@@ -28,7 +28,6 @@ void UserManager::setUpGUI()
     lblTitoloRemove->setText("Rimuovi utenti dalla condivisione:");
 
     this->listaUser = new QListWidget(this);
-    listaUser->setSortingEnabled(true);
 
     buttons = new QDialogButtonBox(this);
     buttons->addButton( QDialogButtonBox::Ok)->setText("Rimuovi");
@@ -51,6 +50,7 @@ void UserManager::setUpGUI()
     connect(this->listaUser, SIGNAL(itemClicked(QListWidgetItem *)), this, SLOT(checkItem(QListWidgetItem *)));
 
     connect(this->btnAddUser->button( QDialogButtonBox::Apply), SIGNAL(clicked()), this, SLOT(addUser()));
+    connect(this->buttons->button( QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(removeUser()));
 
     this->listItem = new QList<QListWidgetItem>;
 
@@ -64,22 +64,30 @@ void UserManager::setUpGUI()
 void UserManager::caricaUsers(QList<QString> & lista)
 {
     qDebug() << "sono in UserManager::caricaUsers >> " << lista;
+
+    this->listItem->clear();
+    this->listaUser->clear();
+
     for(QString s : lista){
         QListWidgetItem item(s, listaUser);
         if ( s == this->myself){
-            listItem->append(item);
-            this->listaUser->insertItem(0, &listItem->back());
+            listItem->prepend(item);
+            // this->listaUser->insertItem(0, &listItem->back());
         } else {
             item.setFlags(Qt::ItemFlag::ItemIsUserCheckable);
             item.setFlags(Qt::ItemFlag::ItemIsEnabled);
             item.setCheckState(Qt::CheckState::Unchecked);
             listItem->append(item);
-            this->listaUser->addItem(&listItem->back());
+            // this->listaUser->addItem(&listItem->back());
         }
-
     }
-    this->listaUser->sortItems(Qt::SortOrder::DescendingOrder);
-
+//    qDebug() << std::for_each(listItem->begin(), listItem->end(), [](QListWidgetItem &i){return i.text();});
+    std::sort(++this->listItem->begin(), listItem->end());
+    std::for_each(listItem->begin(),
+                  listItem->end(),
+                  [&](QListWidgetItem &i){
+        this->listaUser->addItem(&i);
+    } );
 }
 
 /**
@@ -108,11 +116,23 @@ void UserManager::addUser()
 {
     qDebug() << "sono in UserManager::addUser";
     QString str = this->addUsers->text();
+
     str = str.trimmed();
     QStringList listaUser = str.split(',', QString::SkipEmptyParts);
 
     emit s_addUsers(listaUser);
+}
 
-    this->close();
+void UserManager::removeUser()
+{
+    QStringList lista;
+    for(int i = 0; i < this->listaUser->count(); ++i)
+    {
+        if ( listaUser->item(i)->checkState() == Qt::CheckState::Checked ){
+            lista.append(listaUser->item(i)->text());
+        }
+    }
+
+    emit s_removeUsers(lista);
 }
 

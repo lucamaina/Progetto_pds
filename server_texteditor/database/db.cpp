@@ -353,6 +353,41 @@ bool db::addUser(utente &user, QString docId, QString &newUser)
     return true;
 }
 
+bool db::remUser(utente &user, QString docId, QString &newUser)
+{
+    // verifica docId e user
+    QVector<QString> values;
+    values.push_back(user.getUsername());
+    values.push_back(docId);
+    QSqlQuery res = this->query(queryOPEN, values);
+    int valid = 0;
+    if (res.first()){
+        valid = res.value(0).toInt();
+    }
+    if (valid != 1){
+        return false;
+    }
+
+    // verifica newUser
+    values.clear();
+    values.push_back(newUser);
+    res = this->query(queryUTENTIFind, values);
+    if (res.first()){
+        valid = res.value(0).toInt();
+    }
+    if (valid != 1){
+        return false;
+    }
+
+    // rimuovi relazione
+    values.clear();
+    values.push_back(docId);
+    values.push_back(newUser);
+    res = this->query(queryRELAZIONErem, values);
+
+    return true;
+}
+
 void db::setUpUtenti()
 {
     QSqlQuery res = this->query(querySetUpUtenti);

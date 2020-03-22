@@ -22,6 +22,7 @@
 #define CRS "CURSOR"
 #define ULIST "USER-LIST"
 #define ADD_USER "ADD-USER"
+#define REM_USER "REM-USER"
 
 #define OK "OK"
 #define ERR "ERR"
@@ -75,5 +76,7 @@
 
 #define REM_ERR "error - remove not possible"
 #define REM_OK "ok - remove done"
+
+#define ADD_USER_ERR "error - add user"
 
 #endif // CMDSTRING_H

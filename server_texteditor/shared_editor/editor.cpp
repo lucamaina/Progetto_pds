@@ -5,6 +5,7 @@
  */
 
 #include "editor.h"
+#include "../server/s_thread.h"
 
 Editor::Editor(QObject *parent) : QObject(parent)
 {
@@ -18,7 +19,6 @@ Editor::Editor(QString Id, QString fName)
     this->refCount = 1;
     this->file = new QFile(this->nomeFile);
     file->open(QIODevice::ReadWrite | QIODevice::Text);
-    // file->write("qwertt");
     qDebug() << file->size();
 
     if (this->file->isOpen()){
@@ -48,7 +48,7 @@ bool Editor::loadMap()
 
 bool Editor::sendMap(QString nomeUtente)
 {
-    QTcpSocket *sock = this->sendList.value(nomeUtente);
+    QSharedPointer<MySocket> socket = this->sendList_.value(nomeUtente);
     // prepara messaggio
 
     QByteArray ba;
@@ -71,21 +71,20 @@ bool Editor::sendMap(QString nomeUtente)
 
     ba.prepend(len);
     ba.prepend(INIT);
-    qDebug() << QString(ba);
 
-    if (!this->send(sock, ba)){
+    if (!this->send(socket, ba)){
         qDebug() << "err invio";
     }
-    return sendBody(sock);
+    return sendBody(socket);
 }
 
-bool Editor::sendBody(QTcpSocket *sock )
+bool Editor::sendBody(QSharedPointer<MySocket> &sock)
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::ReadWrite);
     stream << this->symMap;
     qDebug() << "size qByteArray = " << ba.size();
-    sock->write(ba);
+    sock.get()->write(ba);
     return true;
 }
 
@@ -115,8 +114,8 @@ QString Editor::mapToSend()
 
 bool Editor::loadFile(const QString &nomeUser, const int dimFile)
 {
-    if (!this->sendList.contains(nomeUser)){    return false;   }
-
+    if (!this->sendList_.contains(nomeUser)){    return false;   }
+    (void) dimFile;
 
     return true;
 }
@@ -155,28 +154,31 @@ bool Editor::process(Message &msg)
     return false;
 }
 
-bool Editor::send(QTcpSocket* t, QByteArray ba)
+bool Editor::send(QSharedPointer<MySocket> &sock, QByteArray ba)
 {
-    t->waitForBytesWritten(100);
-    if (t->write(ba, ba.length()) == -1){
-        qDebug() << "Errore in scrittura al client" << ba;
-        return false;
+    sock.get()->write(ba);
+    return true;
+}
+
+bool Editor::sendToAll(Comando &cmd)
+{
+    QSharedPointer<MySocket> sp;
+    this->sendList_.values();
+    for(QSharedPointer<MySocket> sock : this->sendList_.values()){
+        this->send(sock, cmd.toByteArray());
     }
-    qDebug() << "To client: " << ba;
     return true;
 }
 
 bool Editor::rispErr(Message &msg)
 {
-    return this->send(this->sendList.value(msg.getUser()),
-                      Comando(Comando::Insert_Err).toByteArray());
+    QSharedPointer<MySocket> tmpSock = this->sendList_.value(msg.getUser());
+    return this->send( tmpSock,
+                       Comando( Comando::Insert_Err ).toByteArray());
 }
 
 bool Editor::deserialise(QByteArray &ba)
 {
-    //TODO
-    // problemi in serilizzare mappa
-    // this->symMap.clear();
     QMap<double, Symbol> map;
     map.clear();
     QByteArray p;
@@ -194,53 +196,7 @@ bool Editor::deserialise(QByteArray &ba)
     return true;
 }
 
-void Editor::editProva()
-{
-    /*
-    this->symMap.clear();
-    this->symMap.insert(1, Symbol("asd", 'a', 1, "aaaaaaaaaaaa"));
-    symMap.insert(2, Symbol("asd", 'b', 2, "bbbbbbbbbbbbb"));
-    symMap.insert(3, Symbol("qwe", 'c', 3, "ccccccccccccccc"));
-    symMap.insert(4, Symbol("qwe", 'd', 4, "ddddddddddd"));
-    symMap.insert(5, Symbol("asd", 'e', 5, "eeeeeeeeeeeeeee"));
-
-    QJsonObject json;
-    QByteArray s;
-
-    QMapIterator<double, Symbol> i(symMap);
-    while (i.hasNext()) {
-        i.next();
-        s.clear();
-        QDataStream out(&s, QIODevice::WriteOnly);
-        QJsonValue jval( QString(s.toBase64()) );
-        qDebug() << jval.toString();
-        json.insert(QString::number(i.key()), jval.toString());
-    }
-
-    QJsonDocument Doc(json);
-
-
-    QFile *f= new QFile("mappa_sv");
-    f->open(QIODevice::ReadWrite | QIODevice::Text);
-    //QByteArray s;
-    s.clear();
-    QDataStream out(&s, QIODevice::WriteOnly);
-    out << symMap;
-
-    QMap<double,Symbol> deserial;
-    QDataStream in(&s, QIODevice::ReadWrite);
-    in >> deserial;
-
-    f->write(s);
-    f->write("\n\n");
-    f->write(s.toHex());
-    f->write("\n\n");
-    f->write(s.toBase64(QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals));
-    f->write("\n\n");
-    f->write(Doc.toJson());
-    f->close();
-    */
-}
+void Editor::editProva(){}
 
 
 
@@ -254,21 +210,27 @@ void Editor::editProva()
  * @return
  * aggiungo socket relativo all'utente alla lista
  */
-bool Editor::addUser(utente &user)
+bool Editor::addUser(utente &user, QSharedPointer<MySocket> & sock)
 {
-    if (this->sendList.contains(user.getUsername())){
-        sendList.insert(user.getUsername(), user.getSocket());
-        return true;
-    } else {
-        this->sendList.insert(user.getUsername(), user.getSocket());
-    }
+    qDebug() << "snon in " << Q_FUNC_INFO;
+    this->sendList_.insert(user.getUsername(), sock);
+    // preparo messaggio lista di cursori
+    QStringList list = this->sendList_.keys();
+    Comando cmd(Comando::Up_Cursor);
+    cmd.insertMulti(UNAME, list).insert(DOCID, this->DocId);
+    //cmd.insert(DOCID, this->DocId);
+
+    // invio a tutti
+    this->sendToAll(cmd);
+
     return true;
 }
 
+
 bool Editor::removeUser(const QString &nomeUser)
 {
-    if (this->sendList.contains(nomeUser)){
-        this->sendList.remove(nomeUser);
+    if (this->sendList_.contains(nomeUser)){
+        this->sendList_.remove(nomeUser);
 
 
 
@@ -279,7 +241,7 @@ bool Editor::removeUser(const QString &nomeUser)
 
 bool Editor::findUser(const QString &nomeUser)
 {
-    return this->sendList.contains(nomeUser);
+    return this->sendList_.contains(nomeUser);
 }
 
 bool Editor::isEmpty()
@@ -318,9 +280,10 @@ bool Editor::localDelete(Message msg)
 bool Editor::remoteSend(Message msg)
 {
     QByteArray ba = msg.toQByteArray();
-
-    foreach (QString ut, this->sendList.keys()){
-        this->send(sendList.value(ut), ba);
+    QSharedPointer<MySocket> tmpSock;
+    for (QString ut : this->sendList_.keys()){
+        tmpSock = sendList_.value(ut);
+        this->send(tmpSock, ba);
     }
     return true;
 }

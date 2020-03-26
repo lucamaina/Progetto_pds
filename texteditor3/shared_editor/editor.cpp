@@ -153,10 +153,14 @@ QString Editor::getTesto()
  */
 double Editor::insertLocal(double index,char value, QTextCharFormat formato){
     Symbol s = Symbol(username,value,1,formato);
-
+    double flag = -1;
+    if (symMap.contains(index)){
+        //cancello carattere in textEdit e lo riscrivo
+        flag = index;
+    }
     symMap.insert(index, s);
 
-    return index;
+    return flag;
 }
 
 

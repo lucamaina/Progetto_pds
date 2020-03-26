@@ -23,6 +23,7 @@
 #define ULIST "USER-LIST"
 #define ADD_USER "ADD-USER"
 #define REM_USER "REM-USER"
+#define UP_CRS "UP-CRS"
 
 #define OK "OK"
 #define ERR "ERR"
@@ -77,6 +78,7 @@
 #define REM_ERR "error - remove not possible"
 #define REM_OK "ok - remove done"
 
-#define ADD_USER_ERR "error - add user"
+#define ADD_USER_ERR "error - Utenti non aggiunti"
+#define REM_USER_ERR "error - Utenti non rimossi"
 
 #endif // CMDSTRING_H

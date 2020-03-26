@@ -19,7 +19,7 @@ void Network::push(Message &msg)
 {
     std::unique_lock<std::mutex> lg(mQueue);
     this->msgQueue.push_back(msg);
-
+//    qDebug() << "sono in " << Q_FUNC_INFO;
     emit sigSend();
     return;
 }
@@ -37,7 +37,7 @@ void Network::msgRead(Message &msg)
     }
 }
 
-bool Network::createEditor(QString fileId, QString nomeFile, utente &user)
+bool Network::createEditor(QString fileId, QString nomeFile, utente &user, QSharedPointer<MySocket> &sock)
 {
     // verifica nome file non sia già presente
     if (this->editorMap.contains(fileId)){
@@ -45,7 +45,7 @@ bool Network::createEditor(QString fileId, QString nomeFile, utente &user)
         return false;
     }
     Editor *ed = new Editor(fileId, nomeFile);
-    ed->addUser(user);
+    ed->addUser(user, sock);
     this->editorMap.insert(fileId, ed);
 
     // TODO leggi file e carica symMap
@@ -96,11 +96,10 @@ bool Network::filePresent(QString fileId)
 }
 
 
-bool Network::addRefToEditor(QString fileId, utente &user)
+bool Network::addRefToEditor(QString fileId, utente &user, QSharedPointer<MySocket>&sock)
 {
     if (this->editorMap.contains(fileId)){
-        editorMap.value(fileId)->addUser(user);
-        return true;
+        return editorMap.value(fileId)->addUser(user, sock);
     } else {
         return false;
     }
@@ -132,16 +131,9 @@ Editor &Network::getEditor(QString docId)
  */
 void Network::dispatch()
 {
-    //std::lock_guard<std::mutex> lg(mQueue);
+    // qDebug() << "sono in " << Q_FUNC_INFO;
     if (!msgQueue.isEmpty()){
-        while (msgQueue.size() > 0){
-            Message msg = msgQueue.dequeue();
-            // leggo messaggio e lo consegno
-            sendToEdit(msg);
-            // send to altri utenti
-
-
-        }
+        Message msg = msgQueue.dequeue();
+        sendToEdit(msg);
     }
-    return;
 }

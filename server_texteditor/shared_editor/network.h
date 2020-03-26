@@ -16,12 +16,12 @@ public:
     static Network& getNetwork();
     void push(Message &msg);
     void msgRead(Message &msg);
-    bool createEditor(QString fileID, QString nomeFile, utente& userName);
+    bool createEditor(QString fileID, QString nomeFile, utente& userName, QSharedPointer<MySocket> &sock);
     bool createEditor(QMap<QString, QString> cmd);
     void sendToEdit(Message& msg);
     bool sendToUsers(Message & msg);
     bool filePresent(QString fileId);
-    bool addRefToEditor(QString fileId, utente& user);
+    bool addRefToEditor(QString fileId, utente& user, QSharedPointer<MySocket> &sock);
     bool remRefToEditor(QString fileId, QString user);
 
     Editor& getEditor(QString docId);

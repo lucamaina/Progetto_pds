@@ -11,7 +11,11 @@
 class Comando
 {
 public:
-    enum cmdType {Insert_Ok, Remove_Ok, Insert_Err, Remove_Err};
+    enum cmdType {  Insert_Ok,
+                    Remove_Ok,
+                    Insert_Err,
+                    Remove_Err,
+                    Up_Cursor};
 
 private:
     QMap<QString, QString> cmdMap;
@@ -21,6 +25,11 @@ public:
     Comando(cmdType tipo);
     QByteArray toByteArray(void);
     bool verifyCMD(QList<QString> &list);
+    void insert(QString key, QString value);
+    Comando &insertMulti(QString tipo, QStringList & elenco);
+    QList<QString> keys();
+    QList<QString> values();
+    QString toString();
 };
 
 #endif // COMANDO_H

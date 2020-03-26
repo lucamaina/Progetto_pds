@@ -17,15 +17,6 @@ db::db(int connName)
     myDb.setHostName("localhost");
     myDb.setDatabaseName("web_editor");
     Logger::getLog().write("Nuova connessione di nome " + QString::number(connName));
-
-/* spostato in conn
-    {
-        myDb.setUserName("serverUser");
-        myDb.setPassword("pass");
-        bool ok = myDb.open();
-        qDebug() << "database opened:" << ok;
-    }
-*/
 }
 
 QSqlQuery db::query(QString querySrc)
@@ -38,15 +29,15 @@ QSqlQuery db::query(QString querySrc)
         QSqlError err = query.lastError();
         qDebug() << err.text();
     }
-    qDebug() << "last query" << query.executedQuery();
+    // qDebug() << "last query" << query.executedQuery();
     return query;
 }
 
 QSqlQuery db::query(QString querySrc, QVector<QString> values)
 {
     QSqlQuery query(this->myDb);
-    if (myDb.isOpen()){
-        qDebug() << "db aperto prima di exec";
+    if (!myDb.isOpen()){
+        qDebug() << "Error: db chiuso prima di exec";
     }
     query.prepare(querySrc);
     for (int idx = 0; idx < values.length(); idx++){
@@ -57,7 +48,7 @@ QSqlQuery db::query(QString querySrc, QVector<QString> values)
         QSqlError err = query.lastError();
         qDebug() << err.text();
     }
-    qDebug() << "last query" << query.executedQuery() << " values: " << values;
+    // qDebug() << "last query" << query.executedQuery() << " values: " << values;
     return query;
 }
 

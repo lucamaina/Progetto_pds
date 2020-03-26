@@ -28,7 +28,7 @@ public:
     QString getNick();
     QString getPass();
     void setNick(QString nick);
-    void setSocket(QTcpSocket *sock);
+    void setSocket(QTcpSocket &sock);
     bool prepareUtente(QMap<QString, QString> map);
     bool prepareUtente(QMap<QString, QString> map, bool isConnect);
     bool isConnected(){ return this->isConnect; }
@@ -39,12 +39,6 @@ public:
         isConnect = false;
         mioSocket = nullptr;
     }
-
-signals:
-
-
-public slots:
-
 
 };
 

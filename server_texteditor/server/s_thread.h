@@ -19,6 +19,8 @@
 #include "../shared_editor/network.h"
 #include "../shared_editor/message.h"
 
+#include "mysocket.h"
+
 class s_thread : public QThread
 {
     Q_OBJECT
@@ -29,8 +31,10 @@ public:
     void run();
 
 public slots:
-    void readyRead();
+    //void readyRead();
     void disconnected();
+    void dispatchCmd(QMap<QString, QString> &cmd);
+    void dispatchCmd(Comando &cmd);
 
 signals:
     void deleteThreadSig(s_thread &t);
@@ -39,7 +43,10 @@ private:
     int sockID;
     QString docID = "";
     QTcpSocket *socket = nullptr;
-//    std::shared_ptr<QTcpSocket> socket;
+
+    // socket con shared pointer
+    QSharedPointer<MySocket> sp_socket;
+
     //utente *user = nullptr;     // usare unique_ptr
     std::unique_ptr<utente> up_user;
     //db *conn;
@@ -55,12 +62,13 @@ private:
     /****************************************************************************
      * metodi controllo dei comandi ricevuti ************************************/
     void leggiXML(QByteArray data);
-    void dispatchCmd(QMap<QString, QString> cmd);
+
 
     /****************************************************************************
      * metodi controllo dei messaggi inviati ************************************/
     bool scriviXML(QMap<QString, QString> comando);
     bool clientMsg(QByteArray data);
+    bool clientMsg_(QMap<QString, QString> comando);
     bool clientMsg(QMap<QString, QString> comando);
 
     bool sendBody(QByteArray &ba);

@@ -14,6 +14,7 @@
 #include "../NuovoFileRemotoWindoow/usermanager.h"
 #include "cmdstring.h"
 #include "shared_editor/editor.h"
+#include "shared_editor/eventbuffer.h"
 
 class Client : public QObject
 {
@@ -38,17 +39,27 @@ public:
     void loadFile(QMap<QString,QString> cmd);
     QString serialize(const QTextCharFormat &format);
     QTextCharFormat deserialize(QByteArray &s);
+
     bool isLogged(void){
         return this->logged;
     }
 
+    /****************************************************************************
+     ***************** metodi gestione cursori **********************************/
+
+    bool upCursor(QMap<QString,QString> cmd);
 
     // puntatore all'editor remoto
     Editor* remoteFile;
+    QList<EventBuffer> eventBuf;
 
+
+    QString getUsername() const;
 
 signals:
     void addMe();
+    void s_upCursor(QStringList&);
+
     void spostaCursSignal(int& posX, int& posY, int& anchor, char& car, QString& user); //fa anche l'inserimento
     void cancellaSignal(int& posX, int& posY, int& anchor,char& car, QString& user);
     void deleteListSig(); //cancella la lista di utenti online dal widget
@@ -111,6 +122,7 @@ private:
     void dispatchOK(QMap <QString, QString> cmd);
     void dispatchERR(QMap <QString,QString> cmd);
     void spostaCursori(QMap <QString,QString> cmd);
+
     /****************************************************************************
      ***************** metodi controllo dei comandi inviati ********************/
 

@@ -14,7 +14,8 @@
 #include "symbol.h"
 #include "../server/comando.h"
 
-class s_thread;
+class MySocket;
+class Network;
 
 class Editor : public QObject
 {
@@ -30,7 +31,8 @@ private:
 
     QMap<double, Symbol> symMap;
     QVector<utente> userList;
-    QMap<QString, QTcpSocket*> sendList;
+
+    QMap<QString, QSharedPointer<MySocket>> sendList_;
 
 
 public:
@@ -40,7 +42,7 @@ public:
     static Editor& getFile();
     bool loadMap();
     bool sendMap(QString nomeUtente);
-    bool sendBody(QTcpSocket *sock);
+    bool sendBody(QSharedPointer<MySocket> &sock);
 
     QByteArray getSymMap();
 
@@ -53,7 +55,8 @@ public:
 
     /****************************************************************************
      * metodi controllo utenti **************************************************/
-    bool addUser(utente &nomeUser);
+    bool addUser(utente &nomeUser, QSharedPointer<MySocket> &sock);
+
     bool removeUser(const QString &nomeUser);  // utente& nomeUser
     bool findUser(const QString &nomeUser);
 
@@ -64,7 +67,9 @@ public:
     bool cursorChange(Message msg);
     bool remoteSend(Message msg);
 
-    bool send(QTcpSocket *t, QByteArray ba);
+    bool send(QSharedPointer<MySocket> &sock, QByteArray ba);
+
+    bool sendToAll(Comando &cmd);
     bool rispErr(Message &msg);
     bool process(Message& msg);
 

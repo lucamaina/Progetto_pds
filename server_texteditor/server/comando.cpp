@@ -22,6 +22,12 @@ Comando::Comando(Comando::cmdType tipo)
         cmdMap.insert(CMD, ERR);
         cmdMap.insert(MEX, REM_ERR);
         break;
+    case (Up_Cursor):
+        cmdMap.insert(CMD, UP_CRS);
+        break;
+    default:
+        cmdMap.insert(CMD, "Error");
+        break;
     }
 }
 
@@ -33,18 +39,13 @@ QByteArray Comando::toByteArray()
     QByteArray ba;
     QXmlStreamWriter wr(&ba);
     wr.writeStartDocument();
-    wr.writeTextElement(this->cmdMap.value(CMD), "");
+    wr.writeStartElement(this->cmdMap.value(CMD));
+    cmdMap.remove(CMD);
 
-    foreach(QString key, cmdMap.keys()){
-        if (key != CMD) {
-            QString elem, val;
-            elem = this->cmdMap.firstKey();
-            val = this->cmdMap.value(elem);
-            qDebug() << elem << " : " << val;
-            wr.writeTextElement(elem, val);
-        }
+    for(QString key : cmdMap.keys()){
+        wr.writeTextElement(key, cmdMap.value(key));
     }
-
+    wr.writeEndElement();
     wr.writeEndDocument();
 
     int dim = ba.size();
@@ -71,5 +72,38 @@ bool Comando::verifyCMD(QList<QString> &list)
         if (!this->cmdMap.contains(val)){    return false;   }
     }
     return true;
+}
+
+void Comando::insert(QString key, QString value)
+{
+    this->cmdMap.insert(key, value);
+}
+
+Comando& Comando::insertMulti(QString tipo, QStringList &elenco)
+{
+    int i = 1;
+    for (QString s : elenco){
+        this->cmdMap.insert(tipo+QString::number(i++), s);
+    }
+    return *this;
+}
+
+QList<QString> Comando::keys()
+{
+    return this->cmdMap.keys();
+}
+
+QList<QString> Comando::values()
+{
+    return this->cmdMap.values();
+}
+
+QString Comando::toString()
+{
+    QString str;
+    for (QString key : this->keys()){
+        str.append(key+" : "+cmdMap.value(key)+"\n");
+    }
+    return str;
 }
 

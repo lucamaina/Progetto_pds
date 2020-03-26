@@ -12,13 +12,23 @@ void s_thread::run()
 {
     Logger::getLog().write("Nuovo thread in esecuzione, ID = "+ QString::number(this->sockID) );
     qDebug() << "Thread running, ID: " << QString::number(this->sockID);
+/*
     this->socket = new QTcpSocket();
     socket->setSocketDescriptor(sockID);
     connect(this->socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
     connect(this->socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
-    qDebug() << "Client connesso";
+    qDebug() << "Client connesso vecchio socket";
+*/
+
+    sp_socket = QSharedPointer<MySocket>( new MySocket(sockID));
+
+    connect(sp_socket.get(), &MySocket::s_disconnected, this, &s_thread::disconnected, Qt::DirectConnection);
+    connect(sp_socket.get(), SIGNAL( s_dispatchCmd(QMap<QString, QString>&) ), this, SLOT( dispatchCmd(QMap<QString, QString>&) ), Qt::DirectConnection);
+    connect(sp_socket.get(), SIGNAL( s_dispatchCmd(Comando&) ), this, SLOT( dispatchCmd(Comando&) ), Qt::DirectConnection);
+    qDebug() << "Client connesso nuovo socket";
+
     this->up_user = std::make_unique<utente>( utente() );
-    this->up_user.get()->setSocket(this->socket);
+
     this->connectDB();
 }
 
@@ -57,22 +67,17 @@ s_thread::~s_thread()
  */
 void s_thread::leggiXML(QByteArray qb)
 {
-    qDebug() << endl << "Leggo XML from client:";
-    QMap<QString, QString> command;
+    qDebug().noquote() << endl << endl << "-> Leggo XML from client: " << this->sockID << endl << qb;
 
-    qDebug() << qb;
+    QMap<QString, QString> command;
     QXmlStreamReader stream(qb);
 
     while (!stream.atEnd() && !stream.hasError() ){
         QXmlStreamReader::TokenType token = stream.readNext();
-        // leggo start document
-        /*if (token == QXmlStreamReader::StartDocument){
-            qDebug() << "start doc: " << QString(token) << " - " << stream.readElementText();
-        }*/
         token = stream.readNext();
         // leggo elemento con nome del comando
         if (token == QXmlStreamReader::StartElement){
-            qDebug() << "comando: " << stream.name();
+            //qDebug() << "comando: " << stream.name();
             QString cmd = stream.name().toString();
             command.insert(CMD, cmd);
         }
@@ -81,7 +86,7 @@ void s_thread::leggiXML(QByteArray qb)
         while ( token == QXmlStreamReader::StartElement ){
             QString name = stream.name().toString(), text = stream.readElementText();
             command.insert(name, text);
-            qDebug() << "   start elem: " << name << " val: " << text;
+            //qDebug() << "   start elem: " << name << " val: " << text;
             token = stream.readNext();
         }
     }
@@ -100,7 +105,7 @@ void s_thread::leggiXML(QByteArray qb)
  * @param cmd
  * legge nella mappa il nome del comando e richiama le funzioni corrette
  */
-void s_thread::dispatchCmd(QMap<QString, QString> cmd){
+void s_thread::dispatchCmd(QMap<QString, QString> &cmd){
     auto comando = cmd.find(CMD);
     if (comando.value() == CONN) {
         this->connectDB();
@@ -129,6 +134,12 @@ void s_thread::dispatchCmd(QMap<QString, QString> cmd){
     } else if (comando.value() == REM_USER) {
         this->remUsersDB(cmd);
     }
+}
+
+void s_thread::dispatchCmd(Comando &cmd)
+{
+    QMap<QString, QString> cmdMap;
+    (void) cmd;
 }
 
 /**
@@ -176,12 +187,7 @@ bool s_thread::scriviXML(QMap<QString, QString> comando)
  * manda messaggio al client
  */
 bool s_thread::clientMsg(QByteArray data){
-    if (socket->isOpen() && socket->isWritable()){
-        if (this->socket->write(data, data.size()) == -1){
-            // errore
-            qDebug() << "errore scrittura verso client";
-        }
-    }
+    this->sp_socket.get()->write(data);
     return false;
 }
 
@@ -191,7 +197,7 @@ bool s_thread::clientMsg(QByteArray data){
  * @return
  * override per mandare messaggi al client
  */
-bool s_thread::clientMsg(QMap<QString, QString> comando){
+bool s_thread::clientMsg_(QMap<QString, QString> comando){ // vecchia versione
     QList<QString> list = {CMD};
     if (!verifyCMD(comando, list)){ return false;   }
     QByteArray ba;
@@ -212,9 +218,14 @@ bool s_thread::clientMsg(QMap<QString, QString> comando){
 
     ba.prepend(len);
     ba.prepend(INIT);
-    qDebug() << "to client: " << QString(ba);
+    qDebug().noquote() << endl << "<- To client: " << this->sockID << endl << QString(ba);
 
     return clientMsg(ba);
+}
+
+bool s_thread::clientMsg(QMap<QString, QString> comando){
+    this->sp_socket->write(comando);
+    return true;
 }
 
 /**
@@ -257,7 +268,7 @@ void s_thread::connectDB()
             logStr = QString::number(this->sockID) + " connesso a db con utente: ";
         }
         Logger::getLog().write(logStr);
-         clientMsg(risp);
+        clientMsg(risp);
     }
 }
 
@@ -436,7 +447,6 @@ void s_thread::browsFile(QMap<QString, QString> &comando)
     }
     QString logStr;
     QMap<QString, QString> map = this->up_conn->browsFile(*up_user);
-        clientMsg("Browsing effettuato");
         logStr = QString::number(this->sockID) + "Browsing con utente: " + up_user->getUsername();
 
     Logger::getLog().write(logStr);
@@ -450,7 +460,7 @@ void s_thread::browsFile(QMap<QString, QString> &comando)
  */
 void s_thread::openFile(QMap<QString, QString> &comando)
 {
-    QList<QString> list = {CMD, DOCID}; // DOCID, FNAME, UNAME
+    QList<QString> list = {CMD, DOCID};
     if (!verifyCMD(comando, list)){ return;   }
     if (up_user == nullptr) return;
     if (!this->up_conn->isOpen()){
@@ -487,24 +497,22 @@ void s_thread::openFile(QMap<QString, QString> &comando)
     Network &net = Network::getNetwork();
     if (!net.filePresent(comando.value(DOCID))){
         // aggiungi file
-        net.createEditor(comando.value(DOCID), PATH + comando.value(FNAME), *up_user);     // net.createEditor(comando.value(DOCID), PATH + comando.value(FNAME), *user);
+        net.createEditor( comando.value(DOCID),
+                          PATH + comando.value(FNAME),
+                          *up_user,
+                          this->sp_socket );     // net.createEditor(comando.value(DOCID), PATH + comando.value(FNAME), *user);
     } else {
         // aumenta contatore user attivi
-        net.addRefToEditor(comando.value(DOCID), *this->up_user);
+        net.addRefToEditor( comando.value(DOCID),
+                            *this->up_user,
+                            this->sp_socket );
     }
-
-    // crea mappa di prova
-    //net.getEditor(comando.value(DOCID)).editProva();
-
 
     // send Map
     QByteArray ba = net.getEditor(comando.value(DOCID)).getSymMap();
 
     this->sendBody(ba);
     qDebug() << ba;
-    // net.getEditor(comando.value(DOCID)).deserialise(ba);
-
-
 }
 
 /**
@@ -569,6 +577,7 @@ void s_thread::getUsers(QMap<QString, QString> &comando)
 
 }
 
+// verificare messaggio di risposta
 void s_thread::addUsersDB(QMap<QString, QString> &comando)
 {
     qDebug() << "sono in s_thread::addUsersDB";
@@ -586,17 +595,20 @@ void s_thread::addUsersDB(QMap<QString, QString> &comando)
     QStringList lista = toQStringList(comando);
 
     QMap<QString, QString> risp;
-    risp.insert(CMD, ERR);
-    risp.insert(MEX, "Utenti aggiunti: " + rispOk + "\nUtenti non aggiunti: " + rispErr);
+
     int i = 1;
     for (QString utente : lista){
-        if ( this->up_conn->addUser(*this->up_user, docId, utente) == true ){
-            // utente aggiunto correttamente
-        } else {
+        if ( this->up_conn->addUser(*this->up_user, docId, utente) == false ){
             risp.insert(UNAME+QString::number(i++), utente);
         }
     }
-    this->clientMsg(risp);
+
+    if (!risp.isEmpty()){
+        risp.insert(CMD, ERR);
+        risp.insert(MEX, ADD_USER_ERR);
+        this->clientMsg(risp);
+    }
+
 
     // ritorno list autenti aggiornata
     comando.clear();
@@ -606,6 +618,7 @@ void s_thread::addUsersDB(QMap<QString, QString> &comando)
 
 }
 
+// verificare messaggio di risposta
 void s_thread::remUsersDB(QMap<QString, QString> &comando)
 {
     qDebug() << "sono in s_thread::remUsersDB = " << Q_FUNC_INFO;
@@ -621,28 +634,30 @@ void s_thread::remUsersDB(QMap<QString, QString> &comando)
     QString logStr;
     QString rispOk, rispErr;
     QStringList lista = toQStringList(comando);
+    QMap<QString, QString> risp;
+
     for (QString utente : lista){
         if ( this->up_conn->remUser(*this->up_user, docId, utente) == true ){
             rispOk.append(utente+" ; ");
-            // rimuovi utente dal documento
-            Network &net = Network::getNetwork();
+            Network::getNetwork().getEditor(docId).removeUser(utente);
+            // mostra agli utenti
 
         } else {
             rispErr.append(utente+ " ; ");
         }
     }
-    QMap<QString, QString> risp;
-    risp.insert(CMD, OK);
-    risp.insert(MEX, "Utenti aggiunti: " + rispOk + "\nUtenti non aggiunti: " + rispErr);
-    this->clientMsg(risp);
+
+    if (!risp.isEmpty()){
+        risp.insert(CMD, ERR);
+        risp.insert(MEX, REM_USER_ERR);
+        this->clientMsg(risp);
+    }
 
     // ritorno list autenti aggiornata
     comando.clear();
     comando.insert(CMD, ULIST);
     comando.insert(DOCID, docId);
     this->getUsers(comando);
-
-
 }
 
 
@@ -702,7 +717,8 @@ QStringList s_thread::toQStringList(QMap<QString, QString> cmd)
 void s_thread::sendMsg(QMap<QString, QString> comando)
 {
     Message Msg = Message();
-    if (!Msg.prepareMsg(comando, this->up_user->getUsername())){   return; }
+    if (!Msg.prepareMsg(comando, this->up_user->getUsername())){
+        return; }
     Network &net = Network::getNetwork();
     net.push(Msg);
 }
@@ -729,17 +745,9 @@ bool s_thread::verifyCMD(QMap<QString, QString> &cmd, QList<QString> &list)
  ************************ public slots *******************************************************************
  *********************************************************************************************************/
 
-/**
- * @brief s_thread::readyRead
- * metodo chiamato se il socket ha un buffer da leggere, quando riconosce un intero lo usa come dimensione del
- * file xml da leggere e chiama il metodo per la lettura.
- *
- * |buffer| usato come contenitore sporco,
- * |out|
- */
+/*
 void s_thread::readyRead()
 {
-
     QByteArray out;
     QByteArray tmp;
     uint dim;
@@ -799,6 +807,5 @@ void s_thread::readyRead()
             // token nonn trovato
         }
     }
-
-
 }
+*/

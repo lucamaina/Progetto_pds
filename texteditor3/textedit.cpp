@@ -189,8 +189,10 @@ TextEdit::TextEdit(QWidget *parent)
 
     this->textEdit->installEventFilter(this);       // importante
 
+    this->textCursor = this->textEdit->textCursor();
 
     this->client = new Client(this);
+
     connect(this, SIGNAL(cursorChanged(int&,int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&,int&)));
     connect(this->client, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
     connect(this, SIGNAL(stileTesto(QString&,QString&)), this->client, SLOT(handleStile(QString&,QString&)));
@@ -199,6 +201,7 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this->client, &Client::s_setText, this, &TextEdit::setText, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_removeText, this, &TextEdit::removeText, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_loadEditor, this, &TextEdit::loadEditor, Qt::ConnectionType::DirectConnection);
+    connect(this->client, &Client::s_upCursor, this, &TextEdit::upCursor);
 
     setupStatusBar();
 
@@ -227,9 +230,10 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
         int poss = s.position();
 
         if (event->type() == QEvent::KeyPress) {    // verifica key di interesse
+
             QKeyEvent *e = static_cast<QKeyEvent*>(event);
-            int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
-            int posx=textEdit->textCursor().positionInBlock();/******************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************/
+            int posy=textEdit->textCursor().blockNumber(); //*********************QUESTO è L'INDICE DI RIGA**********************
+            int posx=textEdit->textCursor().positionInBlock();//*****************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************
             int anchor=textEdit->textCursor().anchor();
 
             if (e->isAutoRepeat()){
@@ -243,26 +247,6 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 
                 this->cancellamento(poss, e->key());
 
-                /*
-                this->statusBar()->showMessage("Press key = " + QKeySequence(e->key()).toString() , 1000);
-                QChar c = e->key();
-
-                this->client->remoteDelete(c,posx,anchor);    // PULSANTE BACKSPACE CHIAMA CANCELLAZIONE REMOTA
-                QTextCursor s=textEdit->textCursor();
-                int poss=s.position();
-                if(s.hasSelection()){
-
-                    int poscurs=s.position();
-                    int posanch=s.anchor();
-                    qDebug()<<"poscurs: "<<poscurs<<", posanchor: "<<posanch;
-                    for(int i=poscurs+1; i<=posanch; i++){
-                        this->client->remoteFile->deleteLocal(poscurs+1);
-                    }
-                }
-                else{this->client->remoteFile->deleteLocal(poss);}
-                qDebug()<<"chiavi: "<<this->client->remoteFile->symMap.keys();
-                */
-
                 return true;
 
             } else {
@@ -273,7 +257,7 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 
                 this->inserimento(poss, c, format, posx);
 
-                return true;
+                return false;
             }
 
 
@@ -552,7 +536,9 @@ void TextEdit::setText(QChar c, QTextCharFormat f, int posCursor)
 {
     QTextCursor s = textEdit->textCursor();
     s.setPosition(posCursor, QTextCursor::MoveAnchor);
-    s.insertText(c, f);
+    s.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor);
+    s.removeSelectedText();
+    s.insertText(c, f);    
 }
 
 void TextEdit::removeText(int posCursor)
@@ -561,7 +547,6 @@ void TextEdit::removeText(int posCursor)
     s.setPosition(posCursor, QTextCursor::MoveAnchor);
     s.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor);
     s.removeSelectedText();
-
 }
 
 void TextEdit::loadEditor(QString str)
@@ -719,7 +704,7 @@ bool TextEdit::load(const QString &f)
 }
 
 bool TextEdit::maybeSave()
-{
+{/*
     if (!textEdit->document()->isModified())
         return true;
 
@@ -732,7 +717,7 @@ bool TextEdit::maybeSave()
         return fileSave();
     else if (ret == QMessageBox::Cancel)
         return false;
-    return true;
+    return true;*/
 }
 
 void TextEdit::setCurrentFileName(const QString &fileName)
@@ -1146,9 +1131,6 @@ void TextEdit::currentCharFormatChanged(const QTextCharFormat &format)
 
 void TextEdit::cursorPositionChanged()
 {
-    //
-    // qDebug() << "Cursore at: " << this->textEdit->textCursor().position();
-    //
     alignmentChanged(textEdit->alignment());
     QTextList *list = textEdit->textCursor().currentList();
     if (list) {
@@ -1200,15 +1182,15 @@ void TextEdit::cursorPositionChanged()
 
 
 
-    if(mappaCursori.contains("Me")){
+    if(mappaCursori.contains(client->getUsername())){
 
         // muovo il cursore
-        QTextCursor *s1= mappaCursori.find("Me").value();
+        QTextCursor *s1= mappaCursori.find(client->getUsername()).value();
 
         s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
         s1->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posx);
         s1->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posy);
-        int poss=s1->position();
+        int poss = s1->position();
         s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
         s1->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
 
@@ -1224,8 +1206,8 @@ void TextEdit::cursorPositionChanged()
     }
 
 
-    if(mappaEtichette.contains("Me")){
-        QLabel* l=mappaEtichette.find("Me").value();
+    if(mappaEtichette.contains(client->getUsername())){
+        QLabel* l=mappaEtichette.find(client->getUsername()).value();
         QRect s=textEdit->cursorRect();
         l->move(s.left(), s.bottom());
     }
@@ -1316,6 +1298,7 @@ void TextEdit::alignmentChanged(Qt::Alignment a)
 void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){
     //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
 
+    qDebug()<< "sono in " << Q_FUNC_INFO;
     qDebug()<<posX<<posY<<car<<user;
 
     if(!mappaCursori.contains(user)){
@@ -1409,20 +1392,20 @@ void TextEdit::deleteListSlot(){
    }
 }
 
-void TextEdit::userListClicked(QListWidgetItem* item){
+void TextEdit::userListClicked(QListWidgetItem* item)
+{
     //rendo visibile il cursore appena cliccato
 
-    QString lalla=item->text();
-
-    qDebug()<<lalla;
+    qDebug() << "sono in " << Q_FUNC_INFO;
+    qDebug() << item->text();
 
     textEdit->setFocus(); //rimette il focus al widget che fa text editor altrimenti scompare il cursore
 
     disconnect(textEdit, &QTextEdit::cursorPositionChanged,
             this, &TextEdit::cursorPositionChanged);
 
-    if(mappaCursori.contains(lalla)){
-        textEdit->setTextCursor(* mappaCursori.find(lalla).value());
+    if(mappaCursori.contains(item->text())){
+        textEdit->setTextCursor(* mappaCursori.find(item->text()).value());
 
     }
 
@@ -1434,7 +1417,6 @@ void TextEdit::userListClicked(QListWidgetItem* item){
 void TextEdit::cancellaAtCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){
 
     if(!mappaCursori.contains(user)){
-
 
         //Se non ho mai visto questo user lo metto nella lista di user
 
@@ -1516,7 +1498,11 @@ void TextEdit::nuovoFile(QString& filename){
     return;
 }
 
-void TextEdit::addMeSlot(){
+void TextEdit::addMeSlot()
+{
+    return;
+    //
+    qDebug() << "sono in "<< Q_FUNC_INFO;
     if(!mappaCursori.contains("Me")){
 
         int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/
@@ -1556,6 +1542,32 @@ void TextEdit::addMeSlot(){
     }
 
 
+}
+
+void TextEdit::upCursor(QStringList &list)
+{
+    qDebug() << "sono in " << Q_FUNC_INFO;
+    mappaCursori.clear();
+    mappaEtichette.clear();
+
+    for (QString nome : list){
+        // aggiungo cursore con nuovo nome
+
+        QTextCursor* s = new QTextCursor(textEdit->document());
+        mappaCursori.insert(nome, s);
+
+        QLabel *lbl = new QLabel(nome, textEdit);
+        mappaEtichette.insert(nome, lbl);
+
+        QRect r = textEdit->cursorRect();
+        lbl->move(r.left(), r.bottom());
+        lbl->setFont(QFont("Arial",8,14,true));
+        lbl->setStyleSheet("QLabel { background-color : rgba(255, 0, 0,64); color : blue; }");
+        if (nome == this->client->getUsername()){
+            lbl->show();
+        }
+        this->list->addItem(nome);
+    }
 }
 
 void TextEdit::nuovoStileSlot(QString& stile,QString& param){

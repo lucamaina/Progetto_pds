@@ -23,6 +23,7 @@ SOURCES += \
         logger/logger.cpp \
         main.cpp \
         server/comando.cpp \
+        server/mysocket.cpp \
         server/s_thread.cpp \
         server/server.cpp \
         server_main.cpp \
@@ -46,6 +47,7 @@ HEADERS += \
     logger/logger.h \
     server/cmdstring.h \
     server/comando.h \
+    server/mysocket.h \
     server/s_thread.h \
     server/server.h \
     server_main.h \

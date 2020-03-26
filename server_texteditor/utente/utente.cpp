@@ -38,9 +38,9 @@ void utente::setNick(QString nick)
     this->nickname = nick;
 }
 
-void utente::setSocket(QTcpSocket *sock)
+void utente::setSocket(QTcpSocket &sock)
 {
-    this->mioSocket = sock;
+    this->mioSocket = &sock;
 }
 
 bool utente::prepareUtente(QMap<QString, QString> map)

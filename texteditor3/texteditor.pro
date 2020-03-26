@@ -23,6 +23,7 @@ HEADERS         = textedit.h \
     RegisterDialog/registerdialog.h \
     Utils/utils.h \
     shared_editor/editor.h \
+    shared_editor/eventbuffer.h \
     shared_editor/message.h \
     shared_editor/symbol.h
 
@@ -37,6 +38,7 @@ SOURCES         = textedit.cpp \
                   main.cpp \
                   Client/client.cpp \
                   shared_editor/editor.cpp \
+                  shared_editor/eventbuffer.cpp \
                   shared_editor/message.cpp \
                   shared_editor/symbol.cpp
 

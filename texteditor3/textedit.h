@@ -67,6 +67,7 @@
 #include <QAbstractTextDocumentLayout>
 
 #include"NuovoFileRemotoWindoow/nuovofileremoto.h"
+#include "shared_editor/eventbuffer.h"
 
 class QAction;
 class QComboBox;
@@ -107,6 +108,8 @@ private slots:
     void nuovoFile(QString& filename);
     void userListClicked(QListWidgetItem* item);
     void addMeSlot();
+    void upCursor(QStringList &list);
+
     void nuovoStileSlot(QString& stile,QString& param);
 
     /*************** Comandi per gestione file remoti **************/
@@ -155,7 +158,7 @@ private:
     void myTextAlign(QString& a);
 
     //Editor* editor;
-
+    QTextCursor textCursor;
     QShortcut* sh;
     QListWidget *list;
     QMap<QString,QTextCursor*> mappaCursori; //mappa con nome utente e relativo cursore;

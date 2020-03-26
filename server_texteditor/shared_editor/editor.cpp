@@ -227,6 +227,7 @@ bool Editor::addUser(utente &user, QSharedPointer<MySocket> & sock)
 }
 
 
+
 bool Editor::removeUser(const QString &nomeUser)
 {
     if (this->sendList_.contains(nomeUser)){

@@ -231,9 +231,6 @@ bool Editor::removeUser(const QString &nomeUser)
 {
     if (this->sendList_.contains(nomeUser)){
         this->sendList_.remove(nomeUser);
-
-
-
         return true;
     }
     return false;

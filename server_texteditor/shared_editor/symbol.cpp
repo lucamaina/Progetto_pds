@@ -28,10 +28,16 @@ Symbol::Symbol()
 QMap<QString, QString> Symbol::toMap()
 {
     QMap<QString, QString> map;
-    map.insert(UNAME, this->userName);
-    map.insert(CAR, this->car);
-    map.insert(IDX, QString::number(this->index));
-    map.insert(FORMAT, QString(this->formato));
+    {   // elementi sempre presenti
+        map.insert(UNAME, this->userName);
+        map.insert(IDX, QString::number(this->index));
+    }
+    if ( !this->car.isNull() ){
+        map.insert(CAR, this->car);
+    }
+    if ( !this->formato.isEmpty() && !this->formato.isNull() ){
+        map.insert(FORMAT, QString(this->formato));
+    }
     return map;
 }
 

@@ -40,10 +40,11 @@ QByteArray Comando::toByteArray()
     QXmlStreamWriter wr(&ba);
     wr.writeStartDocument();
     wr.writeStartElement(this->cmdMap.value(CMD));
-    cmdMap.remove(CMD);
 
     for(QString key : cmdMap.keys()){
-        wr.writeTextElement(key, cmdMap.value(key));
+        if (key != CMD){
+            wr.writeTextElement(key, cmdMap.value(key));
+        }
     }
     wr.writeEndElement();
     wr.writeEndDocument();

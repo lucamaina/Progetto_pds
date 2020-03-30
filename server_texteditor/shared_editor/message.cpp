@@ -3,40 +3,54 @@
 bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
 {
     if (comando.isEmpty()){ return false;   }
-    QString nomecmd, fileId, formato;
+    QString nomecmd, formato, remoteUSer;
     QChar car;
-    msgType  tipo;
     double idx;
-    int cursor;
-    // il comando non contiene username perchè viene preso l'utente collegato
-    if (comando.contains(CMD) && comando.contains(DOCID)){
-        nomecmd = comando.value(CMD);
-        fileId = comando.value(DOCID);
-        car = comando.value(CAR).at(0);
-        idx = comando.value(IDX).toDouble();
-        cursor = comando.value(CUR).toInt();
-        formato = comando.value(FORMAT);
-    } else {    return false;   }
 
-    if (nomecmd == REM_IN) {
-        tipo = Rem_In;
-    } else if (nomecmd == REM_DEL) {
-        tipo = Rem_Del;
-    } else {
-        return false;               // comando non riconosciuto, messaggio ignorato
+    if (!comando.contains(CMD) ||
+            !comando.contains(DOCID) ||
+            !comando.contains(UNAME) ||
+            !comando.contains(IDX)){
+        qDebug() << "Errore nel comando: " << endl
+                 << comando;
+        return false; // problema nel comando
     }
 
-    this->fileId = fileId;
-    this->user = username;
-    this->tipo = tipo;
+    nomecmd = comando.value(CMD);
+    this->fileId = comando.value(DOCID);
+    idx = comando.value(IDX).toDouble();
+    remoteUSer = comando.value(UNAME);
 
-    if (this->tipo == Rem_In || this->tipo == Rem_Del){
-        QByteArray format = QByteArray(formato.toLatin1());
-        this->sym = new Symbol(user, car, idx, format);
-    } else {
-        this->sym = nullptr;
+    if (remoteUSer != username){
+        qDebug() << "Errore username ricevuti";
         return false;
     }
+    this->user = username;
+
+    if (nomecmd == CRS){
+        this->tipo = Message::Cur;
+    } else if (nomecmd == REM_IN) {
+        this->tipo = Message::Rem_In;
+    } else if (nomecmd == REM_DEL) {
+        this->tipo = Message::Rem_Del;
+    } else {
+        return false;
+    }
+
+    if (comando.contains(CAR)){
+        car = comando.value(CAR).at(0);
+    } else {
+        car = QChar::Null;
+    }
+
+    if (comando.contains(FORMAT)){
+        formato = comando.value(FORMAT);
+    } else {
+        formato = "";
+    }
+
+    QByteArray format = QByteArray(formato.toLatin1());
+    this->sym = new Symbol(user, car, idx, format);
 
     return true;
 }
@@ -64,16 +78,16 @@ QString Message::getFile() const
 QMap<QString, QString> Message::toMap()
 {
     QMap<QString, QString> map = this->sym->toMap();
-    QString tipe = REM_IN;
-    if (this->tipo == Message::Rem_Del)
-        tipe = REM_DEL;
-    map.insert(CMD, tipe);
-    map.insert(UNAME, this->user);
-    map.insert(DOCID, this->fileId);
+    switch (this->tipo) {
+    case Rem_In : map.insert(CMD, REM_IN); break;
+    case Rem_Del : map.insert(CMD, REM_DEL); break;
+    case Message::Cur : map.insert(CMD, CRS); break;
+    }
     map.insert(DOCID, this->fileId);
     return map;
 }
 
+/*
 QByteArray Message::toQByteArray()
 {
     QByteArray ba;
@@ -85,9 +99,6 @@ QByteArray Message::toQByteArray()
 
     foreach (QString key, comando.keys()) {
         wr.writeTextElement(key, comando.value(key));
-    }
-    {
-        wr.writeTextElement(DOCID, this->fileId);
     }
     wr.writeEndElement();
     wr.writeEndDocument();
@@ -102,7 +113,7 @@ QByteArray Message::toQByteArray()
     qDebug() << QString(ba);
 
     return ba;
-}
+}*/
 
 Message::Message()
 {

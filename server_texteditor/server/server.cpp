@@ -41,7 +41,7 @@ void server::deleteThread(s_thread &t)
 
 void server::incomingConnection(int socketID)
 {
-
+    char a;
     int n;
     m.lock();
     if (numThread < maxThread){
@@ -60,7 +60,7 @@ void server::incomingConnection(int socketID)
         } catch (std::exception &e) {
             // TODO migliorare gestione
             log->write(e.what());
-
+            std::cin >> a;
         }
 
     } else {

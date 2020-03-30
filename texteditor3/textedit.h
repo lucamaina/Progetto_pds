@@ -103,6 +103,7 @@ private slots:
     /*************** Comandi per gestione cursore e caratteri **************/
     void salvaMappa();
     void spostaCursor(int& posX,int& posY,int& anchor,char& car,QString& user); //ATTENZIONE: questo oltre al cursore gestisce inserimento caratteri
+    void changeCursor(QString& nomeUser, int pos);
     void cancellaAtCursor(int& posX,int& posY,int& anchor,char& car,QString& user);
     void deleteListSlot();
     void nuovoFile(QString& filename);

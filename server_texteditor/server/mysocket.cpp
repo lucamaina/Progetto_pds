@@ -12,6 +12,11 @@ MySocket::MySocket(int sockId)
     this->connect(&this->sock, &QTcpSocket::disconnected, this, &MySocket::disconnected, Qt::DirectConnection);
 }
 
+MySocket::~MySocket()
+{
+    qDebug().noquote() << "sono in " << Q_FUNC_INFO << " per socket: " << this->sockId;
+}
+
 void MySocket::leggiXML(QByteArray data)
 {
     qDebug().noquote() << endl << " -> Leggo XML from client: " << this->sockId << endl << data;
@@ -52,8 +57,7 @@ bool MySocket::write(QByteArray data)
         if ( sock.isWritable() ){
             qint64 ret = this->sock.write(data, data.size());
             if ( ret != -1){
-                qDebug().noquote() << endl
-                                   << " <- To Client: "<< sockId << endl
+                qDebug().noquote() << " <- To Client: "<< sockId << endl
                                    << data;
                 return true;
             } else {

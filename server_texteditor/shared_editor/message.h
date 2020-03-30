@@ -12,7 +12,7 @@
 class Message
 {
 public:
-    enum msgType {Rem_In, Rem_Del, Cur_Cng};
+    enum msgType {Rem_In, Rem_Del, Cur};
 
 private:
     msgType tipo;
@@ -28,7 +28,7 @@ public:
     QString getUser() const;
     QString getFile() const;
     QMap<QString, QString> toMap();
-    QByteArray toQByteArray();
+//    QByteArray toQByteArray();
 };
 
 #endif // MESSAGE_H

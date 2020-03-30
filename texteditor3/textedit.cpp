@@ -202,7 +202,7 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this->client, &Client::s_removeText, this, &TextEdit::removeText, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_loadEditor, this, &TextEdit::loadEditor, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_upCursor, this, &TextEdit::upCursor);
-
+    connect(this->client, &Client::s_changeCursor, this, &TextEdit::changeCursor, Qt::DirectConnection);
     setupStatusBar();
 
 }
@@ -257,7 +257,7 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 
                 this->inserimento(poss, c, format, posx);
 
-                return false;
+                return true;
             }
 
 
@@ -297,6 +297,7 @@ bool TextEdit::inserimento(int posCursor, QChar car, QTextCharFormat format, int
         this->statusBar()->showMessage("impossibile inserire in locale", 1000);
     } else if (this->client->remoteInsert(car,format,index)) {// INSERIMENTO REMOTO, manda comando a server
         // true se server risp OK
+        this->setText(car, format, s.position());
 
 /*        if(s.hasSelection()){
             int poscurs=s.position();
@@ -536,8 +537,6 @@ void TextEdit::setText(QChar c, QTextCharFormat f, int posCursor)
 {
     QTextCursor s = textEdit->textCursor();
     s.setPosition(posCursor, QTextCursor::MoveAnchor);
-    s.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor);
-    s.removeSelectedText();
     s.insertText(c, f);    
 }
 
@@ -1385,6 +1384,14 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
     return ;
 }
 
+void TextEdit::changeCursor(QString &nomeUser, int pos)
+{
+    this->mappaCursori.value(nomeUser)->setPosition(pos);
+    this->textEdit->textCursor().setPosition(pos);
+    this->mappaEtichette.value(nomeUser)->show();
+
+}
+
 void TextEdit::deleteListSlot(){
    //svuota la lista perchè non sono più connesso;
    while(this->list->count()>0){
@@ -1395,7 +1402,7 @@ void TextEdit::deleteListSlot(){
 void TextEdit::userListClicked(QListWidgetItem* item)
 {
     //rendo visibile il cursore appena cliccato
-
+/*
     qDebug() << "sono in " << Q_FUNC_INFO;
     qDebug() << item->text();
 
@@ -1405,13 +1412,15 @@ void TextEdit::userListClicked(QListWidgetItem* item)
             this, &TextEdit::cursorPositionChanged);
 
     if(mappaCursori.contains(item->text())){
-        textEdit->setTextCursor(* mappaCursori.find(item->text()).value());
+        textEdit->setTextCursor(* mappaCursori.value(item->text()));
+        this->mappaEtichette.value(item->text())->show();
 
     }
 
     else{ qDebug()<<"errore utente non trovato";}
     connect(textEdit, &QTextEdit::cursorPositionChanged,
             this, &TextEdit::cursorPositionChanged);
+*/
 }
 
 void TextEdit::cancellaAtCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){
@@ -1548,7 +1557,11 @@ void TextEdit::upCursor(QStringList &list)
 {
     qDebug() << "sono in " << Q_FUNC_INFO;
     mappaCursori.clear();
+    for (QLabel* l : mappaEtichette.values()){
+        l->setVisible(false);   // unico modo per eliminare vecchia label
+    }
     mappaEtichette.clear();
+    this->list->clear();
 
     for (QString nome : list){
         // aggiungo cursore con nuovo nome
@@ -1562,10 +1575,11 @@ void TextEdit::upCursor(QStringList &list)
         QRect r = textEdit->cursorRect();
         lbl->move(r.left(), r.bottom());
         lbl->setFont(QFont("Arial",8,14,true));
-        lbl->setStyleSheet("QLabel { background-color : rgba(255, 0, 0,64); color : blue; }");
+        lbl->setStyleSheet("QLabel { background-color : rgba(255, 0, 0, 64); color : blue; }");
         if (nome == this->client->getUsername()){
             lbl->show();
         }
+
         this->list->addItem(nome);
     }
 }

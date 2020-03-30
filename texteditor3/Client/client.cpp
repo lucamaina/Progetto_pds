@@ -157,7 +157,9 @@ bool Client::sendMsg(QMap<QString, QString> cmd){
 
     ba.prepend(len);
     ba.prepend(INIT);
-    //qDebug() << QString(ba);
+
+    qDebug().noquote() << " <- To server:" << endl
+                       << QString(ba);
 
     return sendMsg(ba);
 
@@ -417,9 +419,11 @@ void Client::loadFile(QMap<QString,QString> cmd){
 
     QByteArray qba;
     char v[4096];
-    disconnect(this,SIGNAL(readyRead()),this,SLOT(readyRead()));
+    disconnect(this->socket,SIGNAL(readyRead()),this,SLOT(readyRead()));
     qba.clear();
     qba = this->buffer;
+    qDebug().noquote() <<qba.length() << endl << qba;
+
     //lettura socket
     dim = dim - qba.size();
     while (dim > 0){
@@ -430,14 +434,16 @@ void Client::loadFile(QMap<QString,QString> cmd){
                 return;
             }
             qba.append( v );
+            qDebug().noquote() <<qba.length() << endl << qba;
+
             dim = dim - read;
         } else {
             return;
         }
     }
-    qDebug () << qba;
+    qDebug().noquote() <<qba.length() << endl << qba;
 
-    connect(this,SIGNAL(readyRead()),this,SLOT(readyRead()));
+    connect(this->socket,SIGNAL(readyRead()),this,SLOT(readyRead()));
 
     //emit clearEditor();
     this->remoteFile = new Editor(this->docID,this->filename,qba,username);
@@ -464,6 +470,8 @@ void Client::inserimento(QMap<QString,QString> cmd)
         emit s_removeText(posCursor);
     }
     int posCursor = remoteFile->localPosCursor(index);
+    if (user == this->username)
+        return;// ignoro
     emit s_setText(c, charform, posCursor);
 }
 
@@ -480,15 +488,26 @@ void Client::cancellamento(QMap<QString, QString> cmd)
 void Client::spostaCursori(QMap <QString,QString>cmd)
 {
     qDebug() << "sono in " << Q_FUNC_INFO;
-    QString user=cmd.find(UNAME).value();
-    int posX=cmd.find("posX").value().toInt();
-    int posY=cmd.find("posX").value().toInt();
-    int anchor=cmd.find("anchor").value().toInt();
-    char c='\0';
+    QString user = cmd.value(UNAME);
+    if(user == this->username){
+        return; // non considero
+    }
+    // trovo posizione da index
+    double idx = cmd.value(IDX).toDouble();
+    int pos = remoteFile->localPosCursor(idx);
+    if (pos != -1)
+        emit s_changeCursor(user, pos);
+    return;
+}
 
-    if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; }
-
-    emit spostaCursSignal(posX,posY,anchor,c,user);
+void Client::sendCursore(double index)
+{
+    QMap<QString, QString> map;
+    map.insert(CMD, CRS);
+    map.insert(DOCID, this->docID);
+    map.insert(UNAME, this->username);
+    map.insert(IDX, QString::number(index) );
+    this->sendMsg(map);
 }
 
 /**
@@ -752,8 +771,10 @@ bool Client::remoteInsert(QChar c, QTextCharFormat format, double index)
     cmd.insert(DOCID,docID);
 
     qDebug() << cmd;
+    this->sendMsg(cmd);
 
-    return this->sendMsg(cmd);
+    this->sendCursore(index);
+    return true;
 }
 
 bool Client::remoteDelete(QChar c, double index)
@@ -765,6 +786,7 @@ bool Client::remoteDelete(QChar c, double index)
     cmd.insert(UNAME,username);
     cmd.insert(DOCID,docID);
 
+    this->sendCursore(index);
     return this->sendMsg(cmd);
 }
 
@@ -776,15 +798,17 @@ void Client::readyRead(){
     QByteArray tmp;
     uint dim;
     char v[4096] = {};
+    qint64 dimRead = 0;
 
     out.reserve(4096);
     tmp.reserve(16);
 
     if (socket->bytesAvailable() > 0){
-        if (socket->read(v, 4096) < 0){
+        dimRead = socket->read(v, 4096);
+        if ( dimRead < 0){
             qDebug() << "errore in socket::read()";
         }
-        this->buffer.append( v );
+        this->buffer.append( v, static_cast<int>(dimRead) );
     } else {
         return;
     }
@@ -813,12 +837,12 @@ void Client::readyRead(){
             }
 
             while (rimane > 0){
-                uint i = dim - len;
                 //socket->waitForReadyRead(100);      // finisco di leggere il resto del messaggio
-                if (socket->read(v, i) < 0){
+                dimRead = socket->read(v, 4096);
+                if ( dimRead < 0){
                     qDebug() << "errore in socket::read()";
                 }
-                this->command.append( v );
+                this->command.append( v, static_cast<int>(dimRead) );
                 len = static_cast<uint>(command.size());
                 rimane = dim - len;
             }

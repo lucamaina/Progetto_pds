@@ -59,6 +59,7 @@ public:
 signals:
     void addMe();
     void s_upCursor(QStringList&);
+    void s_changeCursor(QString& nomeUser, int pos);
 
     void spostaCursSignal(int& posX, int& posY, int& anchor, char& car, QString& user); //fa anche l'inserimento
     void cancellaSignal(int& posX, int& posY, int& anchor,char& car, QString& user);
@@ -122,6 +123,7 @@ private:
     void dispatchOK(QMap <QString, QString> cmd);
     void dispatchERR(QMap <QString,QString> cmd);
     void spostaCursori(QMap <QString,QString> cmd);
+    void sendCursore(double index);
 
     /****************************************************************************
      ***************** metodi controllo dei comandi inviati ********************/

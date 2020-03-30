@@ -18,6 +18,7 @@ private:
 
 public:
     MySocket(int sockId);
+    ~MySocket();
 
     void leggiXML(QByteArray data);
 

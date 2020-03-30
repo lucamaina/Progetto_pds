@@ -144,8 +144,7 @@ bool Editor::process(Message &msg)
         // call localDel
         this->localDelete(msg);
         this->remoteSend(msg);
-    } else if(tipo == Message::msgType::Cur_Cng){
-        this->cursorChange(msg);
+    } else if(tipo == Message::msgType::Cur){
         this->remoteSend(msg);
     } else {
         return false;
@@ -164,9 +163,11 @@ bool Editor::sendToAll(Comando &cmd)
 {
     QSharedPointer<MySocket> sp;
     this->sendList_.values();
+    qDebug() << "--------------------------------------{";
     for(QSharedPointer<MySocket> sock : this->sendList_.values()){
         this->send(sock, cmd.toByteArray());
     }
+    qDebug() << "--------------------------------------}";
     return true;
 }
 
@@ -277,20 +278,11 @@ bool Editor::localDelete(Message msg)
  */
 bool Editor::remoteSend(Message msg)
 {
-    QByteArray ba = msg.toQByteArray();
-    QSharedPointer<MySocket> tmpSock;
-    for (QString ut : this->sendList_.keys()){
-        tmpSock = sendList_.value(ut);
-        this->send(tmpSock, ba);
-    }
-    return true;
+    auto map = msg.toMap();
+    Comando cmd(map);
+    return this->sendToAll(cmd);
 }
 
-
-bool Editor::cursorChange(Message msg)
-{
-    return remoteSend(msg);
-}
 /**
  * @brief Editor::save
  * @return

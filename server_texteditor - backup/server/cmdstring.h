@@ -1,8 +1,8 @@
 #ifndef CMDSTRING_H
 #define CMDSTRING_H
 
-#define bond 10
-
+/****************************************************************************
+ * nomi dei comandi definiti ************************************************/
 #define INIT "<INIT>"               // token di inizio messaggio
 #define CONN "CONNECT"
 #define LOGIN "LOG-IN"
@@ -54,6 +54,7 @@
 #define FORMAT "format"
 
 
+
 /****************************************************************************
  * messaggi standard ********************************************************/
 #define CONN_ERR "error - connection to db not working"
@@ -70,6 +71,12 @@
 
 #define FILE_ERR "error - user cannot open file"
 #define FILE_OK "ok - file open"
+
+#define INS_ERR "error - inert not possible"
+#define INS_OK "ok - insert done"
+
+#define REM_ERR "error - remove not possible"
+#define REM_OK "ok - remove done"
 
 #define ADD_USER_ERR "error - Utenti non aggiunti"
 #define REM_USER_ERR "error - Utenti non rimossi"

@@ -9,7 +9,6 @@
 #include <QDebug>
 #include <QTcpSocket>
 #include <QPointer>
-#include <limits>
 
 #include "message.h"
 #include "symbol.h"
@@ -29,16 +28,15 @@ private:
 
     QFile *file;
     int refCount;
-    qint32 dim;
-    qint32 maxDim = std::numeric_limits<qint32>::max();
 
-    QVector<Symbol> symList;
+    QMap<double, Symbol> symMap;
     QVector<utente> userList;
 
     QMap<QString, QSharedPointer<MySocket>> sendList_;
 
 
 public:
+    explicit Editor(QObject *parent = nullptr);
     explicit Editor(QString Id, QString nome);
 
     static Editor& getFile();
@@ -48,6 +46,7 @@ public:
 
     QByteArray getSymMap();
 
+    QString mapToSend();
     bool loadFile(const QString &nomeUser, const int dimFile);        // leggo socket dell'utente e carico il file
     ~Editor();
 
@@ -65,11 +64,6 @@ public:
      * metodi di insert e delete ************************************************/
     bool localInsert(Message msg);
     bool localDelete(Message msg);
-
-    int localPosCursor(QVector<qint32> &index);
-
-    bool deserialise(Message msg);
-
     bool cursorChange(Message msg);
     bool remoteSend(Message msg);
 

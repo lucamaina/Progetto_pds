@@ -201,7 +201,7 @@ private:
     void setupStatusBar();
     bool eventFilter(QObject *obj, QEvent *e) override;
 
-    bool inserimento(int posCursor, QChar car, QTextCharFormat format, int posx);
+    bool inserimento(int posCursor, QChar car, QTextCharFormat format);
     bool cancellamento(int posCursor, int key);
 
 public slots:
@@ -212,7 +212,7 @@ public slots:
     void setText(QChar c, QTextCharFormat f, int posCursor);   // inserisce in editor il carattere ricevuto
     void removeText(int posCursor);
     void loadEditor(QString str);
-
+    void windowTitle(QString utente, QString nomeFile, QString docid);
 
 signals:
     void cursorChanged (int& posx, int& posy, int& anchor);

@@ -20,56 +20,9 @@ void Symbol::setFormato(const QByteArray &value)
     formato = value;
 }
 
-
-
-bool Symbol::insertSym(Symbol &sym, QVector<qint32> idx)
-{
-    /*
-    if (idx.isEmpty()){
-        qDebug() << "errore in " << Q_FUNC_INFO;
-        return false;
-    } else if (idx.length() == 1 && idx.at(0) == sym.getIndex()) {
-        // inserisco symbol in nextLevel
-        this->nextLevel.insert(sym.getIndex(), sym);
-        return true;
-    } else{
-        qint32 val = idx.takeAt(0);
-        Symbol s = this->nextLevel.value(val);
-        return s.insertSym(sym, idx);
-    }
-    */
-}
-
-bool Symbol::deleteSym(Symbol &sym, QVector<qint32> idx)
-{/*
-    if (idx.isEmpty()){
-        qDebug() << "errore in " << Q_FUNC_INFO;
-        return false;
-    } else if (idx.length() == 1 && idx.at(0) == sym.getIndex()) {
-        // elimino symbol da nextLevel
-        this->nextLevel.remove(idx.at(0));
-        return true;
-    } else{
-        qint32 val = idx.takeAt(0);
-        Symbol s = this->nextLevel.value(val);
-        return s.deleteSym(sym, idx);
-    }*/
-}
-
-
-QVector<qint32> Symbol::getIndex() const
-{
-    return index;
-}
-
-void Symbol::setIndex(const QVector<qint32> &value)
-{
-    index = value;
-}
-
 Symbol::Symbol()
 {
-    
+
 }
 
 QMap<QString, QString> Symbol::toMap()
@@ -77,11 +30,7 @@ QMap<QString, QString> Symbol::toMap()
     QMap<QString, QString> map;
     {   // elementi sempre presenti
         map.insert(UNAME, this->userName);
-        QString indici;
-        for (qint32 val : this->index){
-            indici.append(QString::number(val) + ";");
-        }
-        map.insert(IDX, indici);
+        map.insert(IDX, QString::number(this->index));
     }
     if ( !this->car.isNull() ){
         map.insert(CAR, this->car);
@@ -102,6 +51,15 @@ void Symbol::setUserName(const QString &value)
     userName = value;
 }
 
+double Symbol::getIndex() const
+{
+    return index;
+}
+
+void Symbol::setIndex(const double &value)
+{
+    index = value;
+}
 
 
 QDataStream &operator<<(QDataStream &out, const Symbol &sym)
@@ -120,3 +78,16 @@ QDataStream &operator >>(QDataStream &in, Symbol &sym)
     return in;
 }
 
+QJsonObject Symbol::toJson(){
+  QJsonObject j;
+  /*
+    j.insert("char",QJsonValue(car));
+    j.insert("index",QJsonValue(index));
+    j.insert("user",QJsonValue(userName));
+    j.insert("font",QJsonValue(ff.fontFamily()));
+    j.insert("size",QJsonValue(ff.fontWeight()));
+    j.insert("italic",QJsonValue(ff.fontItalic()));
+    j.insert("underline",QJsonValue(ff.fontUnderline()));
+*/
+    return j;
+}

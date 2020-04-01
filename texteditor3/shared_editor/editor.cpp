@@ -15,32 +15,8 @@ Editor::Editor(QString Id, QString fName, QByteArray body, QString username)
     this->nomeFile = fName;
     this->username = username;
     this->DocId = Id;
-    QByteArray b = QByteArray::fromBase64(body);
-    QDataStream out(&b, QIODevice::ReadWrite);
-    out >> this->symMap;
 }
 
-/**
- * @brief Editor::loadMap
- * @return
- * old code
- */
-bool Editor::loadMap()
-{
-    QByteArray ba = this->file->readLine();
-    int idx = 1;
-    while (!ba.isNull()) {
-        for (int i = 0; i< ba.size(); i++){
-            QChar c = ba.at(i);
-            Symbol sym = Symbol("Client", c, idx,1);      // username = server
-            this->symMap.insert(idx, sym);
-            //this->_symbols.push_back(sym);
-            idx++;
-        }
-        ba = this->file->readLine();
-    }
-    return true;
-}
 
 /**
  * @brief Editor::~Editor
@@ -52,7 +28,7 @@ Editor::~Editor()
 
 double Editor::getLocalIndexDelete(int posCursor)
 {
-    auto lista = symMap.keys();
+    auto lista = symList.keys();
     if (posCursor > lista.size() + 1 || posCursor < 0){
         return -1;
     }
@@ -60,45 +36,105 @@ double Editor::getLocalIndexDelete(int posCursor)
     return tempmax;
 }
 
-double Editor::getLocalIndexInsert(int posCursor)
+// cerca symbol in posizione posCursor
+QVector<qint32> Editor::getLocalIndexInsert(qint32 posCur) // genera indici di symbol
 {
-    double index = posCursor;
-    auto lista = symMap.keys();
+    qDebug() << "sono in " << Q_FUNC_INFO;
+    QVector<qint32> ret, tmp, indexPre, indexPost;
+    Symbol pre, post;
 
-    if(symMap.empty()){  // il primo parte da 1
-        index=1;
-        return index;
-     }
-
-    if(lista.size()<=posCursor){ //prendi l ultimo index float e fai +1
-        index = posCursor+1;
-        return index;
-    } else {
-        double tempmin=0,tempmax=0;
-        if (posCursor > 0){
-            tempmin = lista.at(posCursor-1);
-        }
-        tempmax = lista.at(posCursor);
-
-
-        double tmpidx = fmed(tempmin,tempmax);
-
-        if ( fequal(tmpidx, tempmin) || fequal(tmpidx, tempmax)){
-            return -1;   // spazio tra i double insufficiente, ricaricare il file e l'editor
-        }
-
-       return tmpidx;
+    if ( symVec.length() == 0){  // caso vector vuoto
+        ret.push_back(1);
+        return ret;
     }
+    if ( posCur == 0){ // aggiungo primo elemento
+        post = this->symVec.first();
+        tmp = post.indici;
+        ret.insert(0, tmp.length(), 0);
+        ret.push_back(1);
+        return ret;
+    }
+    if ( posCur >= symVec.size() ){ // aggiungo ultimo elemento
+        pre = symVec.last();
+        qint32 last = pre.indici.first();
+        if (last + bond < maxDim){
+            ret.push_back(last + bond);
+        } else {
+            ret.push_back(last);
+            ret.push_back(1);
+        }
+        return ret;
+    }
+    if ( posCur < symVec.size() ){ // aggiungo elemnto in mezzo
+        pre = symVec.at(posCur - 1);
+        post = symVec.at(posCur);
+
+        indexPre = pre.indici;
+        indexPost = post.indici;
+        int maxL = std::max(indexPre.length(), indexPost.length()), flag = 0;
+
+        for (int i = 0 ; i < maxL && flag == 0; i++){
+            qint32 idxPre = indexPre.value(i, 0), idxPost = indexPost.value(i, 0);
+            if ( idxPost - idxPre == 0 ){ // inidci uguali
+                ret.push_back(idxPre);
+            } else {
+                if (idxPost - idxPre == 1 || idxPre + 10 >= this->maxDim){
+                    // nuovo livello
+                    ret.push_back(idxPre);
+                    idxPre = indexPre.value(i +1, 0);
+                    if (idxPre + 10 >= this->maxDim){
+                        ret.push_back(idxPre);
+                        ret.push_back(1);
+                    } else{
+                        ret.push_back(idxPre + 10);
+                    }
+                } else if ( idxPost - idxPre > bond ) {
+                    ret.push_back(idxPre + bond);
+                } else if ( idxPost - idxPre > 1 ) {
+                    ret.push_back(idxPre + 1);
+                }
+                flag = 1;
+            }
+        }
+    }
+    return ret;
 }
 
-int Editor::localPosCursor(double index)
-{
-    auto keyList = this->symMap.keys();
 
-    if (keyList.contains(index)){
-        return keyList.indexOf(index);
+
+
+int Editor::localPosCursor(QVector<qint32> &index)
+{
+    int newPos = -1;
+    if (symVec.isEmpty()){
+        return 0;
     }
-    return -1;
+    for (int pos = 0; pos < symVec.size() && newPos == -1; pos++){
+        Symbol s = this->symVec.at(pos);
+        int i = 0;
+        for (qint32 val : s.indici){
+            if ( val < index.value(i, 0) ){
+                break;
+            }
+            if ( val > index.value(i, 0) ){
+                newPos = pos;
+                break;
+            }
+            i++;
+        }
+    }
+    if (newPos == -1){
+        newPos = symVec.size();
+    }
+    return newPos;
+}
+
+double Editor::localInsert(int posCur)
+{
+    qDebug() << "sono in " << Q_FUNC_INFO;
+
+    QVector<qint32> newIndex = this->getLocalIndexInsert(posCur);
+
 }
 
 
@@ -133,43 +169,28 @@ double Editor::fmed(double num1, double num2) {
 bool Editor::fequal(double a, double b)
 {    return qFuzzyCompare(a, b);    }
 
-QString Editor::getTesto()
+QList<Symbol>& Editor::getTesto(QList<Symbol>& testo)
 {
-    QString testo;
-    QList<Symbol> lista = this->symMap.values();
-    for(Symbol s : lista){
-        testo.append(s.car);
+    for( Symbol s : this->symList.values() ){
+        s.read(testo);
     }
     return testo;
 }
 
-/**
- * @brief Editor::insertLocal
- * @param index
- * @param value
- * @param formato
- * @return
- * nuova versione
- */
-double Editor::insertLocal(double index,char value, QTextCharFormat formato){
-    Symbol s = Symbol(username,value,1,formato);
-    double flag = -1;
-    if (symMap.contains(index)){
-        //cancello carattere in textEdit e lo riscrivo
-        flag = index;
-    }
-    symMap.insert(index, s);
+void Editor::read()
+{
 
-    return flag;
 }
 
 
+
+
 int Editor::deleteLocal(double index, char car){
-    if( this->symMap.contains(index) ){
-        if (symMap.value(index).car == car){
-            auto lista = symMap.keys();
+    if( this->symList.contains(index) ){
+        if (symList.value(index).car == car){
+            auto lista = symList.keys();
             int posCur = lista.lastIndexOf(index);
-            symMap.remove(index);
+            symList.remove(index);
             return posCur;
         }
     }
@@ -180,14 +201,14 @@ void Editor::updateFormat(double index, QTextCharFormat formato){
         return;
     } else{
         double i = 0;
-        for(double d : symMap.keys()){
+        for(double d : symList.keys()){
             i++;
             if( fequal(i, index) ){
-                auto t=symMap.find(d);
+                auto t=symList.find(d);
                 t->setFormat(formato);
-                Symbol s = symMap.take(d);
+                Symbol s = symList.take(d);
                 s.setFormat(formato);
-                symMap.insert(d,s);
+                symList.insert(d,s);
                 return;
             }
         }

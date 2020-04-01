@@ -6,7 +6,8 @@
 #include <QDebug>
 
 #include "symbol.h"
-#include "Client/cmdstring.h"
+#include "../utente/utente.h"
+#include "../server/cmdstring.h"
 
 class Message
 {
@@ -15,20 +16,19 @@ public:
 
 private:
     msgType tipo;
-    Symbol sym;
+    Symbol* sym;
     QString user;
     QString fileId;
-    QVector<qint32> indici;
 
 public:
     explicit Message();
     bool prepareMsg(QMap<QString, QString> comando, QString username);
     msgType getTipo() const;
-    Symbol getSym() const;
+    Symbol *getSym() const;
     QString getUser() const;
     QString getFile() const;
     QMap<QString, QString> toMap();
-    QByteArray toQByteArray();
+//    QByteArray toQByteArray();
 };
 
 #endif // MESSAGE_H

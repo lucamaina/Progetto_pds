@@ -1,6 +1,8 @@
 #ifndef CMDSTRING_H
 #define CMDSTRING_H
 
+#define bond 10
+
 /****************************************************************************
  * nomi dei comandi definiti ************************************************/
 #define INIT "<INIT>"               // token di inizio messaggio

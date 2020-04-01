@@ -31,9 +31,12 @@ public:
     void listUser(QMap<QString,QString> cmd);
 
 
-    bool remoteInsert(QChar c, QTextCharFormat format, double index);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
+    bool remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index, int cursor);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
+
     bool remoteDelete(QChar c, double index);
-    void inserimento(QMap<QString,QString> cmd);
+    void inserimentoRemoto(QMap<QString,QString> cmd);
+    bool inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format);
+
     void cancellamento(QMap<QString,QString> cmd);
 
     void loadFile(QMap<QString,QString> cmd);
@@ -57,6 +60,7 @@ public:
     QString getUsername() const;
 
 signals:
+    void s_changeTitle(QString utente, QString nomeFile, QString docid);
     void addMe();
     void s_upCursor(QStringList&);
     void s_changeCursor(QString& nomeUser, int pos);

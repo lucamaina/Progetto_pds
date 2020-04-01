@@ -500,7 +500,7 @@ void s_thread::openFile(QMap<QString, QString> &comando)
         net.createEditor( comando.value(DOCID),
                           PATH + comando.value(FNAME),
                           *up_user,
-                          this->sp_socket );
+                          this->sp_socket );     // net.createEditor(comando.value(DOCID), PATH + comando.value(FNAME), *user);
     } else {
         // aumenta contatore user attivi
         net.addRefToEditor( comando.value(DOCID),

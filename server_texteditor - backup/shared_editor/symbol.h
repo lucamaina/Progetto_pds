@@ -2,7 +2,6 @@
 #define SYMBOL_H
 
 #include <QObject>
-#include <QDebug>
 #include <QMap>
 #include <QtGui/QTextCharFormat>
 #include <QJsonObject>
@@ -17,21 +16,24 @@ class Symbol
 {
 private:
     QChar car;
-    QVector<qint32> index;
+    double index;
     QString userName;           // identifica utente che inserische il carattere
     QByteArray formato;
+    //QList<Symbol> nextLevel;
+    // campo anchor int
 
 public:
     explicit Symbol();
-    explicit Symbol(QString user, QChar car, QVector<qint32> idx) :  userName(user), car(car), index(idx){}
-    explicit Symbol(QString user, QChar car, QVector<qint32> idx, QByteArray ba) :  userName(user), car(car), index(idx), formato(ba){}
+    explicit Symbol(QString user, QChar car, double idx) :  userName(user), car(car), index(idx){}
+    explicit Symbol(QString user, QChar car, double idx, QByteArray ba) :  userName(user), car(car), index(idx), formato(ba){}
 
     QChar getChar(){return this->car;}
     QMap<QString, QString> toMap();
 
     QString getUserName() const;
     void setUserName(const QString &value);
-
+    double getIndex() const;
+    void setIndex(const double &value);
 
     friend QDataStream &operator <<(QDataStream &out, const Symbol &sym);
     friend QDataStream &operator >>(QDataStream &in, Symbol &sym);
@@ -39,20 +41,15 @@ public:
 
     QChar getCar() const;
     void setCar(const QChar &value);
-
+    int getPosX() const;
+    void setPosX(int value);
+    int getPosY() const;
+    void setPosY(int value);
     QByteArray getFormato() const;
     void setFormato(const QByteArray &value);
 
-
-    QMap<qint32, Symbol> getNextLevel() const;
-    void setNextLevel(const QMap<qint32, Symbol> &value);
-
-    bool insertSym(Symbol& sym, QVector<qint32> idx);
-    bool deleteSym(Symbol& sym, QVector<qint32> idx);
-
-
-    QVector<qint32> getIndex() const;
-    void setIndex(const QVector<qint32> &value);
+    QJsonObject toJson();
+    Symbol fromJson(QJsonObject j);
 };
 
 

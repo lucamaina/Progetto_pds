@@ -7,12 +7,16 @@
 #include "editor.h"
 #include "../server/s_thread.h"
 
+Editor::Editor(QObject *parent) : QObject(parent)
+{
+
+}
+
 Editor::Editor(QString Id, QString fName)
 {
     this->nomeFile = fName;
     this->DocId = Id;
     this->refCount = 1;
-    dim = 0;
     this->file = new QFile(this->nomeFile);
     file->open(QIODevice::ReadWrite | QIODevice::Text);
     qDebug() << file->size();
@@ -31,10 +35,11 @@ bool Editor::loadMap()
     this->file->open(QIODevice::ReadWrite);
 
     ba = file->readAll();
+    ba = ba.fromBase64(ba, QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals);
 
     if (!ba.isEmpty()){
         QDataStream out(&ba, QIODevice::ReadWrite);
-        out >> this->symList;
+        out >> this->symMap;
     }
 
     return true;
@@ -48,12 +53,13 @@ bool Editor::sendMap(QString nomeUtente)
 
     QByteArray ba;
     QXmlStreamWriter wr(&ba);
-    int bodySize = this->dim;           // dimensione del file da inviare
+    int bodySize = this->symMap.size();           // dimensione del file da inviare
 
     wr.writeStartDocument();
     wr.writeStartElement(FBODY);
 
     wr.writeTextElement(DIMTOT, QString::number(bodySize));
+  //  wr.writeTextElement(BODY, body);
 
     wr.writeEndElement();
     wr.writeEndDocument();
@@ -76,7 +82,8 @@ bool Editor::sendBody(QSharedPointer<MySocket> &sock)
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::ReadWrite);
-    stream << this->symList;
+    stream << this->symMap;
+    qDebug() << "size qByteArray = " << ba.size();
     sock.get()->write(ba);
     return true;
 }
@@ -90,9 +97,19 @@ QByteArray Editor::getSymMap()
 {
     QByteArray ba;
     QDataStream stream(&ba, QIODevice::ReadWrite);
-    stream << this->symList;
+    stream << this->symMap;
+    ba = ba.toBase64(QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals);
     qDebug() << "size qByteArray to send = " << ba.size();
     return ba;
+}
+
+QString Editor::mapToSend()
+{
+    QString str = "";
+    foreach (Symbol s, this->symMap.values()){
+        str.append(s.getChar());
+    }
+    return str;
 }
 
 bool Editor::loadFile(const QString &nomeUser, const int dimFile)
@@ -163,11 +180,11 @@ bool Editor::rispErr(Message &msg)
 
 bool Editor::deserialise(QByteArray &ba)
 {
-    QMap<qint32, Symbol> map;
+    QMap<double, Symbol> map;
     map.clear();
     QByteArray p;
     QDataStream o(&p, QIODevice::ReadWrite);
-    o << this->symList;
+    o << this->symMap;
 
     QDataStream i(&p, QIODevice::ReadWrite);
     i >> map;
@@ -244,38 +261,14 @@ bool Editor::isEmpty()
  */
 bool Editor::localInsert(Message msg)
 {
-    Symbol newSym = msg.getSym();
-    QVector<qint32> index = msg.getIndici();
-
-    int posCursor = this->localPosCursor(index);
-    if (posCursor > -1){
-        this->symList.insert(posCursor, newSym);
-    }
+    this->symMap.insert(msg.getSym()->getIndex(), *msg.getSym());
     return true;
-}
-
-int Editor::localPosCursor(QVector<qint32> &index)
-{
-    int newPos = -1;
-    for (int pos = 0; pos < symList.size() && newPos != -1; pos++){
-        Symbol s = this->symList.at(pos);
-        int i = 0;
-        for (qint32 val : s.getIndex()){
-            if ( val < index.value(i, 0) ){
-                break;
-            }
-            if ( val > index.value(i, 0) ){
-                newPos = pos;
-                break;
-            }
-            i++;
-        }
-    }
-    return newPos;
 }
 
 bool Editor::localDelete(Message msg)
 {
+    this->symMap.remove(msg.getSym()->getIndex());
+    return true;
 }
 
 /**
@@ -299,10 +292,10 @@ bool Editor::save()
 {
     QByteArray ba;
     QDataStream out (&ba, QIODevice::ReadWrite);
-    out << this->symList;
+    out << this->symMap;
     file->open(QIODevice::WriteOnly | QIODevice::Text);
 
-    file->write(ba);
+    file->write(ba.toBase64(QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals));
     file->close();
 
     qDebug() << "Salvataggio di: " << this->nomeFile << endl;

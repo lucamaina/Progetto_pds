@@ -168,31 +168,25 @@ bool Client::sendMsg(QMap<QString, QString> cmd){
 
 bool Client::leggiXML(QByteArray qb)
 {
-    qDebug() << "Leggo XML";
+    qDebug().noquote() << endl << " -> Leggo XML from Server: " << qb;
     QMap<QString, QString> command;
-
-    qDebug() << qb;
     QXmlStreamReader stream(qb);
 
     while (!stream.atEnd() && !stream.hasError() ){
         QXmlStreamReader::TokenType token = stream.readNext();
-        // leggo start document
-        if (token == QXmlStreamReader::StartDocument){
-            qDebug() << "start doc: " << token << " - " << stream.readElementText();
-        }
         token = stream.readNext();
         // leggo elemento con nome del comando
         if (token == QXmlStreamReader::StartElement){
+            //qDebug() << "comando: " << stream.name();
             QString cmd = stream.name().toString();
             command.insert(CMD, cmd);
         }
         token = stream.readNext();
-        // leggo elemento variabile
+        // leggo elemnto variabile
         while ( token == QXmlStreamReader::StartElement ){
             QString name = stream.name().toString(), text = stream.readElementText();
             command.insert(name, text);
-            qDebug() << "start elem: " << name;
-            qDebug() << "val elem: " << text;
+            //qDebug() << "   start elem: " << name << " val: " << text;
             token = stream.readNext();
         }
     }
@@ -236,7 +230,7 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
         dispatchStile(cmd);
     }
     else if (comando.value() == REM_IN){
-        inserimento(cmd);
+        inserimentoRemoto(cmd);
     }
     else if ( comando.value() == REM_DEL) {
         cancellamento(cmd);
@@ -272,7 +266,7 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         Messaggio.information(nullptr,"Login","Logged in successfully");
         Messaggio.setFixedSize(500,200);
 
-        emit addMe();
+        emit s_changeTitle(this->username, "*", "*");
         this->logged=true;
     }
 
@@ -322,6 +316,8 @@ void Client::dispatchERR(QMap <QString,QString>cmd){
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"Login Error", comando.value());
         Messaggio.setFixedSize(500,200);
+        this->username = "";
+        emit s_changeTitle("*", "*", "*");
 
         LoginDialog* loginDialog = new LoginDialog( );
         connect( loginDialog, SIGNAL (acceptLogin(QString&,QString&)), this, SLOT (handleLogin(QString&,QString&)) );
@@ -441,14 +437,23 @@ void Client::loadFile(QMap<QString,QString> cmd){
             return;
         }
     }
-    qDebug().noquote() <<qba.length() << endl << qba;
+    qDebug().noquote() << "sono in " << Q_FUNC_INFO
+                       << "byte letti: " << qba.length()
+                       << endl << qba;
 
     connect(this->socket,SIGNAL(readyRead()),this,SLOT(readyRead()));
 
     //emit clearEditor();
     this->remoteFile = new Editor(this->docID,this->filename,qba,username);
-    QString testo = this->remoteFile->getTesto();
-    emit this->s_loadEditor(testo);
+    emit this->s_clearEditor();
+
+    QList<Symbol> testo;
+    testo = this->remoteFile->getTesto(testo);
+    int pos = 0;
+    for( Symbol s : testo){
+        emit s_setText(s.car, s.textFormat, pos++);
+    }
+
 }
 
 /**
@@ -456,23 +461,44 @@ void Client::loadFile(QMap<QString,QString> cmd){
  * @param cmd
  * esegue inserimento nella mappa locale ed emette signal per visualizzare il carattere in texteditor
  */
-void Client::inserimento(QMap<QString,QString> cmd)
+void Client::inserimentoRemoto(QMap<QString,QString> cmd)
 {
     QString user = cmd.find(UNAME).value();
-    double index = cmd.find(IDX).value().toDouble();
-    QByteArray format = QByteArray::fromHex(cmd.find(FORMAT).value().toUtf8());
-    QTextCharFormat charform = deserialize(format);
-    char c = cmd.find(CAR).value().at(0).toLatin1();
-
-    double oldIndex = this->remoteFile->insertLocal(index,c, charform);
-    if (oldIndex > 0){
-        int posCursor = remoteFile->localPosCursor(oldIndex);
-        emit s_removeText(posCursor);
-    }
-    int posCursor = remoteFile->localPosCursor(index);
     if (user == this->username)
         return;// ignoro
-    emit s_setText(c, charform, posCursor);
+    QString indici = cmd.find(IDX).value();
+    QVector<qint32> index;
+    for (QString s : indici.split(";", QString::SkipEmptyParts)){
+         index.push_back(s.toInt());
+    }
+    QByteArray format = QByteArray::fromHex(cmd.find(FORMAT).value().toUtf8());
+    QTextCharFormat charform = deserialize(format);
+    QChar c = cmd.find(CAR).value().at(0);
+
+    int posCursor = remoteFile->localPosCursor(index);
+    if (posCursor > -1){
+        Symbol newS = Symbol(user, c, index, charform);
+        remoteFile->symVec.insert(posCursor, newS);
+        emit s_setText(c, charform, posCursor);
+    }
+
+}
+
+bool Client::inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format)
+{
+    QVector<qint32> newIndex = this->remoteFile->getLocalIndexInsert(pos);
+    if (newIndex.isEmpty()){
+        // errore inserimento locale
+        return false;
+    }
+    Symbol newSym = Symbol(this->username, car, newIndex, format);
+
+    this->remoteFile->symVec.insert(pos, newSym);
+
+    emit s_setText(car, format, pos);
+
+    this->remoteInsert(car, format, newIndex, pos);
+    return true;
 }
 
 void Client::cancellamento(QMap<QString, QString> cmd)
@@ -486,7 +512,7 @@ void Client::cancellamento(QMap<QString, QString> cmd)
 }
 
 void Client::spostaCursori(QMap <QString,QString>cmd)
-{
+{/*
     qDebug() << "sono in " << Q_FUNC_INFO;
     QString user = cmd.value(UNAME);
     if(user == this->username){
@@ -496,18 +522,18 @@ void Client::spostaCursori(QMap <QString,QString>cmd)
     double idx = cmd.value(IDX).toDouble();
     int pos = remoteFile->localPosCursor(idx);
     if (pos != -1)
-        emit s_changeCursor(user, pos);
+        emit s_changeCursor(user, pos);*/
     return;
 }
 
 void Client::sendCursore(double index)
-{
+{/*
     QMap<QString, QString> map;
     map.insert(CMD, CRS);
     map.insert(DOCID, this->docID);
     map.insert(UNAME, this->username);
     map.insert(IDX, QString::number(index) );
-    this->sendMsg(map);
+    this->sendMsg(map);*/
 }
 
 /**
@@ -562,7 +588,7 @@ void Client::handleStile(QString& stile,QString& param){
     comando.insert("stile", stile);
     comando.insert("param", param);
 
-    qDebug()<<comando;
+    // qDebug()<<comando;
 
     this->sendMsg(comando);
 }
@@ -644,7 +670,7 @@ void Client::handleRegistration(QString& username, QString& password){
 
 void Client::handleMyCursorChange(int& posX,int& posY, int& anchor)
 {
-    qDebug() << "sono in " << Q_FUNC_INFO;
+    //qDebug() << "sono in " << Q_FUNC_INFO;
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
 
     QMap<QString, QString> comando;
@@ -654,7 +680,6 @@ void Client::handleMyCursorChange(int& posX,int& posY, int& anchor)
     comando.insert("posX", QString::number(posX) );
     comando.insert("posY", QString::number(posY) );
     comando.insert("anchor", QString::number(anchor) );
-    qDebug()<<comando;
     //this->sendMsg(comando);
 }
 
@@ -721,7 +746,7 @@ QString Client::serialize(const QTextCharFormat &format)
     QByteArray s;
     QDataStream out(&s,QIODevice::ReadWrite);
     out <<format;
-    qDebug() << s;
+    // qDebug() << s;
     return QString(s.toHex());
 }
 
@@ -760,20 +785,24 @@ bool Client::upCursor(QMap<QString, QString> cmd)
 }
 
 
-bool Client::remoteInsert(QChar c, QTextCharFormat format, double index)
+bool Client::remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index, int cursor)
 {
     QMap<QString,QString> cmd;
     cmd.insert(CMD, REM_IN);
     cmd.insert(CAR, c);
-    cmd.insert(IDX, QString::number(index));
+    QString indici;
+    for (qint32 val : index){
+        indici.append(QString::number(val) + ";");
+    }
+    cmd.insert(IDX, indici);
     cmd.insert(FORMAT, QString(this->serialize(format)));
-    cmd.insert(UNAME,username);
-    cmd.insert(DOCID,docID);
+    cmd.insert(UNAME, username);
+    cmd.insert(DOCID, docID);
 
     qDebug() << cmd;
     this->sendMsg(cmd);
 
-    this->sendCursore(index);
+    this->sendCursore(cursor);
     return true;
 }
 

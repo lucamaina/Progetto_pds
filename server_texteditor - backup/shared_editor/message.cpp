@@ -5,11 +5,12 @@ bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
     if (comando.isEmpty()){ return false;   }
     QString nomecmd, formato, remoteUSer;
     QChar car;
-    QString indici;
+    double idx;
 
     if (!comando.contains(CMD) ||
             !comando.contains(DOCID) ||
-            !comando.contains(UNAME) ){
+            !comando.contains(UNAME) ||
+            !comando.contains(IDX)){
         qDebug() << "Errore nel comando: " << endl
                  << comando;
         return false; // problema nel comando
@@ -17,6 +18,7 @@ bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
 
     nomecmd = comando.value(CMD);
     this->fileId = comando.value(DOCID);
+    idx = comando.value(IDX).toDouble();
     remoteUSer = comando.value(UNAME);
 
     if (remoteUSer != username){
@@ -35,14 +37,6 @@ bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
         return false;
     }
 
-    if (comando.contains(IDX)){ // indice come stringa con elenco di interi divisi da ;
-        indici = comando.value(IDX);
-        QStringList lista = indici.split(";");
-        for (QString idx : lista){
-            this->indici.push_back(idx.toInt());
-        }
-    }
-
     if (comando.contains(CAR)){
         car = comando.value(CAR).at(0);
     } else {
@@ -56,7 +50,7 @@ bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
     }
 
     QByteArray format = QByteArray(formato.toLatin1());
-    this->sym = Symbol(user, car, this->indici.last(), format);
+    this->sym = new Symbol(user, car, idx, format);
 
     return true;
 }
@@ -66,7 +60,7 @@ Message::msgType Message::getTipo() const
     return tipo;
 }
 
-Symbol Message::getSym() const
+Symbol *Message::getSym() const
 {
     return sym;
 }
@@ -83,14 +77,17 @@ QString Message::getFile() const
 
 QMap<QString, QString> Message::toMap()
 {
-    QMap<QString, QString> map = this->sym.toMap();
-    QString tipe = REM_IN;
-    if (this->tipo == Message::Rem_Del)
-        tipe = REM_DEL;
-    map.insert(CMD, tipe);
+    QMap<QString, QString> map = this->sym->toMap();
+    switch (this->tipo) {
+    case Rem_In : map.insert(CMD, REM_IN); break;
+    case Rem_Del : map.insert(CMD, REM_DEL); break;
+    case Message::Cur : map.insert(CMD, CRS); break;
+    }
+    map.insert(DOCID, this->fileId);
     return map;
 }
 
+/*
 QByteArray Message::toQByteArray()
 {
     QByteArray ba;
@@ -99,10 +96,10 @@ QByteArray Message::toQByteArray()
     wr.writeStartDocument();
     wr.writeStartElement(comando.value(CMD));
     comando.remove(CMD);
-/*
+
     foreach (QString key, comando.keys()) {
         wr.writeTextElement(key, comando.value(key));
-    }*/
+    }
     wr.writeEndElement();
     wr.writeEndDocument();
 
@@ -116,7 +113,7 @@ QByteArray Message::toQByteArray()
     qDebug() << QString(ba);
 
     return ba;
-}
+}*/
 
 Message::Message()
 {

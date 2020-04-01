@@ -8,10 +8,9 @@
 #include <mutex>
 #include <QDebug>
 #include <QTcpSocket>
+#include <QTextCharFormat>
 #include "message.h"
 #include "symbol.h"
-
-class s_thread;
 
 class Editor : public QObject
 {
@@ -23,10 +22,13 @@ private:
     QString nomeFile;
     QString DocId;      // id usato nel db
     QFile *file;
+    qint32 dim = 0;
+    qint32 maxDim = std::numeric_limits<qint32>::max()/10;
 
 
 public:
-    QMap<double, Symbol> symMap;
+    QMap<qint32, Symbol> symList;
+    QVector<Symbol> symVec;
 
     explicit Editor(QObject *parent = nullptr);
     explicit Editor(QString Id, QString nome, QByteArray body, QString username);
@@ -39,15 +41,18 @@ public:
 
     /****************************************************************************
      * metodi di insert e delete ************************************************/
-    double getLocalIndexInsert(int posCursor);
+    QVector<qint32> getLocalIndexInsert(qint32 posCur);
+
+
     double getLocalIndexDelete(int posCursor);
 
-    int localPosCursor(double index);
+    int localPosCursor(QVector<qint32> & index);
 
     bool cursorChange(Message msg);
     bool remoteSend(Message msg);
 
-    double insertLocal(double index,char value, QTextCharFormat formato);
+    double localInsert(int posCur);
+
     int deleteLocal(double index, char car);
 
     void updateFormat(double index, QTextCharFormat formato);
@@ -55,7 +60,7 @@ public:
     double fmed(double num1, double num2);
     bool fequal(double a, double b);
 
-    QString getTesto();
+    QList<Symbol> &getTesto(QList<Symbol>& testo);
 
 
 
@@ -66,8 +71,10 @@ private:
     const Editor &operator=(const Editor & hold) = delete;
 
 signals:
+    void s_read();
 
 public slots:
+    void read();
 
 
 };

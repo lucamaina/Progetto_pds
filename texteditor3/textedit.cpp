@@ -201,8 +201,10 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this->client, &Client::s_setText, this, &TextEdit::setText, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_removeText, this, &TextEdit::removeText, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_loadEditor, this, &TextEdit::loadEditor, Qt::ConnectionType::DirectConnection);
+    connect(this->client, &Client::s_clearEditor, this, &TextEdit::clear, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_upCursor, this, &TextEdit::upCursor);
     connect(this->client, &Client::s_changeCursor, this, &TextEdit::changeCursor, Qt::DirectConnection);
+    connect(this->client, &Client::s_changeTitle, this, &TextEdit::windowTitle, Qt::DirectConnection);
     setupStatusBar();
 
 }
@@ -255,7 +257,7 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
                 QChar c = e->text().front();        // carattere da inserire
                 QTextCharFormat format = textEdit->textCursor().charFormat();   // formato del carattere
 
-                this->inserimento(poss, c, format, posx);
+                this->inserimento(poss, c, format);
 
                 return true;
             }
@@ -288,16 +290,15 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
     return false;
 }
 
-bool TextEdit::inserimento(int posCursor, QChar car, QTextCharFormat format, int posx)
+bool TextEdit::inserimento(int posCursor, QChar car, QTextCharFormat format)
 {
     QTextCursor s = this->textEdit->textCursor();
-    double index = this->client->remoteFile->getLocalIndexInsert(posCursor);
+    this->client->inserimentoLocale(posCursor, car, format);
 
-    if (index < 0){
-        this->statusBar()->showMessage("impossibile inserire in locale", 1000);
-    } else if (this->client->remoteInsert(car,format,index)) {// INSERIMENTO REMOTO, manda comando a server
+     /*else if (this->client->remoteInsert(car,format,index)) {// INSERIMENTO REMOTO, manda comando a server
         // true se server risp OK
-        this->setText(car, format, s.position());
+        this->client->inserimento(index, car, format);
+       // this->setText(car, format, s.position());
 
 /*        if(s.hasSelection()){
             int poscurs=s.position();
@@ -307,13 +308,14 @@ bool TextEdit::inserimento(int posCursor, QChar car, QTextCharFormat format, int
                 this->client->remoteDelete(car, index, anchor);
             }
         }
-*/
+
         this->statusBar()->showMessage("At position: " + QString::number(posCursor) + " Text insert: " + car, 1000);
 
     } else {
         this->statusBar()->showMessage("impossibile inserire da remoto", 1000);
     }
-    return true;
+*/
+    return false; // true per evitare inserimento
 }
 
 bool TextEdit::cancellamento(int posCursor, int key)
@@ -552,6 +554,12 @@ void TextEdit::loadEditor(QString str)
 {
     this->clear();
     this->textEdit->setText(str);
+}
+
+void TextEdit::windowTitle(QString utente, QString nomeFile, QString docid)
+{
+    setWindowTitle(tr("%1 @ %2 = %3 - ").arg(utente, nomeFile, docid, QCoreApplication::applicationName()));
+    setWindowModified(false);
 }
 
 void TextEdit::setupTextActions()
@@ -1386,10 +1394,18 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
 
 void TextEdit::changeCursor(QString &nomeUser, int pos)
 {
-    this->mappaCursori.value(nomeUser)->setPosition(pos);
-    this->textEdit->textCursor().setPosition(pos);
-    this->mappaEtichette.value(nomeUser)->show();
+    disconnect(textEdit, &QTextEdit::cursorPositionChanged,
+            this, &TextEdit::cursorPositionChanged);
 
+    auto oldCursor = this->textEdit->textCursor();
+    this->textEdit->textCursor().setPosition(pos);
+    this->mappaCursori.value(nomeUser)->setPosition(pos);
+    QRect r = this->textEdit->rect();
+    this->mappaEtichette.value(nomeUser)->move(r.left(), r.bottom());
+    this->textEdit->textCursor() = oldCursor;
+
+    connect(textEdit, &QTextEdit::cursorPositionChanged,
+                this, &TextEdit::cursorPositionChanged);
 }
 
 void TextEdit::deleteListSlot(){
@@ -1402,25 +1418,31 @@ void TextEdit::deleteListSlot(){
 void TextEdit::userListClicked(QListWidgetItem* item)
 {
     //rendo visibile il cursore appena cliccato
-/*
+
     qDebug() << "sono in " << Q_FUNC_INFO;
     qDebug() << item->text();
-
+    QTextCursor oldCursor = this->textEdit->textCursor();
     textEdit->setFocus(); //rimette il focus al widget che fa text editor altrimenti scompare il cursore
 
     disconnect(textEdit, &QTextEdit::cursorPositionChanged,
             this, &TextEdit::cursorPositionChanged);
 
     if(mappaCursori.contains(item->text())){
-        textEdit->setTextCursor(* mappaCursori.value(item->text()));
-        this->mappaEtichette.value(item->text())->show();
+        if (item->checkState() == Qt::Unchecked){
+            // item->setCheckState(Qt::Unchecked);
+            mappaEtichette.value(item->text())->setVisible(false);
+        } else {
+            // item->setCheckState(Qt::Checked);
+            textEdit->setTextCursor(* mappaCursori.value(item->text()));
+            mappaEtichette.value(item->text())->setVisible(true);
+            textEdit->textCursor() = oldCursor;
+        }
 
+    } else {
+        qDebug()<<"errore utente non trovato";
     }
-
-    else{ qDebug()<<"errore utente non trovato";}
     connect(textEdit, &QTextEdit::cursorPositionChanged,
             this, &TextEdit::cursorPositionChanged);
-*/
 }
 
 void TextEdit::cancellaAtCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){
@@ -1556,6 +1578,43 @@ void TextEdit::addMeSlot()
 void TextEdit::upCursor(QStringList &list)
 {
     qDebug() << "sono in " << Q_FUNC_INFO;
+    QStringList old = mappaEtichette.keys();
+    for (QString nome : list){
+        if (old.contains(nome)){
+            old.removeOne(nome);
+        } else {
+            if (!mappaCursori.contains(nome)){
+                QTextCursor* s = new QTextCursor(textEdit->document());
+                mappaCursori.insert(nome, s);
+            }
+            if (!mappaEtichette.contains(nome)){
+                QLabel *lbl = new QLabel(nome, textEdit);
+                QRect r = textEdit->cursorRect();
+                lbl->move(r.left(), r.bottom());
+                lbl->setFont(QFont("Arial",8,14,true));
+                lbl->setStyleSheet("QLabel { background-color : rgba(255, 0, 0, 64); color : blue; }");
+                lbl->setVisible(false);
+                mappaEtichette.insert(nome, lbl);
+            }
+            QListWidgetItem *item = new QListWidgetItem(nome);
+            item->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemIsUserCheckable);
+            item->setCheckState(Qt::CheckState::Unchecked);
+            this->list->addItem(item);
+        }
+    }
+    // rimuovi vecchi
+    for (QString exNome : old){
+        mappaCursori.remove(exNome);
+        mappaEtichette.value(exNome)->setVisible(false);
+        mappaEtichette.remove(exNome);
+        for (int i = 0; i < this->list->count(); i++){
+            QListWidgetItem *item = this->list->takeItem(i);
+            if (item->text() == exNome){
+                this->list->removeItemWidget(item);
+            }
+        }
+    }
+    /*
     mappaCursori.clear();
     for (QLabel* l : mappaEtichette.values()){
         l->setVisible(false);   // unico modo per eliminare vecchia label
@@ -1582,6 +1641,7 @@ void TextEdit::upCursor(QStringList &list)
 
         this->list->addItem(nome);
     }
+    */
 }
 
 void TextEdit::nuovoStileSlot(QString& stile,QString& param){
@@ -1625,7 +1685,7 @@ void TextEdit::salvaMappa(){
     QDataStream out(&s, QIODevice::WriteOnly);
     QDataStream in(&s, QIODevice::ReadOnly);
 
-    out << this->client->remoteFile->symMap;
+    out << this->client->remoteFile->symList;
 
     QMap<double,Symbol> deserial;
     in >> deserial;                  // DEBUG

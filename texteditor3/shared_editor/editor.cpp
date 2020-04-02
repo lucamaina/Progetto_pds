@@ -10,11 +10,15 @@ Editor::Editor(QObject *parent) : QObject(parent)
 
 }
 
-Editor::Editor(QString Id, QString fName, QByteArray body, QString username)
+Editor::Editor(QString Id, QString fName, QByteArray& body, QString username)
 {
     this->nomeFile = fName;
     this->username = username;
     this->DocId = Id;
+
+    QDataStream stream(&body, QIODevice::ReadWrite);
+    stream >> this->symVec;
+
 }
 
 
@@ -26,17 +30,28 @@ Editor::~Editor()
     this->file->remove();
 }
 
-double Editor::getLocalIndexDelete(int posCursor)
+/**
+ * @brief Editor::getLocalIndexDelete
+ * @param posCursor
+ * @return
+ *
+ */
+bool Editor::getLocalIndexDelete(int posCursor, Symbol& sym)
 {
-    auto lista = symList.keys();
-    if (posCursor > lista.size() + 1 || posCursor < 0){
-        return -1;
+    if (symVec.size() < posCursor || posCursor < 0){
+        // cursore fuori dalla mappa, errore
+        return false;
     }
-    double tempmax = lista.at(posCursor);
-    return tempmax;
+    sym = symVec.at(posCursor);
+    return true;
 }
 
-// cerca symbol in posizione posCursor
+/**
+ * @brief Editor::getLocalIndexInsert
+ * @param posCur
+ * @return
+ * crea nuovo indice alla posizione del cursore
+ */
 QVector<qint32> Editor::getLocalIndexInsert(qint32 posCur) // genera indici di symbol
 {
     qDebug() << "sono in " << Q_FUNC_INFO;
@@ -102,7 +117,12 @@ QVector<qint32> Editor::getLocalIndexInsert(qint32 posCur) // genera indici di s
 
 
 
-
+/**
+ * @brief Editor::localPosCursor
+ * @param index
+ * @return
+ * trova posizione in cui possono essere inseriti i nuovi indici
+ */
 int Editor::localPosCursor(QVector<qint32> &index)
 {
     int newPos = -1;
@@ -129,51 +149,30 @@ int Editor::localPosCursor(QVector<qint32> &index)
     return newPos;
 }
 
-double Editor::localInsert(int posCur)
+/**
+ * @brief Editor::findLocalPosCursor
+ * @param index
+ * @return
+ * cerca posizione con idici uguali
+ */
+int Editor::findLocalPosCursor(QVector<qint32> &index)
 {
-    qDebug() << "sono in " << Q_FUNC_INFO;
-
-    QVector<qint32> newIndex = this->getLocalIndexInsert(posCur);
-
+    for (Symbol s : this->symVec){
+        auto idx = s.getIndici();
+        if ( idx == index){
+            return symVec.indexOf(s);
+        }
+    }
+    return -1; // non trovato
 }
-
-
-
 
 
 /*********************************************************************************************************
  ************************ metodi di gestione della mappa **************************************************
  *********************************************************************************************************/
 
-
-/**
- * @brief Editor::fmed
- * @param num1
- * @param num2
- * @return indice medio tra precedente e successivo
- */
-double Editor::fmed(double num1, double num2) {
-    double mid = (num1 + num2)/static_cast<double>(2);
-    qDebug()<< "Num1: "<<num1
-            << " mid: "<<mid
-            << " Num2: "<< num2;
-    return mid;
-}
-
-/**
- * @brief Editor::fequal
- * @param a
- * @param b
- * @return verifica l'uguaglianza tra double
- */
-bool Editor::fequal(double a, double b)
-{    return qFuzzyCompare(a, b);    }
-
 QList<Symbol>& Editor::getTesto(QList<Symbol>& testo)
 {
-    for( Symbol s : this->symList.values() ){
-        s.read(testo);
-    }
     return testo;
 }
 
@@ -186,31 +185,9 @@ void Editor::read()
 
 
 int Editor::deleteLocal(double index, char car){
-    if( this->symList.contains(index) ){
-        if (symList.value(index).car == car){
-            auto lista = symList.keys();
-            int posCur = lista.lastIndexOf(index);
-            symList.remove(index);
-            return posCur;
-        }
-    }
+    return 0;
 }
 
 void Editor::updateFormat(double index, QTextCharFormat formato){
-    if( fequal(index, 0) ){
-        return;
-    } else{
-        double i = 0;
-        for(double d : symList.keys()){
-            i++;
-            if( fequal(i, index) ){
-                auto t=symList.find(d);
-                t->setFormat(formato);
-                Symbol s = symList.take(d);
-                s.setFormat(formato);
-                symList.insert(d,s);
-                return;
-            }
-        }
-    }
+    return;
 }

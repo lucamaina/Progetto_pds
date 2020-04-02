@@ -28,7 +28,7 @@ bool Editor::loadMap()
 {
     // TODO verifica eccezioni
     QByteArray ba;
-    this->file->open(QIODevice::ReadWrite);
+    //this->file->open(QIODevice::ReadWrite);
 
     ba = file->readAll();
 
@@ -257,7 +257,10 @@ bool Editor::localInsert(Message msg)
 int Editor::localPosCursor(QVector<qint32> &index)
 {
     int newPos = -1;
-    for (int pos = 0; pos < symList.size() && newPos != -1; pos++){
+    if (symList.isEmpty()){
+        return 0;
+    }
+    for (int pos = 0; pos < symList.size() && newPos == -1; pos++){
         Symbol s = this->symList.at(pos);
         int i = 0;
         for (qint32 val : s.getIndex()){
@@ -271,11 +274,41 @@ int Editor::localPosCursor(QVector<qint32> &index)
             i++;
         }
     }
+    if (newPos == -1){
+        newPos = symList.size();
+    }
     return newPos;
+}
+
+/**
+ * @brief Editor::findLocalPosCursor
+ * @param index
+ * @return
+ * cerca posizione con idici uguali
+ */
+int Editor::findLocalPosCursor(QVector<qint32> &index)
+{
+    for (Symbol s : this->symList){
+        auto idx = s.getIndex();
+        if ( idx == index){
+            int pos = symList.indexOf(s);
+            return pos;
+        }
+    }
+    return -1; // non trovato
 }
 
 bool Editor::localDelete(Message msg)
 {
+    QString user = msg.getUser();
+    QVector<qint32> index = msg.getIndici();
+
+    int posCursor = this->findLocalPosCursor(index);
+    if (posCursor > -1){
+        symList.remove(posCursor);
+        return true;
+    }
+    return false;
 }
 
 /**

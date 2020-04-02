@@ -1,13 +1,24 @@
 #include "symbol.h"
 
-qint32 Symbol::getIndex() const
+
+QChar Symbol::getCar() const
 {
-    return index;
+    return car;
 }
 
-void Symbol::setIndex(const qint32 &value)
+QByteArray Symbol::getFormato() const
 {
-    index = value;
+    return formato;
+}
+
+void Symbol::setFormato(const QByteArray &value)
+{
+    formato = value;
+}
+
+QVector<qint32> Symbol::getIndici() const
+{
+    return indici;
 }
 
 Symbol::Symbol()
@@ -20,7 +31,11 @@ QMap<QString, QString> Symbol::toMap()
     QMap<QString, QString> map;
     map.insert(UNAME, this->userName);
     map.insert(CAR, this->car);
-    map.insert(IDX, QString::number(this->index));
+    QString idx;
+    for (qint32 val : this->indici){
+        idx.append(QString::number(val) + ";");
+    }
+    map.insert(IDX, idx);
     return map;
 }
 
@@ -52,18 +67,6 @@ void Symbol::setUserName(const QString &value)
 
 
 
-QList<Symbol> & Symbol::read(QList<Symbol>& testo)
-{
-    if (this->nextLevel.isEmpty()){
-        testo.append(*this);
-    } else {
-        for (Symbol s : nextLevel.values()){
-            s.read(testo);
-        }
-    }
-    return testo;
-}
-
 /**
  * @brief Symbol::getLocalIndex
  * @param posCur
@@ -73,28 +76,26 @@ QList<Symbol> & Symbol::read(QList<Symbol>& testo)
  */
 qint32 Symbol::getLocalIndex(qint32 posCur, QVector<qint32> &vec)
 {
-    if (posCur == 0){
-        vec.push_front(this->getIndex());
-        return 0;
-    }
-    std::for_each(nextLevel.begin(),
-                  nextLevel.end(),
-                  [&](Symbol s){
-        if (s.getLocalIndex(posCur, vec) == 0){
-            vec.push_front(s.index);
-        }
-                  });
-
-    return posCur--;
+    return -1;
 }
 
-QDataStream &operator<<(QDataStream& out, const Symbol &sym){
-    out << sym.getUserName()<<sym.getIndex()<<sym.car<<sym.formato;
+
+QDataStream &operator<<(QDataStream &out, const Symbol &sym)
+{
+    out.setVersion(QDataStream::Qt_5_12);
+    out << sym.getUserName()<< sym.getIndici() << sym.getCar() << sym.getFormato();
     return out;
 }
 
-QDataStream &operator>>(QDataStream& in, Symbol &sym){
-    in >> sym.userName>>sym.index>>sym.car>>sym.formato;
+QDataStream &operator >>(QDataStream &in, Symbol &sym)
+{
+    in.setVersion(QDataStream::Qt_5_12);
+    in  >> sym.userName     >> sym.indici    >> sym.car      >> sym.formato;
     return in;
+}
+
+bool Symbol::operator ==(const Symbol &s)
+{
+    return s.getIndici() == this->getIndici();
 }
 

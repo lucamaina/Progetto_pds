@@ -24,7 +24,7 @@ Client::Client(QObject *parent) : QObject(parent)
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
 //    connect(this, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
     connect(this, SIGNAL(cancellaSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(cancellaAtCursor(int&,int&,int&,char&,QString&)));
-    connect(this, SIGNAL(cambiaFile(QString&)),this->parent(),SLOT(loadFile(QString&)));
+//    connect(this, SIGNAL(cambiaFile(QString&)),this->parent(),SLOT(loadFile(QString&)));
     connect(this, SIGNAL(addMe()),this->parent(),SLOT(addMeSlot()));
     connect(this, SIGNAL(nuovoStile(QString&,QString&)), this->parent(),SLOT(nuovoStileSlot(QString&,QString&)));
     connect(finestraAddFile, SIGNAL(s_addNewFile(QString&)), this, SLOT(remoteAdd(QString&)));
@@ -233,7 +233,7 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
         inserimentoRemoto(cmd);
     }
     else if ( comando.value() == REM_DEL) {
-        cancellamento(cmd);
+        cancellamentoRemoto(cmd);
     }
     else if (comando.value() == FBODY) {
         loadFile(cmd);
@@ -409,8 +409,8 @@ void Client::handleBrowse(QMap<QString,QString> cmd){
  * @param cmd
  * gestisce apertura di un file ricevuto dal server
  */
-void Client::loadFile(QMap<QString,QString> cmd){
-    qDebug() << cmd.toStdMap();
+void Client::loadFile(QMap<QString,QString> cmd)
+{
     qint64 dim = cmd.find(BODY).value().toInt();
 
     QByteArray qba;
@@ -444,13 +444,11 @@ void Client::loadFile(QMap<QString,QString> cmd){
     connect(this->socket,SIGNAL(readyRead()),this,SLOT(readyRead()));
 
     //emit clearEditor();
-    this->remoteFile = new Editor(this->docID,this->filename,qba,username);
+    this->remoteFile = new Editor(this->docID, this->filename, qba,  username);
     emit this->s_clearEditor();
 
-    QList<Symbol> testo;
-    testo = this->remoteFile->getTesto(testo);
     int pos = 0;
-    for( Symbol s : testo){
+    for( Symbol s : remoteFile->symVec){
         emit s_setText(s.car, s.textFormat, pos++);
     }
 
@@ -486,29 +484,61 @@ void Client::inserimentoRemoto(QMap<QString,QString> cmd)
 
 bool Client::inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format)
 {
+    // creo nuovo indice
     QVector<qint32> newIndex = this->remoteFile->getLocalIndexInsert(pos);
     if (newIndex.isEmpty()){
         // errore inserimento locale
         return false;
     }
+    // creo symbol
     Symbol newSym = Symbol(this->username, car, newIndex, format);
 
+    // inserisco in locale
     this->remoteFile->symVec.insert(pos, newSym);
 
+    // scrivo in editor
     emit s_setText(car, format, pos);
 
+    // invio al server
     this->remoteInsert(car, format, newIndex, pos);
     return true;
 }
 
-void Client::cancellamento(QMap<QString, QString> cmd)
+bool Client::cancellamentoLocale(int posCursor)
 {
-    double index = cmd.find(IDX).value().toDouble();
-    char c = cmd.find(CAR).value().at(0).toLatin1();
+    // trovo symbol alla posizione del cursore
+    Symbol oldSym;
+    if ( !this->remoteFile->getLocalIndexDelete(posCursor, oldSym)){
+        // errore cancellazione locale
+        return false;
+    }
+    // cancello in locale
+    this->remoteFile->symVec.remove(posCursor);
 
-    int posCursor = this->remoteFile->deleteLocal(index, c);
-
+    // scrivo in editor
     emit s_removeText(posCursor);
+
+    // invio al server
+    this->remoteDelete(oldSym, posCursor);
+    return true;
+}
+
+void Client::cancellamentoRemoto(QMap<QString, QString> cmd)
+{
+    QString user = cmd.find(UNAME).value();
+    if (user == this->username)
+        return;// ignoro
+    QString indici = cmd.find(IDX).value();
+    QVector<qint32> index;
+    for (QString s : indici.split(";", QString::SkipEmptyParts)){
+         index.push_back(s.toInt());
+    }
+
+    int posCursor = remoteFile->findLocalPosCursor(index);
+    if (posCursor > -1){
+        remoteFile->symVec.remove(posCursor);
+        emit s_removeText(posCursor);
+    }
 }
 
 void Client::spostaCursori(QMap <QString,QString>cmd)
@@ -526,7 +556,7 @@ void Client::spostaCursori(QMap <QString,QString>cmd)
     return;
 }
 
-void Client::sendCursore(double index)
+void Client::sendCursore(int pos)
 {/*
     QMap<QString, QString> map;
     map.insert(CMD, CRS);
@@ -806,17 +836,36 @@ bool Client::remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index
     return true;
 }
 
-bool Client::remoteDelete(QChar c, double index)
+bool Client::remoteInsert(Symbol sym, int cursor)
+{
+    return remoteInsert( sym.getChar(),
+                         sym.getFormat(),
+                         sym.getIndici(),
+                         cursor);
+}
+
+bool Client::remoteDelete(QChar c, QVector<qint32> index, int cursor)
 {
     QMap<QString,QString> cmd;
     cmd.insert(CMD, REM_DEL);
     cmd.insert(CAR, c);
-    cmd.insert(IDX, QString::number(index));
+    QString indici;
+    for (qint32 val : index){
+        indici.append(QString::number(val) + ";");
+    }
+    cmd.insert(IDX, indici);
     cmd.insert(UNAME,username);
     cmd.insert(DOCID,docID);
 
-    this->sendCursore(index);
+    this->sendCursore(cursor);
     return this->sendMsg(cmd);
+}
+
+bool Client::remoteDelete(Symbol s, int cursor)
+{
+    return remoteDelete( s.getChar(),
+                         s.getIndici(),
+                         cursor);
 }
 
 

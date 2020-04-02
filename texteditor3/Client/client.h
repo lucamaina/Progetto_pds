@@ -32,12 +32,16 @@ public:
 
 
     bool remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index, int cursor);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
+    bool remoteInsert(Symbol sym, int cursor);
 
-    bool remoteDelete(QChar c, double index);
+    bool remoteDelete(QChar c, QVector<qint32> index, int cursor);
+    bool remoteDelete(Symbol s, int cursor);
+
     void inserimentoRemoto(QMap<QString,QString> cmd);
     bool inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format);
 
-    void cancellamento(QMap<QString,QString> cmd);
+    bool cancellamentoLocale(int posCursor);
+    void cancellamentoRemoto(QMap<QString,QString> cmd);
 
     void loadFile(QMap<QString,QString> cmd);
     QString serialize(const QTextCharFormat &format);
@@ -127,7 +131,7 @@ private:
     void dispatchOK(QMap <QString, QString> cmd);
     void dispatchERR(QMap <QString,QString> cmd);
     void spostaCursori(QMap <QString,QString> cmd);
-    void sendCursore(double index);
+    void sendCursore(int pos);
 
     /****************************************************************************
      ***************** metodi controllo dei comandi inviati ********************/

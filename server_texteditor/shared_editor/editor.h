@@ -67,6 +67,7 @@ public:
     bool localDelete(Message msg);
 
     int localPosCursor(QVector<qint32> &index);
+    int findLocalPosCursor(QVector<qint32> & index);
 
     bool deserialise(Message msg);
 

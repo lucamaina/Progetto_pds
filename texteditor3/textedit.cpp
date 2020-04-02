@@ -320,12 +320,15 @@ bool TextEdit::inserimento(int posCursor, QChar car, QTextCharFormat format)
 
 bool TextEdit::cancellamento(int posCursor, int key)
 {
-    if (key == Qt::Key_Backspace){
+    // gestisco limiti dell'editor tra delete e backspace
+    if (key == Qt::Key_Backspace && posCursor > 0){
         posCursor--;
     } else if (key == Qt::Key_Delete){
         // Qt::key_delete
     }
 
+    this->client->cancellamentoLocale(posCursor);
+/*
     QTextCursor s = this->textEdit->textCursor();
     s.setPosition(posCursor);
     s.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor);
@@ -344,7 +347,7 @@ bool TextEdit::cancellamento(int posCursor, int key)
     } else {
         this->statusBar()->showMessage("impossibile inserire da remoto", 1000);
     }
-
+*/
     return true;
 }
 
@@ -1685,7 +1688,7 @@ void TextEdit::salvaMappa(){
     QDataStream out(&s, QIODevice::WriteOnly);
     QDataStream in(&s, QIODevice::ReadOnly);
 
-    out << this->client->remoteFile->symList;
+    out << this->client->remoteFile->symVec;
 
     QMap<double,Symbol> deserial;
     in >> deserial;                  // DEBUG

@@ -35,7 +35,7 @@ public:
 
     friend QDataStream &operator <<(QDataStream &out, const Symbol &sym);
     friend QDataStream &operator >>(QDataStream &in, Symbol &sym);
-
+    bool operator ==(const Symbol &s);
 
     QChar getCar() const;
     void setCar(const QChar &value);

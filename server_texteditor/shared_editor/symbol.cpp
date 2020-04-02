@@ -102,21 +102,24 @@ void Symbol::setUserName(const QString &value)
     userName = value;
 }
 
+bool Symbol::operator ==(const Symbol &s)
+{
+    return s.getIndex() == this->getIndex();
+}
+
 
 
 QDataStream &operator<<(QDataStream &out, const Symbol &sym)
 {
     out.setVersion(QDataStream::Qt_5_12);
-    out.setFloatingPointPrecision(QDataStream::FloatingPointPrecision::DoublePrecision);
-    out << sym.getUserName() << sym.getIndex() << sym.getCar() << sym.getFormato();
+    out << sym.getUserName()<< sym.getIndex() << sym.getCar() << sym.getFormato();
     return out;
 }
 
 QDataStream &operator >>(QDataStream &in, Symbol &sym)
 {
     in.setVersion(QDataStream::Qt_5_12);
-    in.setFloatingPointPrecision(QDataStream::DoublePrecision);
-    in >> sym.userName >> sym.index >> sym.car >> sym.formato;
+    in  >> sym.userName     >> sym.index    >> sym.car      >> sym.formato;
     return in;
 }
 

@@ -56,7 +56,7 @@ bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
     }
 
     QByteArray format = QByteArray(formato.toLatin1());
-    this->sym = Symbol(user, car, this->indici.last(), format);
+    this->sym = Symbol(user, car, this->indici, format);
 
     return true;
 }

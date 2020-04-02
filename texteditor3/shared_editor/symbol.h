@@ -13,25 +13,25 @@ class Symbol
 {
 public:
     QChar car;
-    qint32 index;
     QString userName;           // identifica utente che inserische il carattere
     QTextCharFormat textFormat;
     QByteArray formato;
-    QMap<qint32, Symbol> nextLevel;
-
     // versione con QVector
     QVector<qint32> indici;
 
 
 friend QDataStream &operator <<(QDataStream& out, const Symbol& sym);
 friend QDataStream &operator >>(QDataStream& in, Symbol& sym);
+bool operator ==(const Symbol &s);
 
 public:
     explicit Symbol();
-    explicit Symbol(QString user, QChar car, qint32 idx, QTextCharFormat format) : car(car), index(idx),  userName(user){ formato = serialize(format);}
-    explicit Symbol(QString user, QChar car, QVector<qint32> idx, QTextCharFormat format) :  car(car), userName(user), indici(idx){ formato = serialize(format);}
+    explicit Symbol(QString user, QChar car, QVector<qint32> idx, QByteArray formato) :  car(car), userName(user), formato(formato), indici(idx)
+    { textFormat = deserialize<QTextCharFormat>(formato);}
 
-    explicit Symbol(QString user, QChar car, qint32 idx, QByteArray formato) :  car(car), index(idx), userName(user), formato(formato){}
+    explicit Symbol(QString user, QChar car, QVector<qint32> idx, QTextCharFormat format) :  car(car), userName(user), textFormat(format),indici(idx)
+    { formato = serialize(format); }
+
     QChar getChar(){return this->car;}
     QMap<QString, QString> toMap();
 
@@ -49,8 +49,12 @@ public:
 
      qint32 getLocalIndex(qint32 posCur, QVector<qint32>& vec);
 
-    qint32 getIndex() const;
-    void setIndex(const qint32 &value);
+    QChar getCar() const;
+
+    QByteArray getFormato() const;
+    void setFormato(const QByteArray &value);
+
+    QVector<qint32> getIndici() const;
 
 signals:
     void s_read(QChar c, QTextCharFormat f, qint32 pos);

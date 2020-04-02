@@ -27,11 +27,10 @@ private:
 
 
 public:
-    QMap<qint32, Symbol> symList;
     QVector<Symbol> symVec;
 
     explicit Editor(QObject *parent = nullptr);
-    explicit Editor(QString Id, QString nome, QByteArray body, QString username);
+    explicit Editor(QString Id, QString nome, QByteArray &body, QString username);
 
     static Editor& getFile();
     bool loadMap();
@@ -44,21 +43,18 @@ public:
     QVector<qint32> getLocalIndexInsert(qint32 posCur);
 
 
-    double getLocalIndexDelete(int posCursor);
+    bool getLocalIndexDelete(int posCursor, Symbol &sym);
 
     int localPosCursor(QVector<qint32> & index);
+    int findLocalPosCursor(QVector<qint32> & index);
 
     bool cursorChange(Message msg);
     bool remoteSend(Message msg);
-
-    double localInsert(int posCur);
 
     int deleteLocal(double index, char car);
 
     void updateFormat(double index, QTextCharFormat formato);
 
-    double fmed(double num1, double num2);
-    bool fequal(double a, double b);
 
     QList<Symbol> &getTesto(QList<Symbol>& testo);
 

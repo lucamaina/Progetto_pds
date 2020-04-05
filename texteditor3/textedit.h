@@ -184,7 +184,7 @@ private:
     QAction *actionPaste;
 #endif
 
-    QComboBox *comboStyle;
+    // QComboBox *comboStyle;
     QFontComboBox *comboFont;
     QComboBox *comboSize;
     bool remoteStile;
@@ -196,6 +196,8 @@ private:
 public:
 
     int cursorPos;
+
+    void setVisibleFileActions(bool set);
 
 private:
     void setupStatusBar();

@@ -151,21 +151,27 @@ TextEdit::TextEdit(QWidget *parent)
     textEdit->setFont(textFont);
     fontChanged(textEdit->font());
     colorChanged(textEdit->textColor());
-    alignmentChanged(textEdit->alignment());
+    //alignmentChanged(textEdit->alignment());
 
     connect(textEdit->document(), &QTextDocument::modificationChanged,
             actionSave, &QAction::setEnabled);
     connect(textEdit->document(), &QTextDocument::modificationChanged,
             this, &QWidget::setWindowModified);
+/*
     connect(textEdit->document(), &QTextDocument::undoAvailable,
             actionUndo, &QAction::setEnabled);
     connect(textEdit->document(), &QTextDocument::redoAvailable,
             actionRedo, &QAction::setEnabled);
+*/
 
     setWindowModified(textEdit->document()->isModified());
     actionSave->setEnabled(textEdit->document()->isModified());
+
+/*
     actionUndo->setEnabled(textEdit->document()->isUndoAvailable());
     actionRedo->setEnabled(textEdit->document()->isRedoAvailable());
+*/
+
 
 #ifndef QT_NO_CLIPBOARD
     actionCut->setEnabled(false);
@@ -195,7 +201,7 @@ TextEdit::TextEdit(QWidget *parent)
 
     connect(this, SIGNAL(cursorChanged(int&,int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&,int&)));
     connect(this->client, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
-    connect(this, SIGNAL(stileTesto(QString&,QString&)), this->client, SLOT(handleStile(QString&,QString&)));
+//  connect(this, SIGNAL(stileTesto(QString&,QString&)), this->client, SLOT(handleStile(QString&,QString&)));
     connect(this, SIGNAL(pasteSig(QString&)),this->client, SLOT(pasteSlot(QString&)));
     connect(this->client, SIGNAL(clearEditor() ), this, SLOT(clear() ));
     connect(this->client, &Client::s_setText, this, &TextEdit::setText, Qt::ConnectionType::DirectConnection);
@@ -219,6 +225,25 @@ void TextEdit::setupStatusBar(){
 
 bool TextEdit::eventFilter(QObject *obj, QEvent *event){
     if (obj == this->textEdit) {
+        /*
+         * modifica shortcut di copia e incolla
+         */
+        if(event->type() == QEvent::ShortcutOverride)
+        {
+            QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+            if(keyEvent->modifiers().testFlag(Qt::ControlModifier) == true)
+            {
+                // allow override of all Ctrl+ shortcuts
+//                    if(keyEvent->key()==86){
+//                        goPaste();
+//                    }
+                if(keyEvent->key() == Qt::Key_X){
+                    this->setVisibleFileActions(true);
+                }
+                return false;
+            }
+        }
+
         if (!this->client->isLogged()){
             this->statusBar()->showMessage("Utente non loggato", 2000);
             return false;   // eseguo normalmente
@@ -265,25 +290,7 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 
         }
 
-        /*
-         * modifica shortcut di copia e incolla
-         */
-        if(event->type() == QEvent::ShortcutOverride)
-            {
-                QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
-                if(keyEvent->modifiers().testFlag(Qt::ControlModifier) == true)
-                {
-                    // allow override of all Ctrl+ shortcuts
-//                    if(keyEvent->key()==86){
-//                        goPaste();
-//                    }
-                    if(keyEvent->key()==86){
-                        //salvaMappa();
-                        this->textEdit->clear();
-                    }
-                    return false;
-                }
-            }
+
         return false;
     }
 
@@ -355,10 +362,13 @@ bool TextEdit::cancellamento(int posCursor, int key)
 
 void TextEdit::closeEvent(QCloseEvent *e)
 {
+    e->accept();
+    /*
     if (maybeSave())
         e->accept();
     else
         e->ignore();
+*/
 }
 
 void TextEdit::setupUserActions()
@@ -473,6 +483,7 @@ void TextEdit::setupEditActions()
     QToolBar *tb = addToolBar(tr("Edit Actions"));
     QMenu *menu = menuBar()->addMenu(tr("&Edit"));
 
+/*
     const QIcon undoIcon = QIcon::fromTheme("edit-undo", QIcon(rsrcPath + "/editundo.png"));
     actionUndo = menu->addAction(undoIcon, tr("&Undo"), textEdit, &QTextEdit::undo);
     actionUndo->setShortcut(QKeySequence::Undo);
@@ -482,7 +493,9 @@ void TextEdit::setupEditActions()
     actionRedo = menu->addAction(redoIcon, tr("&Redo"), textEdit, &QTextEdit::redo);
     actionRedo->setPriority(QAction::LowPriority);
     actionRedo->setShortcut(QKeySequence::Redo);
-    tb->addAction(actionRedo);
+    tb->addAction(actionRedo);  
+*/
+
     menu->addSeparator();
 
 #ifndef QT_NO_CLIPBOARD
@@ -561,7 +574,7 @@ void TextEdit::loadEditor(QString str)
 
 void TextEdit::windowTitle(QString utente, QString nomeFile, QString docid)
 {
-    setWindowTitle(tr("%1 @ %2 = %3 - ").arg(utente, nomeFile, docid, QCoreApplication::applicationName()));
+    setWindowTitle(tr("%1[*] @ %2[*] = %3[*] - [*]").arg(utente, nomeFile, docid, QCoreApplication::applicationName()));
     setWindowModified(false);
 }
 
@@ -602,7 +615,7 @@ void TextEdit::setupTextActions()
     actionTextUnderline->setCheckable(true);
 
     menu->addSeparator();
-
+/*
     const QIcon leftIcon = QIcon::fromTheme("format-justify-left", QIcon(rsrcPath + "/textleft.png"));
     actionAlignLeft = new QAction(leftIcon, tr("&Left"), this);
     actionAlignLeft->setShortcut(Qt::CTRL + Qt::Key_L);
@@ -641,7 +654,7 @@ void TextEdit::setupTextActions()
 
     tb->addActions(alignGroup->actions());
     menu->addActions(alignGroup->actions());
-
+*/
     menu->addSeparator();
 
     QPixmap pix(16, 16);
@@ -654,6 +667,9 @@ void TextEdit::setupTextActions()
     addToolBarBreak(Qt::TopToolBarArea);
     addToolBar(tb);
 
+/*
+ *  NON UTILIZZABILE
+ *
     comboStyle = new QComboBox(tb);
     tb->addWidget(comboStyle);
     comboStyle->addItem("Standard");
@@ -673,6 +689,7 @@ void TextEdit::setupTextActions()
     comboStyle->addItem("Heading 6");
 
     connect(comboStyle, QOverload<int>::of(&QComboBox::activated), this, &TextEdit::textStyle);
+*/
 
     comboFont = new QFontComboBox(tb);
     tb->addWidget(comboFont);
@@ -713,8 +730,9 @@ bool TextEdit::load(const QString &f)
     return true;
 }
 
+/*
 bool TextEdit::maybeSave()
-{/*
+{
     if (!textEdit->document()->isModified())
         return true;
 
@@ -727,8 +745,9 @@ bool TextEdit::maybeSave()
         return fileSave();
     else if (ret == QMessageBox::Cancel)
         return false;
-    return true;*/
+    return true;
 }
+*/
 
 void TextEdit::setCurrentFileName(const QString &fileName)
 {
@@ -778,10 +797,12 @@ void TextEdit::RegisterDialog()
  */
 void TextEdit::fileNew()
 {
+    /*
     if (maybeSave()) {
         textEdit->clear();
         setCurrentFileName(QString());
     }
+    */
 }
 
 void TextEdit::fileOpen()
@@ -1081,7 +1102,9 @@ void TextEdit::textColor()
 }
 
 void TextEdit::textAlign(QAction *a)
-{   QString p="align";
+{
+/*
+    QString p="align";
     if (a == actionAlignLeft){
         textEdit->setAlignment(Qt::AlignLeft | Qt::AlignAbsolute);
 
@@ -1109,6 +1132,7 @@ void TextEdit::textAlign(QAction *a)
         QString s="giustficato";
         if(!remoteStile)emit stileTesto(p,s);
     }
+*/
 }
 
 void TextEdit::myTextAlign(QString& a)
@@ -1133,6 +1157,21 @@ void TextEdit::myTextAlign(QString& a)
     }
 }
 
+void TextEdit::setVisibleFileActions(bool set)
+{
+    QMenu *menu = menuBar()->addMenu(tr("&File"));
+    QToolBar *t = this->tb;
+    if (set){
+        // rendi visibili
+        for (QAction *a : t->actions()){
+            a->setVisible(false);
+        }
+
+    } else {
+        // nascondi
+    }
+}
+
 void TextEdit::currentCharFormatChanged(const QTextCharFormat &format)
 {
     fontChanged(format.font());
@@ -1141,6 +1180,7 @@ void TextEdit::currentCharFormatChanged(const QTextCharFormat &format)
 
 void TextEdit::cursorPositionChanged()
 {
+    /*
     alignmentChanged(textEdit->alignment());
     QTextList *list = textEdit->textCursor().currentList();
     if (list) {
@@ -1177,6 +1217,7 @@ void TextEdit::cursorPositionChanged()
         int headingLevel = textEdit->textCursor().blockFormat().headingLevel();
         comboStyle->setCurrentIndex(headingLevel ? headingLevel + 8 : 0);
     }
+    */
 
     /*
      *  Posizione del cursore nel testo
@@ -1295,6 +1336,7 @@ void TextEdit::colorChanged(const QColor &c)
 
 void TextEdit::alignmentChanged(Qt::Alignment a)
 {
+    /*
     if (a & Qt::AlignLeft)
         actionAlignLeft->setChecked(true);
     else if (a & Qt::AlignHCenter)
@@ -1303,6 +1345,7 @@ void TextEdit::alignmentChanged(Qt::Alignment a)
         actionAlignRight->setChecked(true);
     else if (a & Qt::AlignJustify)
         actionAlignJustify->setChecked(true);
+        */
 }
 
 void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){

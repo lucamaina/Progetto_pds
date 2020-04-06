@@ -259,9 +259,6 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
         if (event->type() == QEvent::KeyPress) {    // verifica key di interesse
 
             QKeyEvent *e = static_cast<QKeyEvent*>(event);
-            int posy=textEdit->textCursor().blockNumber(); //*********************QUESTO è L'INDICE DI RIGA**********************
-            int posx=textEdit->textCursor().positionInBlock();//*****************QUESTO è L'INDICE ALL'INTERNO DELLA RIGA************
-            int anchor=textEdit->textCursor().anchor();
 
             if (e->isAutoRepeat()){
                 return true;       // salta le azioni ripetute
@@ -363,12 +360,8 @@ bool TextEdit::cancellamento(int posCursor, int key)
 void TextEdit::closeEvent(QCloseEvent *e)
 {
     e->accept();
-    /*
-    if (maybeSave())
-        e->accept();
-    else
-        e->ignore();
-*/
+    /* richiede se si vuole chiudere o no
+     * if (maybeSave())        e->accept();    else        e->ignore(); */
 }
 
 void TextEdit::setupUserActions()
@@ -380,47 +373,34 @@ void TextEdit::setupUserActions()
     QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
   //  login->setShortcut(QKeySequence::ZoomIn); tr("Ctrl+a")
     tb->addAction(login);
-    login->setCheckable(true);
-
-    const QIcon connectIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
-    QAction *connect = menu->addAction(connectIcon, tr("&Connect"), this, &TextEdit::ConnectDialog);
-  //  login->setShortcut(QKeySequence::ZoomIn); tr("Ctrl+a")
-    tb->addAction(connect);
-    login->setCheckable(true);
-
-    const QIcon logoutIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/logout.png"));
-    QAction *logout = menu->addAction(logoutIcon, tr("&Logout"), this, &TextEdit::LogoutDialog);
-  //  login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
-    tb->addAction(logout);
-    login->setCheckable(true);
+    //login->setCheckable(true);
 
     const QIcon registerIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/registration.png"));
     QAction *registration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::RegisterDialog);
    // registration->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
     tb->addAction(registration);
-    login->setCheckable(true);
+    //login->setCheckable(true);
 
-
-
+    const QIcon logoutIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/logout.png"));
+    QAction *logout = menu->addAction(logoutIcon, tr("&Logout"), this, &TextEdit::LogoutDialog);
+  //  login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
+    tb->addAction(logout);
+    //login->setCheckable(true);
 }
 
 void TextEdit::setupFileActions()
 {
     QToolBar *tb = addToolBar(tr("File Actions"));
     QMenu *menu = menuBar()->addMenu(tr("&File"));
+    QAction *a;
 
     const QIcon newIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/filenew.png"));
-    QAction *a = menu->addAction(newIcon,  tr("&New"), this, &TextEdit::fileNew);
-    tb->addAction(a);
-    a->setPriority(QAction::LowPriority);
-    a->setShortcut(QKeySequence::New);
-
-    const QIcon openIcon = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/fileopen.png"));
-    a = menu->addAction(openIcon, tr("&Open..."), this, &TextEdit::fileOpen);
-    a->setShortcut(QKeySequence::Open);
+    a = menu->addAction(newIcon,  tr("&New remote file"), this, &TextEdit::fileNew);
     tb->addAction(a);
 
-    menu->addSeparator();
+    const QIcon remoteBrows = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/remoteBrows.png"));
+    a = menu->addAction(remoteBrows, tr("&Remote Brows..."), this, &TextEdit::remoteBrows);
+    tb->addAction(a);
 
     const QIcon saveIcon = QIcon::fromTheme("document-save", QIcon(rsrcPath + "/filesave.png"));
     actionSave = menu->addAction(saveIcon, tr("&Save"), this, &TextEdit::fileSave);
@@ -428,32 +408,11 @@ void TextEdit::setupFileActions()
     actionSave->setEnabled(false);
     tb->addAction(actionSave);
 
-
-    a = menu->addAction(tr("Save &As..."), this, &TextEdit::fileSaveAs);
-    a->setPriority(QAction::LowPriority);
-    menu->addSeparator();
-
-    const QIcon remoteAddFile = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/newOnServer.png"));
-    a = menu->addAction(remoteAddFile, tr("&Remote Add..."), this, &TextEdit::remoteAddFile);
-    a->setShortcut(QKeySequence::Open);
-    tb->addAction(a);
-
     const QIcon addUser = QIcon::fromTheme("addUser", QIcon(rsrcPath + "/addUserIcon.png"));
     a = menu->addAction(addUser, tr("&add User to File..."), this, &TextEdit::remoteAddUser);
     tb->addAction(a);
 
-    const QIcon remoteBrows = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/remoteBrows.png"));
-    a = menu->addAction(remoteBrows, tr("&Remote Brows..."), this, &TextEdit::remoteBrows);
-    a->setShortcut(QKeySequence::Open);
-    tb->addAction(a);
-
-
-
-    const QIcon remoteRemoveFile = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/remoteDelete.png"));
-    a = menu->addAction(remoteRemoveFile, tr("&Remote Remove..."), this, &TextEdit::remoteRemoveFile);
-    a->setShortcut(QKeySequence::Open);
-    tb->addAction(a);
-
+    tb->addSeparator();
 
 #ifndef QT_NO_PRINTER
     const QIcon printIcon = QIcon::fromTheme("document-print", QIcon(rsrcPath + "/fileprint.png"));
@@ -473,6 +432,41 @@ void TextEdit::setupFileActions()
 
     menu->addSeparator();
 #endif
+
+
+
+    const QIcon exitFileIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/fileexit.png"));
+    a = menu->addAction(exitFileIcon,  tr("&Exit from this file"), this, &TextEdit::fileNew); // slot di connessione
+    tb->addAction(a);
+
+    /*
+    const QIcon openIcon = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/fileopen.png"));
+    a = menu->addAction(openIcon, tr("&Open..."), this, &TextEdit::fileOpen);
+    a->setShortcut(QKeySequence::Open);
+    tb->addAction(a);
+    */
+
+    menu->addSeparator();
+
+
+
+
+    a = menu->addAction(tr("Save &As..."), this, &TextEdit::fileSaveAs);
+    a->setPriority(QAction::LowPriority);
+    menu->addSeparator();
+
+    /*
+    const QIcon remoteAddFile = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/newOnServer.png"));
+    a = menu->addAction(remoteAddFile, tr("&Remote Add..."), this, &TextEdit::remoteAddFile);
+    a->setShortcut(QKeySequence::Open);
+    tb->addAction(a);
+
+    const QIcon remoteRemoveFile = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/remoteDelete.png"));
+    a = menu->addAction(remoteRemoveFile, tr("&Remote Remove..."), this, &TextEdit::remoteRemoveFile);
+    a->setShortcut(QKeySequence::Open);
+    tb->addAction(a);
+    */
+
 
     a = menu->addAction(tr("&Quit"), this, &QWidget::close);
     a->setShortcut(Qt::CTRL + Qt::Key_Q);
@@ -1159,14 +1153,12 @@ void TextEdit::myTextAlign(QString& a)
 
 void TextEdit::setVisibleFileActions(bool set)
 {
-    QMenu *menu = menuBar()->addMenu(tr("&File"));
-    QToolBar *t = this->tb;
-    if (set){
+    if (true){
         // rendi visibili
-        for (QAction *a : t->actions()){
-            a->setVisible(false);
-        }
-
+        this->actionSave->setEnabled(false);
+        this->actionTextColor->setEnabled(false);
+        //for (QAction *a : this->menuBar()->actions())
+          //  a->setVisible(false);
     } else {
         // nascondi
     }

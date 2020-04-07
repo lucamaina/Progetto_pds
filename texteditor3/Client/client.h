@@ -19,8 +19,6 @@
 class Client : public QObject
 {
     Q_OBJECT
-
-
 public:
     explicit Client(QObject *parent = nullptr);
 
@@ -30,7 +28,7 @@ public:
     void handleAddUser();
     void listUser(QMap<QString,QString> cmd);
 
-
+    // gestore mappa
     bool remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index, int cursor);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
     bool remoteInsert(Symbol sym, int cursor);
 
@@ -64,7 +62,7 @@ public:
     QString getUsername() const;
 
 signals:
-    void s_changeTitle(QString utente, QString nomeFile, QString docid);
+    void s_changeTitle(QString utente = "*", QString nomeFile = "*", QString docid = "*");
     void addMe();
     void s_upCursor(QStringList&);
     void s_changeCursor(QString& nomeUser, int pos);
@@ -76,7 +74,7 @@ signals:
     void nuovoStile(QString& stile,QString& param);
     void openFileSignal(QString& filename);
     void s_clearEditor();
-    void toStatusBar(QString s);
+    void s_toStatusBar(QString s);
 
     void s_setText(QChar c, QTextCharFormat f, int posCur);
     void s_removeText(int posCur);
@@ -117,11 +115,17 @@ private:
     QByteArray buffer;
     QString tempUser;
     QString tempPass;
+
     // nuova versione ready read
     QByteArray buffer_, command;
 
     nuovoFileRemoto *finestraAddFile;
     UserManager *finestraUsers;
+
+    void clear();
+    void showUserLogin();
+    void showUserLogoff();
+    void showUserLogError(QString& str);
 
     /****************************************************************************
      ***************** metodi controllo dei comandi ricevuti ********************/

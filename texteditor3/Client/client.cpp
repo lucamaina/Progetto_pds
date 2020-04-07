@@ -69,6 +69,39 @@ void Client::sendRemoveUsers(QStringList &lista)
     this->sendMsg(cmd);
 }
 
+/* elimina info dell'utente */
+void Client::clear()
+{
+    this->username.clear();
+    this->docID.clear();
+    this->filename.clear();
+    this->tempPass.clear();
+    this->tempUser.clear();
+    this->files.clear();        // superfluo
+}
+
+/* mostro utente come loggato */
+void Client::showUserLogin()
+{
+    emit s_changeTitle(this->getUsername());
+    emit s_toStatusBar(this->getUsername() + " login effettuato correttamente");
+    this->logged = true;
+}
+
+void Client::showUserLogoff()
+{
+    emit s_changeTitle();
+    this->remoteFile->clear();
+    this->s_clearEditor();
+    this->clear();
+}
+
+void Client::showUserLogError(QString &str)
+{
+    QMessageBox msg;
+
+}
+
 QString Client::getUsername() const
 {
     return username;
@@ -260,41 +293,25 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         this->connectedDB=true;
         qDebug() << "Connesso";
     }
-
     else if(comando.value()==LOGIN_OK){
-        QMessageBox Messaggio;
-        Messaggio.information(nullptr,"Login","Logged in successfully");
-        Messaggio.setFixedSize(500,200);
-
-        emit s_changeTitle(this->username, "*", "*");
-        this->logged=true;
+        this->showUserLogin();
     }
-
     else if(comando.value()==LOGOUT_OK){
-        QMessageBox Messaggio;
-        Messaggio.information(nullptr,"Logout","Logged out successfully");
-        Messaggio.setFixedSize(500,200);
-
-        connect(this,SIGNAL(deleteListSig()),this->parent(),SLOT(deleteListSlot()));
-        emit deleteListSig();
-
-        this->logged=false;
-
+        this->showUserLogoff();
     }
-
     else if(comando.value()==REG_OK){
-        QMessageBox Messaggio;
-        Messaggio.information(nullptr,"Registration","Registered & Logged in successfully");
-        Messaggio.setFixedSize(500,200);
-
+        this->username = this->tempUser;
+        tempPass.clear();
+        tempUser.clear();
+        this->showUserLogin();
+    }
+    else if(comando.value()==FILE_OK){
+        emit this->s_toStatusBar("File opened successfully");
         this->logged=true;
-    } else if(comando.value()==FILE_OK){
-        emit this->toStatusBar("File opened successfully");
-        this->logged=true;
-    } else {
+    }
+    else {
         qDebug() << comando.key();
     }
-
 
 }
 
@@ -313,15 +330,13 @@ void Client::dispatchERR(QMap <QString,QString>cmd){
     }
 
     if(comando.value()==LOGIN_ERR){
-        QMessageBox Messaggio;
-        Messaggio.information(nullptr,"Login Error", comando.value());
-        Messaggio.setFixedSize(500,200);
-        this->username = "";
-        emit s_changeTitle("*", "*", "*");
+        this->showUserLogoff();
 
+    /*
         LoginDialog* loginDialog = new LoginDialog( );
         connect( loginDialog, SIGNAL (acceptLogin(QString&,QString&)), this, SLOT (handleLogin(QString&,QString&)) );
         loginDialog->exec();
+    */
     }
 
     if(comando.value()==LOGOUT_ERR){
@@ -660,19 +675,15 @@ void Client::handleLogin(QString& username, QString& password)
 void Client::handleLogout(){
 
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
-        QMessageBox Messaggio;
-        Messaggio.critical(nullptr,"Logout Error","User not connected or not logged to the server");
-        Messaggio.setFixedSize(500,200);
+        emit this->s_changeTitle();
+        emit s_toStatusBar("Client non connesso al server");
         return;
     }
 
     QMap<QString, QString> comando;
-
     comando.insert(CMD, LOGOUT);
     comando.insert(UNAME, username);
-    //comando.insert("password", password);
     this->sendMsg(comando);
-
 }
 
 void Client::handleRegistration(QString& username, QString& password){
@@ -689,7 +700,7 @@ void Client::handleRegistration(QString& username, QString& password){
     comando.insert(CMD, REG);
     comando.insert(UNAME, username);
     comando.insert(NICK, username);
-    comando.insert("password", password);
+    comando.insert(PASS, password);
 
     tempUser=username;
     tempPass=password;

@@ -164,7 +164,8 @@ TextEdit::TextEdit(QWidget *parent)
             actionRedo, &QAction::setEnabled);
 */
 
-    setWindowModified(textEdit->document()->isModified());
+    // setWindowModified(textEdit->document()->isModified()); aggiunge * al nome
+    setWindowModified(false);
     actionSave->setEnabled(textEdit->document()->isModified());
 
 /*
@@ -220,7 +221,7 @@ TextEdit::TextEdit(QWidget *parent)
  * */
 void TextEdit::setupStatusBar(){
     statusBar()->showMessage(tr("Status message: bentornato"), 2000);   // 2 secondi
-    connect(client,&Client::toStatusBar, this, &TextEdit::statusBarOutput);
+    connect(client,&Client::s_toStatusBar, this, &TextEdit::statusBarOutput);
 }
 
 bool TextEdit::eventFilter(QObject *obj, QEvent *event){
@@ -370,19 +371,19 @@ void TextEdit::setupUserActions()
     QMenu *menu = menuBar()->addMenu(tr("User"));
 
     const QIcon loginIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
-    QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
+    QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::loginDialog);
   //  login->setShortcut(QKeySequence::ZoomIn); tr("Ctrl+a")
     tb->addAction(login);
     //login->setCheckable(true);
 
     const QIcon registerIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/registration.png"));
-    QAction *registration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::RegisterDialog);
+    QAction *registration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::registerDialog);
    // registration->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
     tb->addAction(registration);
     //login->setCheckable(true);
 
     const QIcon logoutIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/logout.png"));
-    QAction *logout = menu->addAction(logoutIcon, tr("&Logout"), this, &TextEdit::LogoutDialog);
+    QAction *logout = menu->addAction(logoutIcon, tr("&Logout"), this, &TextEdit::logoutDialog);
   //  login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
     tb->addAction(logout);
     //login->setCheckable(true);
@@ -568,8 +569,8 @@ void TextEdit::loadEditor(QString str)
 
 void TextEdit::windowTitle(QString utente, QString nomeFile, QString docid)
 {
-    setWindowTitle(tr("%1[*] @ %2[*] = %3[*] - [*]").arg(utente, nomeFile, docid, QCoreApplication::applicationName()));
     setWindowModified(false);
+    setWindowTitle(tr("%1[*] @ %2[*] = %3[*] - [*]").arg(utente, nomeFile, docid, QCoreApplication::applicationName()));
 }
 
 void TextEdit::setupTextActions()
@@ -745,6 +746,7 @@ bool TextEdit::maybeSave()
 
 void TextEdit::setCurrentFileName(const QString &fileName)
 {
+    /*
     this->fileName = fileName;
     textEdit->document()->setModified(false);
 
@@ -756,9 +758,10 @@ void TextEdit::setCurrentFileName(const QString &fileName)
 
     setWindowTitle(tr("%1[*] - %2").arg(shownName, QCoreApplication::applicationName()));
     setWindowModified(false);
+    */
 }
 
-void TextEdit::LoginDialog()
+void TextEdit::loginDialog()
 {
 
     class LoginDialog* loginDialog = new class LoginDialog( this );
@@ -766,21 +769,22 @@ void TextEdit::LoginDialog()
     loginDialog->exec();
 }
 
-void TextEdit::ConnectDialog()
+void TextEdit::connectDialog()
 {
     connect(this, SIGNAL(connectSig()), this->client, SLOT(connectSlot()));
     emit connectSig();
 
 }
 
-void TextEdit::LogoutDialog()
+void TextEdit::logoutDialog()
 {
-    connect( this, SIGNAL (acceptLogoff()), this->client, SLOT (handleLogoff()) );
+    if (this->client != nullptr) this->client->handleLogout();
+    else this->windowTitle();
 }
 
-void TextEdit::RegisterDialog()
+void TextEdit::registerDialog()
 {
-    class RegisterDialog* registerdialog = new class RegisterDialog( this );
+    RegisterDialog* registerdialog = new RegisterDialog( this );
     connect( registerdialog, SIGNAL (acceptRegistration(QString&,QString&)), this->client, SLOT (handleRegistration(QString&,QString&)) );
     registerdialog->exec();
 }

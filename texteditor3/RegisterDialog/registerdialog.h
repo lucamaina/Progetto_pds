@@ -9,14 +9,12 @@
 #include <QDebug>
 #include <QMessageBox>
 
-/*!
- '''Makes class LoginDialog a child to its parent, QDialog
+/*
+ * Makes class LoginDialog a child to its parent, QDialog
 */
 class RegisterDialog : public QDialog
 {
-/*!
- '''Turns Login Dialog into a QObject
-*/
+
  Q_OBJECT
 
 private:
@@ -26,20 +24,16 @@ private:
  QLabel* labelUsername;
 
 /*!
- * A label for the password.
- */
+ * A label for the password. */
  QLabel* labelPassword1;
  QLabel* labelPassword2;
 
 /*!
- * An editable combo box for allowing the user
- * to enter his username or select it from a list.
- */
+ * An editable combo box for allowing the user to enter his username or select it from a list. */
  QComboBox* comboUsername;
 
 /*!
- * A field to let the user enters his password.
- */
+ * A field to let the user enters his password. */
  QLineEdit* editPassword1;
  QLineEdit* editPassword2;
 

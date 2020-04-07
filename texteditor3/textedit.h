@@ -89,10 +89,10 @@ public:
 
 public slots:
     void fileNew();
-    void LoginDialog();
-    void LogoutDialog();
-    void RegisterDialog();
-    void ConnectDialog();
+    void loginDialog();
+    void logoutDialog();
+    void registerDialog();
+    void connectDialog();
 
 
 protected:
@@ -214,7 +214,7 @@ public slots:
     void setText(QChar c, QTextCharFormat f, int posCursor);   // inserisce in editor il carattere ricevuto
     void removeText(int posCursor);
     void loadEditor(QString str);
-    void windowTitle(QString utente, QString nomeFile, QString docid);
+    void windowTitle(QString utente = "*", QString nomeFile = "*", QString docid = "*");
 
 signals:
     void cursorChanged (int& posx, int& posy, int& anchor);

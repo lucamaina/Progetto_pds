@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <iostream>
 
 #include "cmdstring.h"
 #include "comando.h"
@@ -18,7 +19,7 @@ private:
 
 public:
     MySocket(int sockId);
-    ~MySocket();
+    // ~MySocket() = default;
 
     void leggiXML(QByteArray data);
 

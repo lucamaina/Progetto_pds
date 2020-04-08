@@ -18,21 +18,10 @@ void sum(int& a){
 }
 server_main::server_main(QObject *parent) : QObject(parent)
 {
-/*
-    std::unique_ptr<int> p = std::make_unique<int>(int(18));
-    qDebug() <<"int: " << *p;
-    sum(*p.get());
-    return;
-
-*/
-
-
     this->myServer = new server();
     myServer->startServer();
 
     Logger::getLog().write("Start new logger process");
-
-    //mydb = new db();
 }
 
 

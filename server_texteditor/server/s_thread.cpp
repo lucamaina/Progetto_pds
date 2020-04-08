@@ -3,8 +3,6 @@
 s_thread::s_thread(int ID, QObject *parent) : QThread(parent)
 {
     this->sockID = ID;
-    this->buffer.reserve(4096*10);
-    this->command.reserve(4096);
 }
 
 
@@ -12,13 +10,8 @@ void s_thread::run()
 {
     Logger::getLog().write("Nuovo thread in esecuzione, ID = "+ QString::number(this->sockID) );
     qDebug() << "Thread running, ID: " << QString::number(this->sockID);
-/*
-    this->socket = new QTcpSocket();
-    socket->setSocketDescriptor(sockID);
-    connect(this->socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
-    connect(this->socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
-    qDebug() << "Client connesso vecchio socket";
-*/
+
+    connect(this, &s_thread::finished, this, &s_thread::deleteLater, Qt::DirectConnection);
 
     sp_socket = QSharedPointer<MySocket>( new MySocket(sockID));
 
@@ -38,23 +31,30 @@ void s_thread::run()
  */
 void s_thread::disconnected()
 {
-    qDebug() << "(disconnected) client disconnesso "
+    qDebug() << endl
+             << "(disconnected) client disconnesso "
              << QString::number(this->sockID);
-    this->quit();
+    this->sp_socket->deleteLater();
     emit deleteThreadSig(*this);
 }
 
-s_thread::~s_thread()
+void s_thread::exitThread()
 {
     qDebug() << "Distruttore s_thread.";
+    // tolgo utente da editor
+    Network::getNetwork().remRefToEditor( this->docID,
+                                          this->up_user->getUsername() );
     if (this->up_user.get()->isConnected()){
         QMap<QString, QString> cmd;
         cmd.insert(CMD, LOGOUT);
         this->logoffDB(cmd);
         this->disconnectDB();
     }
+
+    qDebug() << "s_thread distrutto : " << this->sockID;
+    this->quit();
 }
-\
+
 /*********************************************************************************************************
  ************************ metodi di connessione con client ***********************************************
  *********************************************************************************************************/
@@ -117,8 +117,6 @@ void s_thread::dispatchCmd(QMap<QString, QString> &cmd){
         this->registerDB(cmd);
     } else if (comando.value() == DISC) {
         this->disconnectDB();
-    } else if (comando.value() == FBODY) {
-        this->loadFile(cmd);
     } else if (comando.value() == ADD_FILE) {
         this->addFileDB(cmd);
     } else if (comando.value() == BROWS) {
@@ -515,37 +513,6 @@ void s_thread::openFile(QMap<QString, QString> &comando)
     qDebug() << ba;
 }
 
-/**
- * @brief s_thread::loadFile
- * @param comando
- * legge file da socket, deserializza la mappa CRDT e la carica.
- * L'editor deve già essere creato e presente in network !!!
- * l'utente deve essere l'unico collegato !!!
- */
-void s_thread::loadFile(QMap<QString, QString> &comando)
-{
-    if (!this->up_user->isConnected()){ return; }
-    QList<QString> list = {CMD, FNAME, DOCID }; // DOCID, FNAME, UNAME
-    if (!verifyCMD(comando, list)){ return;   }
-
-    QString nomeF = comando.value(FNAME);   // inutile
-    QString dimF = comando.value(DIMTOT);
-    int dim = dimF.toInt();
-
-    // ricavo editor da network
-    Network &net = Network::getNetwork();
-    Editor &ed = net.getEditor(comando.value(DOCID));
-
-    // controllo editor
-
-    // leggo file da socket
-    QByteArray ba;
-    this->readBody(ba, dim);
-
-
-    ed.deserialise(ba);
-
-}
 
 void s_thread::getUsers(QMap<QString, QString> &comando)
 {
@@ -660,38 +627,6 @@ void s_thread::remUsersDB(QMap<QString, QString> &comando)
     this->getUsers(comando);
 }
 
-
-void s_thread::readBody(QByteArray &ba, int dim)
-{
-    int dimtmp = 0;
-    int blk_dim = 4096;
-    char v[4096] = {};
-    ba.clear();
-    ba.reserve(4096);
-
-    ba.append(this->buffer);
-
-    if (ba.size() >= dim){
-        ba.chop(ba.size() - dim);
-    } else {
-        dimtmp = dim - ba.size();    // dimensione da leggere
-        while (dimtmp > 0){
-            if (dimtmp < 4096){
-                blk_dim = dimtmp;
-            }
-            this->socket->waitForReadyRead(100);      // finisco di leggere il resto del messaggio
-            if (this->socket->read(v, blk_dim) < 0){
-                qDebug() << "errore in socket::read()";
-            }
-
-            ba.append(v);
-            dimtmp = dim - ba.size();
-
-        }
-    }
-    // togliere dopo debug
-    qDebug() << "body: " << ba;
-}
 
 QStringList s_thread::toQStringList(QMap<QString, QString> cmd)
 {

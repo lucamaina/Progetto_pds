@@ -2,6 +2,7 @@
 #define utente_H
 
 #include <QObject>
+#include <QDebug>
 #include <QMap>
 #include <iostream>
 #include <QCryptographicHash>
@@ -23,6 +24,8 @@ public:
     utente(QString username, QString password)
         : username(username), password(password){}
     utente(){}
+    ~utente(){ qDebug() << "user distrutto"; }
+
 public:
     QString getUsername();
     QString getNick();

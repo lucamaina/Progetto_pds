@@ -27,11 +27,11 @@ class s_thread : public QThread
 
 public:
     s_thread(int ID, QObject *parent = nullptr);
-    ~s_thread();
+
+    void exitThread();
     void run();
 
 public slots:
-    //void readyRead();
     void disconnected();
     void dispatchCmd(QMap<QString, QString> &cmd);
     void dispatchCmd(Comando &cmd);
@@ -52,10 +52,6 @@ private:
     //db *conn;
     std::unique_ptr<db> up_conn;
 
-    // nuova versione ready read
-    QByteArray buffer, command;
-
-    void readBody(QByteArray &ba, int dim);
     QStringList toQStringList(QMap<QString, QString> cmd);
 
 
@@ -84,7 +80,6 @@ private:
     void addFileDB(QMap<QString, QString> &comando);
     void browsFile(QMap<QString, QString> &comando);
     void openFile(QMap<QString, QString> &comando);
-    void loadFile(QMap<QString, QString> &comando);
     void getUsers(QMap<QString, QString> &comando);
     void addUsersDB(QMap<QString, QString> &comando);
     void remUsersDB(QMap<QString, QString> &comando);

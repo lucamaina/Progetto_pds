@@ -34,9 +34,8 @@ void server::deleteThread(s_thread &t)
     numThread--;
     m.unlock();
     qDebug() << "delete: " << &t;
-    t.~s_thread();
     tVec.removeOne(&t);
-
+    t.exitThread();
 }
 
 void server::incomingConnection(int socketID)
@@ -52,6 +51,7 @@ void server::incomingConnection(int socketID)
 
         tVec.push_back( new s_thread(socketID) );
         s_thread *newThread = tVec.last();
+        m.unlock();
 
         connect(newThread, &s_thread::deleteThreadSig, this, &server::deleteThread, Qt::ConnectionType::DirectConnection);
         // TODO exception
@@ -60,13 +60,12 @@ void server::incomingConnection(int socketID)
         } catch (std::exception &e) {
             // TODO migliorare gestione
             log->write(e.what());
+            qDebug() << "sono in server: " << e.what();
             std::cin >> a;
         }
 
     } else {
         qDebug() << "connessione rifiutata, max utenti raggiunti";
-        m.unlock();
         return;
     }
-    m.unlock();
 }

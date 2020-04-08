@@ -12,15 +12,16 @@ MySocket::MySocket(int sockId)
     this->connect(&this->sock, &QTcpSocket::disconnected, this, &MySocket::disconnected, Qt::DirectConnection);
 }
 
+/*
 MySocket::~MySocket()
 {
     qDebug().noquote() << "sono in " << Q_FUNC_INFO << " per socket: " << this->sockId;
 }
+*/
 
 void MySocket::leggiXML(QByteArray data)
 {
-    qDebug().noquote() << endl << " -> Leggo XML from client: " << this->sockId << endl << data;
-
+    qDebug() << endl << " -> Leggo XML from client: " << this->sockId << endl << data;
     QMap<QString, QString> command;
     QXmlStreamReader stream(data);
 
@@ -53,22 +54,25 @@ void MySocket::leggiXML(QByteArray data)
 
 bool MySocket::write(QByteArray data)
 {
-    if (sock.isOpen()){
-        if ( sock.isWritable() ){
-            qint64 ret = this->sock.write(data, data.size());
-            if ( ret != -1){
-                qDebug().noquote() << " <- To Client: "<< sockId << endl
-                                   << data;
-                return true;
-            } else {
-                qDebug() << endl << "!!! Errore scrittura socket: "<< this->sockId << " !!!" << endl << sock.errorString();
+
+        if (sock.isOpen()){
+            if ( sock.isWritable() ){
+                qint64 ret = this->sock.write(data, data.size());
+                if ( ret != -1){
+                    qDebug() << " <- To Client: "<< sockId << endl
+                             << data;
+                    return true;
+                } else {
+                    qDebug() << endl << "!!! Errore scrittura socket: "<< this->sockId << " !!!" << endl << sock.errorString();
+                }
+            }   else {
+                    qDebug() << endl << "!!! Errore non Writable socket: "<< this->sockId << " !!!" << endl << data;
             }
-        }   else {
-                qDebug() << endl << "!!! Errore non Writable socket: "<< this->sockId << " !!!" << endl << data;
+        } else {
+            qDebug() << endl << "!!! Errore non Aperto socket: "<< this->sockId << " !!!" << endl << data;
         }
-    } else {
-        qDebug() << endl << "!!! Errore non Aperto socket: "<< this->sockId << " !!!" << endl << data;
-    }
+
+
     return false;
 }
 

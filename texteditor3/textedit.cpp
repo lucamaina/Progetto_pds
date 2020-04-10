@@ -281,11 +281,8 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 
             } else {
                 // PULSANTI DI INSERIMENTO
-                qDebug()<<"--------------------------------------------";
-                qDebug()<<e->text().front().isPrint();
-                qDebug()<<"--------------------------------------------";
 
-                if(!e->text().front().isPrint()){return false;}
+                if(!e->text().front().isPrint()&&e->text().front()!='\xd'){return false;}
 
                 QChar c = e->text().front();        // carattere da inserire
                 QTextCharFormat format = textEdit->textCursor().charFormat();   // formato del carattere

@@ -554,6 +554,16 @@ void Client::spostaCursori(QMap <QString,QString>cmd)
 //    if (pos != -1)
 //        emit s_changeCursor(user, pos);
 //    return;
+    qDebug()<<cmd;
+    QString user=cmd.find("username").value();
+    int posX=cmd.find("posX").value().toInt();
+    int posY=cmd.find("posY").value().toInt();
+    int anchor=cmd.find("anchor").value().toInt();
+    char c='\0';
+
+    if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; } //non lo considero
+
+    emit spostaCursSignal(posX,posY,anchor,c,user);
 }
 
 void Client::sendCursore(int pos)
@@ -707,10 +717,14 @@ void Client::handleMyCursorChange(int& posX,int& posY, int& anchor)
 
     comando.insert(CMD,CRS);
     comando.insert(UNAME,this->username);
+    comando.insert(DOCID, this->docID);
     comando.insert("posX", QString::number(posX) );
     comando.insert("posY", QString::number(posY) );
     comando.insert("anchor", QString::number(anchor) );
-    this->sendMsg(comando);
+
+        qDebug()<<"------------------------------------------";
+    qDebug()<<comando;
+   // this->sendMsg(comando);
 }
 
 void Client::pasteSlot(QString& clipboard){

@@ -555,15 +555,19 @@ void Client::spostaCursori(QMap <QString,QString>cmd)
 //        emit s_changeCursor(user, pos);
 //    return;
     qDebug()<<cmd;
-    QString user=cmd.find("username").value();
-    int posX=cmd.find("posX").value().toInt();
-    int posY=cmd.find("posY").value().toInt();
-    int anchor=cmd.find("anchor").value().toInt();
+    QString user=cmd.find(UNAME).value();
+    QString indici=cmd.find(IDX).value();
+
+    int pos=indici.split(";", QString::SkipEmptyParts)[0].toInt();
+    qDebug()<<pos;
+    int anchor=indici.split(";", QString::SkipEmptyParts)[1].toInt();
+    qDebug()<<anchor;
+
     char c='\0';
 
     if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; } //non lo considero
-
-    emit spostaCursSignal(posX,posY,anchor,c,user);
+    //user="lalla";
+    emit spostaCursSignal(pos,anchor,c,user);
 }
 
 void Client::sendCursore(int pos)
@@ -708,7 +712,7 @@ void Client::handleRegistration(QString& username, QString& password){
     this->sendMsg(comando);
 }
 
-void Client::handleMyCursorChange(int& posX,int& posY, int& anchor)
+void Client::handleMyCursorChange(int& pos,int& anchor)
 {
     //qDebug() << "sono in " << Q_FUNC_INFO;
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
@@ -718,13 +722,12 @@ void Client::handleMyCursorChange(int& posX,int& posY, int& anchor)
     comando.insert(CMD,CRS);
     comando.insert(UNAME,this->username);
     comando.insert(DOCID, this->docID);
-    comando.insert("posX", QString::number(posX) );
-    comando.insert("posY", QString::number(posY) );
-    comando.insert("anchor", QString::number(anchor) );
+    QString indici=QString::number(pos)+";"+QString::number(anchor);
+    comando.insert(IDX, indici );
 
-        qDebug()<<"------------------------------------------";
-    qDebug()<<comando;
-   // this->sendMsg(comando);
+    //    qDebug()<<"------------------------------------------";
+    //qDebug()<<comando;
+    this->sendMsg(comando);
 }
 
 void Client::pasteSlot(QString& clipboard){

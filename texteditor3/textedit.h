@@ -101,7 +101,7 @@ private slots:
 
     /*************** Comandi per gestione cursore e caratteri **************/
     void salvaMappa();
-    void spostaCursor(int& posX,int& posY,int& anchor,char& car,QString& user); //ATTENZIONE: questo oltre al cursore gestisce inserimento caratteri
+    void spostaCursor(int& pos,int& anchor,char& car,QString& user); //ATTENZIONE: questo oltre al cursore gestisce inserimento caratteri
     void changeCursor(QString& nomeUser, int pos);
     void cancellaAtCursor(int& posX,int& posY,int& anchor,char& car,QString& user);
     void deleteListSlot();
@@ -216,7 +216,7 @@ public slots:
     void windowTitle(QString utente, QString nomeFile, QString docid);
 
 signals:
-    void cursorChanged (int& posx, int& posy, int& anchor);
+    void cursorChanged (int& pos, int& anchor);
     void acceptLogout();
     void stileTesto(QString& stile,QString& param);
     void connectSig();

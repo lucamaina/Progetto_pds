@@ -199,8 +199,8 @@ TextEdit::TextEdit(QWidget *parent)
 
     this->client = new Client(this);
 
-    connect(this, SIGNAL(cursorChanged(int&,int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&,int&)));
-    connect(this->client, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
+    connect(this, SIGNAL(cursorChanged(int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&)));
+    connect(this->client, SIGNAL(spostaCursSignal(int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,char&,QString&)));
 //  connect(this, SIGNAL(stileTesto(QString&,QString&)), this->client, SLOT(handleStile(QString&,QString&)));
     connect(this, SIGNAL(pasteSig(QString&)),this->client, SLOT(pasteSlot(QString&)));
   //  connect(this->client, SIGNAL(clearEditor() ), this, SLOT(clear() ));
@@ -1281,7 +1281,8 @@ void TextEdit::cursorPositionChanged()
         QRect s=textEdit->cursorRect();
         l->move(s.left(), s.bottom());
     }
-    emit cursorChanged(posx,posy,anchor);
+    int pos=this->textEdit->textCursor().position();
+    emit cursorChanged(pos,anchor);
     //statusBar()->showMessage(str, 0);
 
 }
@@ -1367,11 +1368,11 @@ void TextEdit::alignmentChanged(Qt::Alignment a)
         */
 }
 
-void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){
+void TextEdit::spostaCursor(int& pos,int& anchor,char& car ,QString& user){
     //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
-
+    user=user;
     qDebug()<< "sono in " << Q_FUNC_INFO;
-    qDebug()<<posX<<posY<<car<<user;
+    qDebug()<<pos<<car<<user;
 
     if(!mappaCursori.contains(user)){
         //Se non ho mai visto questo user lo metto nella lista di user
@@ -1388,27 +1389,33 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
         disconnect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
 
-        s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
-        s->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
-        s->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
-        int poss=s->position();
-        s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
-        s->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
+        if(anchor>pos){
+            s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+            s->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
+            s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-pos);
+        }
 
-        if(anchor<=poss){
-            s->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
+        else if(anchor<=pos){
+            s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+            s->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,pos);
+            s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,pos-anchor);
         }
-       else{
-       s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
-        }
+
+
 
         QLabel *lab=new QLabel(user, textEdit);
         mappaEtichette.insert(user,lab);
+        auto cc=textEdit->textCursor();
+        textEdit->setTextCursor(* mappaCursori.value(user));
         QRect r=textEdit->cursorRect();
         lab->move(r.left(), r.bottom());
         lab->setFont(QFont("Arial",6,12,true));
         lab->setStyleSheet("QLabel { background-color : rgba(255, 0, 0,64); color : blue; }");
         lab->show();
+        textEdit->setTextCursor(cc);
+        qDebug()<<"------------------";
+        qDebug()<<mappaCursori.find(user).value()->position();
+        qDebug()<<"------------------";
 
         connect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
@@ -1423,37 +1430,41 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
         // muovo il cursore
 
         QTextCursor *s1= mappaCursori.find(user).value();
-        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
-        s1->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
-        s1->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
-        int poss=s1->position();
-        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
-        s1->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
 
-        if(anchor<=poss){
-            s1->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
+
+        if(anchor>pos){
+            s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+            s1->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
+            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-pos);
         }
 
-       else{
-            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
+        else if(anchor<=pos){
+            s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+            s1->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,pos);
+            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,pos-anchor);
         }
 
         QLabel *lab=mappaEtichette.find(user).value();
         mappaEtichette.insert(user,lab);
+        auto cc=textEdit->textCursor();
+        textEdit->textCursor().setPosition(mappaCursori.find(user).value()->position());
+        textEdit->setTextCursor(* mappaCursori.value(user));
         QRect r=textEdit->cursorRect();
         lab->move(r.left(), r.bottom());
         lab->show();
+        textEdit->setTextCursor(cc);
+        qDebug()<<"------------------";
+        qDebug()<<textEdit->cursorRect().x();
+        qDebug()<<user;
+        qDebug()<<mappaCursori.find(user).value()->position();
+        qDebug()<<"------------------";
 
         connect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
 
 
     }
-    QTextCursor *s= mappaCursori.find(user).value();
 
-    QChar c(car);
-
-    if(c!=nullptr)s->insertText(c);
     return ;
 }
 

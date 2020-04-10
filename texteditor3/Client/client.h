@@ -69,7 +69,7 @@ signals:
     void s_upCursor(QStringList&);
     void s_changeCursor(QString& nomeUser, int pos);
 
-    void spostaCursSignal(int& posX, int& posY, int& anchor, char& car, QString& user); //fa anche l'inserimento
+    void spostaCursSignal(int& pos, int& anchor, char& car, QString& user); //fa anche l'inserimento
     void cancellaSignal(int& posX, int& posY, int& anchor,char& car, QString& user);
     void deleteListSig(); //cancella la lista di utenti online dal widget
     void cambiaFile(QString& file);
@@ -96,7 +96,7 @@ public slots:
     void handleStile(QString& stile,QString& param);
     void readyRead();
     void pasteSlot(QString& clipboard);
-    void handleMyCursorChange(int& posX,int& posY, int& anchor);
+    void handleMyCursorChange(int& pos, int& anchor);
     void remoteOpen(QString& name, QString &docID);
 
     void remoteAdd(QString& name);

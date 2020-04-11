@@ -216,6 +216,10 @@ bool Editor::removeUser(const QString &nomeUser)
 {
     if (this->sendList_.contains(nomeUser)){
         this->sendList_.remove(nomeUser);
+        Comando cmd(Comando::Up_Cursor);
+        QStringList list = this->sendList_.keys();
+        cmd.insertMulti(UNAME, list).insert(DOCID, this->DocId);
+        this->sendToAll(cmd);
         return true;
     }
     return false;
@@ -228,7 +232,7 @@ bool Editor::findUser(const QString &nomeUser)
 
 bool Editor::isEmpty()
 {
-    return this->userList.isEmpty();
+    return this->sendList_.isEmpty();
 }
 
 

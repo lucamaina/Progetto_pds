@@ -65,7 +65,6 @@
 #include <shared_editor/editor.h>
 #include <QPainter>
 #include <QAbstractTextDocumentLayout>
-
 #include"NuovoFileRemotoWindoow/nuovofileremoto.h"
 #include "shared_editor/eventbuffer.h"
 
@@ -89,10 +88,10 @@ public:
 
 public slots:
     void fileNew();
-    void loginDialog();
-    void logoutDialog();
-    void registerDialog();
-    void connectDialog();
+    void LoginDialog();
+    void LogoutDialog();
+    void RegisterDialog();
+    void ConnectDialog();
 
 
 protected:
@@ -102,7 +101,7 @@ private slots:
 
     /*************** Comandi per gestione cursore e caratteri **************/
     void salvaMappa();
-    void spostaCursor(int& posX,int& posY,int& anchor,char& car,QString& user); //ATTENZIONE: questo oltre al cursore gestisce inserimento caratteri
+    void spostaCursor(int& pos,int& anchor,char& car,QString& user); //ATTENZIONE: questo oltre al cursore gestisce inserimento caratteri
     void changeCursor(QString& nomeUser, int pos);
     void cancellaAtCursor(int& posX,int& posY,int& anchor,char& car,QString& user);
     void deleteListSlot();
@@ -214,10 +213,10 @@ public slots:
     void setText(QChar c, QTextCharFormat f, int posCursor);   // inserisce in editor il carattere ricevuto
     void removeText(int posCursor);
     void loadEditor(QString str);
-    void windowTitle(QString utente = "*", QString nomeFile = "*", QString docid = "*");
+    void windowTitle(QString utente, QString nomeFile, QString docid);
 
 signals:
-    void cursorChanged (int& posx, int& posy, int& anchor);
+    void cursorChanged (int& pos, int& anchor);
     void acceptLogout();
     void stileTesto(QString& stile,QString& param);
     void connectSig();

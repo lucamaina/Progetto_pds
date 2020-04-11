@@ -19,6 +19,8 @@
 class Client : public QObject
 {
     Q_OBJECT
+
+
 public:
     explicit Client(QObject *parent = nullptr);
 
@@ -28,7 +30,7 @@ public:
     void handleAddUser();
     void listUser(QMap<QString,QString> cmd);
 
-    // gestore mappa
+
     bool remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index, int cursor);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
     bool remoteInsert(Symbol sym, int cursor);
 
@@ -62,19 +64,19 @@ public:
     QString getUsername() const;
 
 signals:
-    void s_changeTitle(QString utente = "*", QString nomeFile = "*", QString docid = "*");
+    void s_changeTitle(QString utente, QString nomeFile, QString docid);
     void addMe();
     void s_upCursor(QStringList&);
     void s_changeCursor(QString& nomeUser, int pos);
 
-    void spostaCursSignal(int& posX, int& posY, int& anchor, char& car, QString& user); //fa anche l'inserimento
+    void spostaCursSignal(int& pos, int& anchor, char& car, QString& user); //fa anche l'inserimento
     void cancellaSignal(int& posX, int& posY, int& anchor,char& car, QString& user);
     void deleteListSig(); //cancella la lista di utenti online dal widget
     void cambiaFile(QString& file);
     void nuovoStile(QString& stile,QString& param);
     void openFileSignal(QString& filename);
     void s_clearEditor();
-    void s_toStatusBar(QString s);
+    void toStatusBar(QString s);
 
     void s_setText(QChar c, QTextCharFormat f, int posCur);
     void s_removeText(int posCur);
@@ -94,7 +96,7 @@ public slots:
     void handleStile(QString& stile,QString& param);
     void readyRead();
     void pasteSlot(QString& clipboard);
-    void handleMyCursorChange(int& posX,int& posY, int& anchor);
+    void handleMyCursorChange(int& pos, int& anchor);
     void remoteOpen(QString& name, QString &docID);
 
     void remoteAdd(QString& name);
@@ -115,17 +117,11 @@ private:
     QByteArray buffer;
     QString tempUser;
     QString tempPass;
-
     // nuova versione ready read
     QByteArray buffer_, command;
 
     nuovoFileRemoto *finestraAddFile;
     UserManager *finestraUsers;
-
-    void clear();
-    void showUserLogin();
-    void showUserLogoff();
-    void showUserLogError(QString& str);
 
     /****************************************************************************
      ***************** metodi controllo dei comandi ricevuti ********************/

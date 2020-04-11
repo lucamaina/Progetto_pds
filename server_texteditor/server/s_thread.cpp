@@ -11,7 +11,7 @@ void s_thread::run()
     Logger::getLog().write("Nuovo thread in esecuzione, ID = "+ QString::number(this->sockID) );
     qDebug() << "Thread running, ID: " << QString::number(this->sockID);
 
-    connect(this, &s_thread::finished, this, &s_thread::deleteLater, Qt::DirectConnection);
+    connect(this, &s_thread::finished, this, &s_thread::test, Qt::DirectConnection);
 
     sp_socket = QSharedPointer<MySocket>( new MySocket(sockID));
 
@@ -23,6 +23,8 @@ void s_thread::run()
     this->up_user = std::make_unique<utente>( utente() );
 
     this->connectDB();
+
+    this->exec();
 }
 
 /**
@@ -40,19 +42,18 @@ void s_thread::disconnected()
 
 void s_thread::exitThread()
 {
-    qDebug() << "Distruttore s_thread.";
+    qDebug() << "sono in " << Q_FUNC_INFO;
     // tolgo utente da editor
     Network::getNetwork().remRefToEditor( this->docID,
                                           this->up_user->getUsername() );
     if (this->up_user.get()->isConnected()){
-        QMap<QString, QString> cmd;
-        cmd.insert(CMD, LOGOUT);
-        this->logoffDB(cmd);
+        this->logOffDB();
         this->disconnectDB();
     }
 
-    qDebug() << "s_thread distrutto : " << this->sockID;
+    qDebug() << "s_thread disconnesso : " << this->sockID;
     this->quit();
+    this->wait();
 }
 
 /*********************************************************************************************************
@@ -330,6 +331,19 @@ void s_thread::logoffDB(QMap<QString, QString> &comando)
     clientMsg(risp);
 }
 
+void s_thread::logOffDB()
+{
+    QString logStr;
+    if (up_user->isConnected()){
+        if (this->up_conn->userLogOut(*up_user) ){
+            logStr = QString::number(this->sockID) + " log out a db con utente: " + up_user->getUsername();
+        } else {
+            logStr = QString::number(this->sockID) + " non log out a db con utente: " + up_user->getUsername();
+        }
+        Logger::getLog().write(logStr);
+    }
+}
+
 /**
  * @brief s_thread::registerDB
  * @param comando
@@ -505,7 +519,7 @@ void s_thread::openFile(QMap<QString, QString> &comando)
                             *this->up_user,
                             this->sp_socket );
     }
-
+    this->docID = comando.value(DOCID);
     // send Map
     QByteArray ba = net.getEditor(comando.value(DOCID)).getSymMap();
 

@@ -58,7 +58,7 @@ public:
 
     QList<Symbol> &getTesto(QList<Symbol>& testo);
 
-    void clear();
+
 
 private:
 

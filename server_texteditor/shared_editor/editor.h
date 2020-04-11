@@ -33,8 +33,6 @@ private:
     qint32 maxDim = std::numeric_limits<qint32>::max();
 
     QVector<Symbol> symList;
-    QVector<utente> userList;
-
     QMap<QString, QSharedPointer<MySocket>> sendList_;
 
 

@@ -164,8 +164,7 @@ TextEdit::TextEdit(QWidget *parent)
             actionRedo, &QAction::setEnabled);
 */
 
-    // setWindowModified(textEdit->document()->isModified()); aggiunge * al nome
-    setWindowModified(false);
+    setWindowModified(textEdit->document()->isModified());
     actionSave->setEnabled(textEdit->document()->isModified());
 
 /*
@@ -200,11 +199,11 @@ TextEdit::TextEdit(QWidget *parent)
 
     this->client = new Client(this);
 
-    connect(this, SIGNAL(cursorChanged(int&,int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&,int&)));
-    connect(this->client, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
+    connect(this, SIGNAL(cursorChanged(int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&)));
+    connect(this->client, SIGNAL(spostaCursSignal(int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,char&,QString&)));
 //  connect(this, SIGNAL(stileTesto(QString&,QString&)), this->client, SLOT(handleStile(QString&,QString&)));
     connect(this, SIGNAL(pasteSig(QString&)),this->client, SLOT(pasteSlot(QString&)));
-    connect(this->client, SIGNAL(clearEditor() ), this, SLOT(clear() ));
+  //  connect(this->client, SIGNAL(clearEditor() ), this, SLOT(clear() ));
     connect(this->client, &Client::s_setText, this, &TextEdit::setText, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_removeText, this, &TextEdit::removeText, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_loadEditor, this, &TextEdit::loadEditor, Qt::ConnectionType::DirectConnection);
@@ -221,10 +220,11 @@ TextEdit::TextEdit(QWidget *parent)
  * */
 void TextEdit::setupStatusBar(){
     statusBar()->showMessage(tr("Status message: bentornato"), 2000);   // 2 secondi
-    connect(client,&Client::s_toStatusBar, this, &TextEdit::statusBarOutput);
+    connect(client,&Client::toStatusBar, this, &TextEdit::statusBarOutput);
 }
 
 bool TextEdit::eventFilter(QObject *obj, QEvent *event){
+    //qDebug()<<QApplication::clipboard()->mimeData()->text();
     if (obj == this->textEdit) {
         /*
          * modifica shortcut di copia e incolla
@@ -235,14 +235,19 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
             if(keyEvent->modifiers().testFlag(Qt::ControlModifier) == true)
             {
                 // allow override of all Ctrl+ shortcuts
-//                    if(keyEvent->key()==86){
-//                        goPaste();
-//                    }
-                if(keyEvent->key() == Qt::Key_X){
-                    this->setVisibleFileActions(true);
-                }
+                    if(keyEvent->key()==Qt::Key_V){
+                        goPaste();
+                    }
+                    if(keyEvent->key() == Qt::Key_X){
+                        this->setVisibleFileActions(true);
+                    }
+                    if(keyEvent->key() == Qt::Key_C){
+                        QApplication::clipboard()->mimeData()->text()=textEdit->textCursor().selectedText();
+                    }
                 return false;
+
             }
+
         }
 
         if (!this->client->isLogged()){
@@ -265,7 +270,7 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
                 return true;       // salta le azioni ripetute
             }
 
-            if(e->text()==""){ return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
+            if(e->text()==""){return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
 
             if(e->key()==Qt::Key_Backspace || e->key()==Qt::Key_Delete){    // 16777219 , 16777223
                 // PULSANTI DI CANCELLAZIONE
@@ -276,6 +281,8 @@ bool TextEdit::eventFilter(QObject *obj, QEvent *event){
 
             } else {
                 // PULSANTI DI INSERIMENTO
+
+                if(!e->text().front().isPrint()&&e->text().front()!='\xd'){return false;}
 
                 QChar c = e->text().front();        // carattere da inserire
                 QTextCharFormat format = textEdit->textCursor().charFormat();   // formato del carattere
@@ -371,19 +378,19 @@ void TextEdit::setupUserActions()
     QMenu *menu = menuBar()->addMenu(tr("User"));
 
     const QIcon loginIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
-    QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::loginDialog);
+    QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
   //  login->setShortcut(QKeySequence::ZoomIn); tr("Ctrl+a")
     tb->addAction(login);
     //login->setCheckable(true);
 
     const QIcon registerIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/registration.png"));
-    QAction *registration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::registerDialog);
+    QAction *registration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::RegisterDialog);
    // registration->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
     tb->addAction(registration);
     //login->setCheckable(true);
 
     const QIcon logoutIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/logout.png"));
-    QAction *logout = menu->addAction(logoutIcon, tr("&Logout"), this, &TextEdit::logoutDialog);
+    QAction *logout = menu->addAction(logoutIcon, tr("&Logout"), this, &TextEdit::LogoutDialog);
   //  login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
     tb->addAction(logout);
     //login->setCheckable(true);
@@ -523,7 +530,26 @@ void TextEdit::setupEditActions()
 
 void TextEdit::goPaste(){
     QString s(QApplication::clipboard()->mimeData()->text());
-    emit pasteSig(s);
+    int pos=textEdit->textCursor().position();
+    int i=0;
+    if(client->isLogged()){
+        for(QChar c : s)
+        {
+            qDebug()<<c;
+            QVector<qint32> newIndex=this->client->remoteFile->getLocalIndexInsert(pos+i);
+            //this->inserimento(textEdit->textCursor().position(), c, textEdit->textCursor().charFormat());
+            this->client->remoteInsert(c,  textEdit->textCursor().charFormat(), newIndex, pos+i);
+
+            //creo simbolo
+            Symbol newSym = Symbol(this->client->getUsername(), c, newIndex, textEdit->textCursor().charFormat());
+
+            // inserisco in locale
+            this->client->remoteFile->symVec.insert(pos+i, newSym);
+
+            i++;
+        }
+    }
+    //emit pasteSig(s);
     qDebug()<<"lalla";
 }
 
@@ -569,8 +595,8 @@ void TextEdit::loadEditor(QString str)
 
 void TextEdit::windowTitle(QString utente, QString nomeFile, QString docid)
 {
-    setWindowModified(false);
     setWindowTitle(tr("%1[*] @ %2[*] = %3[*] - [*]").arg(utente, nomeFile, docid, QCoreApplication::applicationName()));
+    setWindowModified(false);
 }
 
 void TextEdit::setupTextActions()
@@ -581,7 +607,7 @@ void TextEdit::setupTextActions()
 
     const QIcon boldIcon = QIcon::fromTheme("format-text-bold", QIcon(rsrcPath + "/textbold.png"));
     actionTextBold = menu->addAction(boldIcon, tr("&Bold"), this, &TextEdit::textBold);
-    actionTextBold->setShortcut(Qt::CTRL + Qt::Key_B);
+    //actionTextBold->setShortcut(Qt::CTRL + Qt::Key_B);
     actionTextBold->setPriority(QAction::LowPriority);
     QFont bold;
     bold.setBold(true);
@@ -592,7 +618,7 @@ void TextEdit::setupTextActions()
     const QIcon italicIcon = QIcon::fromTheme("format-text-italic", QIcon(rsrcPath + "/textitalic.png"));
     actionTextItalic = menu->addAction(italicIcon, tr("&Italic"), this, &TextEdit::textItalic);
     actionTextItalic->setPriority(QAction::LowPriority);
-    actionTextItalic->setShortcut(Qt::CTRL + Qt::Key_I);
+    //actionTextItalic->setShortcut(Qt::CTRL + Qt::Key_I);
     QFont italic;
     italic.setItalic(true);
     actionTextItalic->setFont(italic);
@@ -746,7 +772,6 @@ bool TextEdit::maybeSave()
 
 void TextEdit::setCurrentFileName(const QString &fileName)
 {
-    /*
     this->fileName = fileName;
     textEdit->document()->setModified(false);
 
@@ -758,10 +783,9 @@ void TextEdit::setCurrentFileName(const QString &fileName)
 
     setWindowTitle(tr("%1[*] - %2").arg(shownName, QCoreApplication::applicationName()));
     setWindowModified(false);
-    */
 }
 
-void TextEdit::loginDialog()
+void TextEdit::LoginDialog()
 {
 
     class LoginDialog* loginDialog = new class LoginDialog( this );
@@ -769,22 +793,21 @@ void TextEdit::loginDialog()
     loginDialog->exec();
 }
 
-void TextEdit::connectDialog()
+void TextEdit::ConnectDialog()
 {
     connect(this, SIGNAL(connectSig()), this->client, SLOT(connectSlot()));
     emit connectSig();
 
 }
 
-void TextEdit::logoutDialog()
+void TextEdit::LogoutDialog()
 {
-    if (this->client != nullptr) this->client->handleLogout();
-    else this->windowTitle();
+    connect( this, SIGNAL (acceptLogoff()), this->client, SLOT (handleLogoff()) );
 }
 
-void TextEdit::registerDialog()
+void TextEdit::RegisterDialog()
 {
-    RegisterDialog* registerdialog = new RegisterDialog( this );
+    class RegisterDialog* registerdialog = new class RegisterDialog( this );
     connect( registerdialog, SIGNAL (acceptRegistration(QString&,QString&)), this->client, SLOT (handleRegistration(QString&,QString&)) );
     registerdialog->exec();
 }
@@ -1258,7 +1281,8 @@ void TextEdit::cursorPositionChanged()
         QRect s=textEdit->cursorRect();
         l->move(s.left(), s.bottom());
     }
-    emit cursorChanged(posx,posy,anchor);
+    int pos=this->textEdit->textCursor().position();
+    emit cursorChanged(pos,anchor);
     //statusBar()->showMessage(str, 0);
 
 }
@@ -1344,11 +1368,11 @@ void TextEdit::alignmentChanged(Qt::Alignment a)
         */
 }
 
-void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){
+void TextEdit::spostaCursor(int& pos,int& anchor,char& car ,QString& user){
     //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
-
+    user=user;
     qDebug()<< "sono in " << Q_FUNC_INFO;
-    qDebug()<<posX<<posY<<car<<user;
+    qDebug()<<pos<<car<<user;
 
     if(!mappaCursori.contains(user)){
         //Se non ho mai visto questo user lo metto nella lista di user
@@ -1365,27 +1389,33 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
         disconnect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
 
-        s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
-        s->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
-        s->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
-        int poss=s->position();
-        s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
-        s->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
+        if(anchor>pos){
+            s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+            s->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
+            s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-pos);
+        }
 
-        if(anchor<=poss){
-            s->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
+        else if(anchor<=pos){
+            s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+            s->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,pos);
+            s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,pos-anchor);
         }
-       else{
-       s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
-        }
+
+
 
         QLabel *lab=new QLabel(user, textEdit);
         mappaEtichette.insert(user,lab);
+        auto cc=textEdit->textCursor();
+        textEdit->setTextCursor(* mappaCursori.value(user));
         QRect r=textEdit->cursorRect();
         lab->move(r.left(), r.bottom());
         lab->setFont(QFont("Arial",6,12,true));
         lab->setStyleSheet("QLabel { background-color : rgba(255, 0, 0,64); color : blue; }");
         lab->show();
+        textEdit->setTextCursor(cc);
+        qDebug()<<"------------------";
+        qDebug()<<mappaCursori.find(user).value()->position();
+        qDebug()<<"------------------";
 
         connect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
@@ -1400,37 +1430,41 @@ void TextEdit::spostaCursor(int& posX,int& posY,int& anchor,char& car ,QString& 
         // muovo il cursore
 
         QTextCursor *s1= mappaCursori.find(user).value();
-        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
-        s1->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
-        s1->movePosition(QTextCursor::Down,QTextCursor::MoveAnchor,posY);
-        int poss=s1->position();
-        s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
-        s1->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
 
-        if(anchor<=poss){
-            s1->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
+
+        if(anchor>pos){
+            s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+            s1->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,anchor);
+            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-pos);
         }
 
-       else{
-            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
+        else if(anchor<=pos){
+            s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+            s1->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,pos);
+            s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,pos-anchor);
         }
 
         QLabel *lab=mappaEtichette.find(user).value();
         mappaEtichette.insert(user,lab);
+        auto cc=textEdit->textCursor();
+        textEdit->textCursor().setPosition(mappaCursori.find(user).value()->position());
+        textEdit->setTextCursor(* mappaCursori.value(user));
         QRect r=textEdit->cursorRect();
         lab->move(r.left(), r.bottom());
         lab->show();
+        textEdit->setTextCursor(cc);
+        qDebug()<<"------------------";
+        qDebug()<<textEdit->cursorRect().x();
+        qDebug()<<user;
+        qDebug()<<mappaCursori.find(user).value()->position();
+        qDebug()<<"------------------";
 
         connect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
 
 
     }
-    QTextCursor *s= mappaCursori.find(user).value();
 
-    QChar c(car);
-
-    if(c!=nullptr)s->insertText(c);
     return ;
 }
 
@@ -1649,10 +1683,12 @@ void TextEdit::upCursor(QStringList &list)
         mappaCursori.remove(exNome);
         mappaEtichette.value(exNome)->setVisible(false);
         mappaEtichette.remove(exNome);
-        for (int i = 0; i < this->list->count(); i++){
-            QListWidgetItem *item = this->list->takeItem(i);
-            if (item->text() == exNome){
-                this->list->removeItemWidget(item);
+        int t = this->list->count();
+        for (int i = 0; i < t; i++){
+            QListWidgetItem *item = this->list->item(i);
+            QString str = item->text();
+            if ( exNome == item->text() ){
+                this->list->takeItem(i);
             }
         }
     }

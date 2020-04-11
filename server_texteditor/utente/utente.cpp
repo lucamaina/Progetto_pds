@@ -18,7 +18,6 @@
 bool utente::prepareUtente(QMap<QString, QString> map, bool isConnect){
     this->isConnect = isConnect;
     return this->prepareUtente(map);
-;
 }
 
 QTcpSocket *utente::getSocket() const

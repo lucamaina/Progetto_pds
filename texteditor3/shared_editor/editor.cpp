@@ -176,11 +176,6 @@ QList<Symbol>& Editor::getTesto(QList<Symbol>& testo)
     return testo;
 }
 
-void Editor::clear()
-{
-
-}
-
 void Editor::read()
 {
 

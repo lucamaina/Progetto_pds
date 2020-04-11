@@ -24,7 +24,7 @@ public:
     utente(QString username, QString password)
         : username(username), password(password){}
     utente(){}
-    ~utente(){ qDebug() << "user distrutto"; }
+    ~utente() = default;
 
 public:
     QString getUsername();

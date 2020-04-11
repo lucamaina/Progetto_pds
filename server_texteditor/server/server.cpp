@@ -33,7 +33,7 @@ void server::deleteThread(s_thread &t)
     m.lock();
     numThread--;
     m.unlock();
-    qDebug() << "delete: " << &t;
+    qDebug() << "sono in " << Q_FUNC_INFO;
     tVec.removeOne(&t);
     t.exitThread();
 }
@@ -54,6 +54,7 @@ void server::incomingConnection(int socketID)
         m.unlock();
 
         connect(newThread, &s_thread::deleteThreadSig, this, &server::deleteThread, Qt::ConnectionType::DirectConnection);
+        // connect(newThread, &s_thread::finished, newThread, &s_thread::test, Qt::DirectConnection);
         // TODO exception
         try {
             newThread->run();

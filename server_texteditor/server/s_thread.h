@@ -27,7 +27,7 @@ class s_thread : public QThread
 
 public:
     s_thread(int ID, QObject *parent = nullptr);
-
+    ~s_thread(){ qDebug() << "distruttore s_thread " << this->sockID; }
     void exitThread();
     void run();
 
@@ -35,6 +35,8 @@ public slots:
     void disconnected();
     void dispatchCmd(QMap<QString, QString> &cmd);
     void dispatchCmd(Comando &cmd);
+
+    void test(){ qDebug() << "signal finished"; }
 
 signals:
     void deleteThreadSig(s_thread &t);
@@ -76,6 +78,7 @@ private:
     void disconnectDB();
     void loginDB(QMap<QString, QString> &comando);
     void logoffDB(QMap<QString, QString> &comando);
+    void logOffDB();
     void registerDB(QMap<QString, QString> &comando);
     void addFileDB(QMap<QString, QString> &comando);
     void browsFile(QMap<QString, QString> &comando);

@@ -69,39 +69,6 @@ void Client::sendRemoveUsers(QStringList &lista)
     this->sendMsg(cmd);
 }
 
-/* elimina info dell'utente */
-void Client::clear()
-{
-    this->username.clear();
-    this->docID.clear();
-    this->filename.clear();
-    this->tempPass.clear();
-    this->tempUser.clear();
-    this->files.clear();        // superfluo
-}
-
-/* mostro utente come loggato */
-void Client::showUserLogin()
-{
-    emit s_changeTitle(this->getUsername());
-    emit s_toStatusBar(this->getUsername() + " login effettuato correttamente");
-    this->logged = true;
-}
-
-void Client::showUserLogoff()
-{
-    emit s_changeTitle();
-    this->remoteFile->clear();
-    this->s_clearEditor();
-    this->clear();
-}
-
-void Client::showUserLogError(QString &str)
-{
-    QMessageBox msg;
-
-}
-
 QString Client::getUsername() const
 {
     return username;
@@ -259,9 +226,10 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
     else if(comando.value()==ERR){
         dispatchERR(cmd);
     }
+    /*
     else if(comando.value()=="STILE"){
         dispatchStile(cmd);
-    }
+    }*/
     else if (comando.value() == REM_IN){
         inserimentoRemoto(cmd);
     }
@@ -293,25 +261,41 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         this->connectedDB=true;
         qDebug() << "Connesso";
     }
+
     else if(comando.value()==LOGIN_OK){
-        this->showUserLogin();
-    }
-    else if(comando.value()==LOGOUT_OK){
-        this->showUserLogoff();
-    }
-    else if(comando.value()==REG_OK){
-        this->username = this->tempUser;
-        tempPass.clear();
-        tempUser.clear();
-        this->showUserLogin();
-    }
-    else if(comando.value()==FILE_OK){
-        emit this->s_toStatusBar("File opened successfully");
+        QMessageBox Messaggio;
+        Messaggio.information(nullptr,"Login","Logged in successfully");
+        Messaggio.setFixedSize(500,200);
+
+        emit s_changeTitle(this->username, "*", "*");
         this->logged=true;
     }
-    else {
+
+    else if(comando.value()==LOGOUT_OK){
+        QMessageBox Messaggio;
+        Messaggio.information(nullptr,"Logout","Logged out successfully");
+        Messaggio.setFixedSize(500,200);
+
+        connect(this,SIGNAL(deleteListSig()),this->parent(),SLOT(deleteListSlot()));
+        emit deleteListSig();
+
+        this->logged=false;
+
+    }
+
+    else if(comando.value()==REG_OK){
+        QMessageBox Messaggio;
+        Messaggio.information(nullptr,"Registration","Registered & Logged in successfully");
+        Messaggio.setFixedSize(500,200);
+
+        this->logged=true;
+    } else if(comando.value()==FILE_OK){
+        emit this->toStatusBar("File opened successfully");
+        this->logged=true;
+    } else {
         qDebug() << comando.key();
     }
+
 
 }
 
@@ -330,13 +314,15 @@ void Client::dispatchERR(QMap <QString,QString>cmd){
     }
 
     if(comando.value()==LOGIN_ERR){
-        this->showUserLogoff();
+        QMessageBox Messaggio;
+        Messaggio.information(nullptr,"Login Error", comando.value());
+        Messaggio.setFixedSize(500,200);
+        this->username = "";
+        emit s_changeTitle("*", "*", "*");
 
-    /*
         LoginDialog* loginDialog = new LoginDialog( );
         connect( loginDialog, SIGNAL (acceptLogin(QString&,QString&)), this, SLOT (handleLogin(QString&,QString&)) );
         loginDialog->exec();
-    */
     }
 
     if(comando.value()==LOGOUT_ERR){
@@ -557,18 +543,32 @@ void Client::cancellamentoRemoto(QMap<QString, QString> cmd)
 }
 
 void Client::spostaCursori(QMap <QString,QString>cmd)
-{/*
-    qDebug() << "sono in " << Q_FUNC_INFO;
-    QString user = cmd.value(UNAME);
-    if(user == this->username){
-        return; // non considero
-    }
-    // trovo posizione da index
-    double idx = cmd.value(IDX).toDouble();
-    int pos = remoteFile->localPosCursor(idx);
-    if (pos != -1)
-        emit s_changeCursor(user, pos);*/
-    return;
+{
+//    qDebug() << "sono in " << Q_FUNC_INFO;
+//    QString user = cmd.value(UNAME);
+//    if(user == this->username){
+//        return; // non considero
+//    }
+//    // trovo posizione da index
+//    double idx = cmd.value(IDX).toDouble();
+//    int pos = remoteFile->localPosCursor();
+//    if (pos != -1)
+//        emit s_changeCursor(user, pos);
+//    return;
+    qDebug()<<cmd;
+    QString user=cmd.find(UNAME).value();
+    QString indici=cmd.find(IDX).value();
+
+    int pos=indici.split(";", QString::SkipEmptyParts)[0].toInt();
+    qDebug()<<pos;
+    int anchor=indici.split(";", QString::SkipEmptyParts)[1].toInt();
+    qDebug()<<anchor;
+
+    char c='\0';
+
+    if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; } //non lo considero
+    //user="lalla";
+    emit spostaCursSignal(pos,anchor,c,user);
 }
 
 void Client::sendCursore(int pos)
@@ -675,15 +675,19 @@ void Client::handleLogin(QString& username, QString& password)
 void Client::handleLogout(){
 
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
-        emit this->s_changeTitle();
-        emit s_toStatusBar("Client non connesso al server");
+        QMessageBox Messaggio;
+        Messaggio.critical(nullptr,"Logout Error","User not connected or not logged to the server");
+        Messaggio.setFixedSize(500,200);
         return;
     }
 
     QMap<QString, QString> comando;
+
     comando.insert(CMD, LOGOUT);
     comando.insert(UNAME, username);
+    //comando.insert("password", password);
     this->sendMsg(comando);
+
 }
 
 void Client::handleRegistration(QString& username, QString& password){
@@ -700,7 +704,7 @@ void Client::handleRegistration(QString& username, QString& password){
     comando.insert(CMD, REG);
     comando.insert(UNAME, username);
     comando.insert(NICK, username);
-    comando.insert(PASS, password);
+    comando.insert("password", password);
 
     tempUser=username;
     tempPass=password;
@@ -709,7 +713,7 @@ void Client::handleRegistration(QString& username, QString& password){
     this->sendMsg(comando);
 }
 
-void Client::handleMyCursorChange(int& posX,int& posY, int& anchor)
+void Client::handleMyCursorChange(int& pos,int& anchor)
 {
     //qDebug() << "sono in " << Q_FUNC_INFO;
     if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
@@ -718,10 +722,13 @@ void Client::handleMyCursorChange(int& posX,int& posY, int& anchor)
 
     comando.insert(CMD,CRS);
     comando.insert(UNAME,this->username);
-    comando.insert("posX", QString::number(posX) );
-    comando.insert("posY", QString::number(posY) );
-    comando.insert("anchor", QString::number(anchor) );
-    //this->sendMsg(comando);
+    comando.insert(DOCID, this->docID);
+    QString indici=QString::number(pos)+";"+QString::number(anchor);
+    comando.insert(IDX, indici );
+
+    //    qDebug()<<"------------------------------------------";
+    //qDebug()<<comando;
+    this->sendMsg(comando);
 }
 
 void Client::pasteSlot(QString& clipboard){
@@ -814,17 +821,15 @@ bool Client::upCursor(QMap<QString, QString> cmd)
 
     int i = 1;
     QStringList list;
-    for (QString key : cmd.keys()){
-        if (key == UNAME+QString::number(i)){
-            list.append(cmd.value(key));
-            i++;
-        }
+    while ( cmd.contains(UNAME + QString::number(i))){
+        list.append(cmd.value( UNAME + QString::number(i)) );
+        i++;
     }
+
     qDebug() << list;
     emit s_upCursor(list);
     return true;
 }
-
 
 bool Client::remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index, int cursor)
 {

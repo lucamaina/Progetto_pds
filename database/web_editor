@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 07, 2020 alle 14:22
+-- Generation Time: Apr 13, 2020 alle 14:38
 -- Versione del server: 5.6.20
 -- PHP Version: 5.5.15
 
@@ -19,6 +19,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `web_editor`
 --
+CREATE DATABASE IF NOT EXISTS `web_editor` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
+USE `web_editor`;
 
 -- --------------------------------------------------------
 
@@ -87,6 +89,7 @@ CREATE TABLE IF NOT EXISTS `utenti` (
 
 INSERT INTO `utenti` (`UserName`, `NickName`, `Password`, `connesso`) VALUES
 ('asd', 'asd', 'dd121e36961a04627eacff629765dd3528471ed745c1e32222db4a8a5f3421c4', 0),
+('mnb', 'mnb', 'dd121e36961a04627eacff629765dd3528471ed745c1e32222db4a8a5f3421c4', 0),
 ('pippo', 'pippo', 'dd121e36961a04627eacff629765dd3528471ed745c1e32222db4a8a5f3421c4', 0),
 ('qwe', 'qwe', 'dd121e36961a04627eacff629765dd3528471ed745c1e32222db4a8a5f3421c4', 0),
 ('user', 'user', 'dd121e36961a04627eacff629765dd3528471ed745c1e32222db4a8a5f3421c4', 0),

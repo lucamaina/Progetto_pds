@@ -139,6 +139,7 @@ TextEdit::TextEdit(QWidget *parent)
     setupEditActions();
     setupTextActions();
 
+    setVisibleFileActions(false);
 
     {
         QMenu *helpMenu = menuBar()->addMenu(tr("Help"));
@@ -201,9 +202,7 @@ TextEdit::TextEdit(QWidget *parent)
 
     connect(this, SIGNAL(cursorChanged(int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&)));
     connect(this->client, SIGNAL(spostaCursSignal(int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,char&,QString&)));
-//  connect(this, SIGNAL(stileTesto(QString&,QString&)), this->client, SLOT(handleStile(QString&,QString&)));
     connect(this, SIGNAL(pasteSig(QString&)),this->client, SLOT(pasteSlot(QString&)));
-  //  connect(this->client, SIGNAL(clearEditor() ), this, SLOT(clear() ));
     connect(this->client, &Client::s_setText, this, &TextEdit::setText, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_removeText, this, &TextEdit::removeText, Qt::ConnectionType::DirectConnection);
     connect(this->client, &Client::s_loadEditor, this, &TextEdit::loadEditor, Qt::ConnectionType::DirectConnection);
@@ -211,8 +210,11 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this->client, &Client::s_upCursor, this, &TextEdit::upCursor);
     connect(this->client, &Client::s_changeCursor, this, &TextEdit::changeCursor, Qt::DirectConnection);
     connect(this->client, &Client::s_changeTitle, this, &TextEdit::windowTitle, Qt::DirectConnection);
-    setupStatusBar();
 
+    connect(this->client, &Client::s_setVisbleFileActions, this, &TextEdit::setVisibleFileActions, Qt::DirectConnection);
+    connect(this->client, &Client::s_setVisbleEditorActions, this, &TextEdit::setVisibleEditorActions, Qt::DirectConnection);
+
+    setupStatusBar();
 }
 
 /*******************************************************************
@@ -378,21 +380,21 @@ void TextEdit::setupUserActions()
     QMenu *menu = menuBar()->addMenu(tr("User"));
 
     const QIcon loginIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/login.png"));
-    QAction *login = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
+    actionLogin = menu->addAction(loginIcon, tr("&Login"), this, &TextEdit::LoginDialog);
   //  login->setShortcut(QKeySequence::ZoomIn); tr("Ctrl+a")
-    tb->addAction(login);
+    tb->addAction(actionLogin);
     //login->setCheckable(true);
 
     const QIcon registerIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/registration.png"));
-    QAction *registration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::RegisterDialog);
+    actionRegistration = menu->addAction(registerIcon, tr("&Register"), this, &TextEdit::RegisterDialog);
    // registration->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
-    tb->addAction(registration);
+    tb->addAction(actionRegistration);
     //login->setCheckable(true);
 
     const QIcon logoutIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/logout.png"));
-    QAction *logout = menu->addAction(logoutIcon, tr("&Logout"), this, &TextEdit::LogoutDialog);
+    actionLoguot = menu->addAction(logoutIcon, tr("&Logout"), this, &TextEdit::LogoutDialog);
   //  login->setShortcut(QKeySequence::ZoomIn); //tr("Ctrl+a")
-    tb->addAction(logout);
+    tb->addAction(actionLoguot);
     //login->setCheckable(true);
 }
 
@@ -403,12 +405,12 @@ void TextEdit::setupFileActions()
     QAction *a;
 
     const QIcon newIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/filenew.png"));
-    a = menu->addAction(newIcon,  tr("&New remote file"), this, &TextEdit::fileNew);
-    tb->addAction(a);
+    actionNewRemote = menu->addAction(newIcon,  tr("&New remote file"), this, &TextEdit::fileNew);
+    tb->addAction(actionNewRemote);
 
     const QIcon remoteBrows = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/remoteBrows.png"));
-    a = menu->addAction(remoteBrows, tr("&Remote Brows..."), this, &TextEdit::remoteBrows);
-    tb->addAction(a);
+    actionBrowsRemote = menu->addAction(remoteBrows, tr("&Remote Brows..."), this, &TextEdit::remoteBrows);
+    tb->addAction(actionBrowsRemote);
 
     const QIcon saveIcon = QIcon::fromTheme("document-save", QIcon(rsrcPath + "/filesave.png"));
     actionSave = menu->addAction(saveIcon, tr("&Save"), this, &TextEdit::fileSave);
@@ -417,26 +419,26 @@ void TextEdit::setupFileActions()
     tb->addAction(actionSave);
 
     const QIcon addUser = QIcon::fromTheme("addUser", QIcon(rsrcPath + "/addUserIcon.png"));
-    a = menu->addAction(addUser, tr("&add User to File..."), this, &TextEdit::remoteAddUser);
-    tb->addAction(a);
+    actionManageUser = menu->addAction(addUser, tr("&add User to File..."), this, &TextEdit::remoteAddUser);
+    tb->addAction(actionManageUser);
 
     tb->addSeparator();
 
 #ifndef QT_NO_PRINTER
     const QIcon printIcon = QIcon::fromTheme("document-print", QIcon(rsrcPath + "/fileprint.png"));
-    a = menu->addAction(printIcon, tr("&Print..."), this, &TextEdit::filePrint);
+    actionPrint = menu->addAction(printIcon, tr("&Print..."), this, &TextEdit::filePrint);
     a->setPriority(QAction::LowPriority);
     a->setShortcut(QKeySequence::Print);
-    tb->addAction(a);
+    tb->addAction(actionPrint);
 
     const QIcon filePrintIcon = QIcon::fromTheme("fileprint", QIcon(rsrcPath + "/fileprint.png"));
     menu->addAction(filePrintIcon, tr("Print Preview..."), this, &TextEdit::filePrintPreview);
 
     const QIcon exportPdfIcon = QIcon::fromTheme("exportpdf", QIcon(rsrcPath + "/exportpdf.png"));
-    a = menu->addAction(exportPdfIcon, tr("&Export PDF..."), this, &TextEdit::filePrintPdf);
+    actionExportPDF = menu->addAction(exportPdfIcon, tr("&Export PDF..."), this, &TextEdit::filePrintPdf);
     a->setPriority(QAction::LowPriority);
     a->setShortcut(Qt::CTRL + Qt::Key_D);
-    tb->addAction(a);
+    tb->addAction(actionExportPDF);
 
     menu->addSeparator();
 #endif
@@ -444,8 +446,8 @@ void TextEdit::setupFileActions()
 
 
     const QIcon exitFileIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/fileexit.png"));
-    a = menu->addAction(exitFileIcon,  tr("&Exit from this file"), this, &TextEdit::fileNew); // slot di connessione
-    tb->addAction(a);
+    actionExitFile = menu->addAction(exitFileIcon,  tr("&Exit from this file"), this, &TextEdit::fileNew); // slot di connessione
+    tb->addAction(actionExitFile);
 
     /*
     const QIcon openIcon = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/fileopen.png"));
@@ -802,6 +804,20 @@ void TextEdit::ConnectDialog()
 
 void TextEdit::LogoutDialog()
 {
+    const QMessageBox::StandardButton ret = QMessageBox::warning(this,
+                   "Disconnessione in corso",
+                   "Si sta per effettuare la disconnessione dell'utente \" " +
+                        this->client->getUsername() + " \".\n Continuare con la disconeesione?",
+                   QMessageBox::Yes | QMessageBox::No,
+                   QMessageBox::No);
+
+    switch (ret){
+    case QMessageBox::Yes : // invio logout
+        this->client->handleLogout();
+        break;
+    default: // esco
+        break;
+    }
     connect( this, SIGNAL (acceptLogoff()), this->client, SLOT (handleLogoff()) );
 }
 
@@ -1180,15 +1196,37 @@ void TextEdit::myTextAlign(QString& a)
 
 void TextEdit::setVisibleFileActions(bool set)
 {
-    if (true){
-        // rendi visibili
-        this->actionSave->setEnabled(false);
-        this->actionTextColor->setEnabled(false);
-        //for (QAction *a : this->menuBar()->actions())
-          //  a->setVisible(false);
+    if ( actionNewRemote != nullptr &&
+         actionBrowsRemote != nullptr &&
+         actionSave != nullptr &&
+         actionManageUser != nullptr &&
+         actionPrint != nullptr &&
+         actionExportPDF != nullptr &&
+         actionExitFile != nullptr )
+    {
+        actionNewRemote->setVisible(set);
+        actionBrowsRemote->setVisible(set);
+        actionSave->setVisible(set);
+        actionManageUser->setVisible(set);
+        actionPrint->setVisible(set);
+        actionExportPDF->setVisible(set);
+        actionExitFile->setVisible(set);
     } else {
-        // nascondi
+        this->statusBarOutput("azione = nullptr");
     }
+
+}
+
+void TextEdit::setVisibleEditorActions(bool set)
+{
+    actionTextBold->setVisible(set);
+    actionTextItalic->setVisible(set);
+    actionTextUnderline->setVisible(set);
+    actionTextColor->setVisible(set);
+    // vale anche per copia incolla
+    actionCut->setVisible(set);
+    actionCopy->setVisible(set);
+    actionPaste->setVisible(set);
 }
 
 void TextEdit::currentCharFormatChanged(const QTextCharFormat &format)
@@ -1609,7 +1647,7 @@ void TextEdit::addMeSlot()
 {
     return;
     //
-    qDebug() << "sono in "<< Q_FUNC_INFO;
+    qDebug() << "sono in " << Q_FUNC_INFO;
     if(!mappaCursori.contains("Me")){
 
         int posy=textEdit->textCursor().blockNumber(); /**********************QUESTO è L'INDICE DI RIGA**********************/

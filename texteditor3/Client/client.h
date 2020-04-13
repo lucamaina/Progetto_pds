@@ -68,7 +68,8 @@ signals:
     void addMe();
     void s_upCursor(QStringList&);
     void s_changeCursor(QString& nomeUser, int pos);
-
+    void s_setVisbleFileActions(bool set);
+    void s_setVisbleEditorActions(bool set);
     void spostaCursSignal(int& pos, int& anchor, char& car, QString& user); //fa anche l'inserimento
     void cancellaSignal(int& posX, int& posY, int& anchor,char& car, QString& user);
     void deleteListSig(); //cancella la lista di utenti online dal widget

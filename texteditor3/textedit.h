@@ -163,20 +163,38 @@ private:
     QListWidget *list;
     QMap<QString,QTextCursor*> mappaCursori; //mappa con nome utente e relativo cursore;
     QMap<QString,QLabel*> mappaEtichette; //mappa con nome utente e relativo cursore;
-    QAction* registration;
+
     Highlighter* Evidenziatore;
     Client *client;
+
+/** azioni legate all'utente **/
+    QAction *actionLogin;
+    QAction *actionRegistration;
+    QAction *actionLoguot;
+
+/** azioni legate alla gestione dei file **/
+    QAction *actionNewRemote;
+    QAction *actionBrowsRemote;
     QAction *actionSave;
+    QAction *actionManageUser;
+    QAction *actionPrint;
+    QAction *actionExportPDF;
+    QAction *actionExitFile;
+
+/** azioni legate alla gestione dell'editor **/
     QAction *actionTextBold;
-    QAction *actionTextUnderline;
     QAction *actionTextItalic;
+    QAction *actionTextUnderline;
     QAction *actionTextColor;
-    QAction *actionAlignLeft;
-    QAction *actionAlignCenter;
-    QAction *actionAlignRight;
-    QAction *actionAlignJustify;
-    QAction *actionUndo;
-    QAction *actionRedo;
+
+//    QAction *actionAlignLeft;
+//    QAction *actionAlignCenter;
+//    QAction *actionAlignRight;
+//    QAction *actionAlignJustify;
+//    QAction *actionUndo;
+//    QAction *actionRedo;
+
+/** azioni di copia incolla **/
 #ifndef QT_NO_CLIPBOARD
     QAction *actionCut;
     QAction *actionCopy;
@@ -196,7 +214,7 @@ public:
 
     int cursorPos;
 
-    void setVisibleFileActions(bool set);
+
 
 private:
     void setupStatusBar();
@@ -214,6 +232,8 @@ public slots:
     void removeText(int posCursor);
     void loadEditor(QString str);
     void windowTitle(QString utente, QString nomeFile, QString docid);
+    void setVisibleFileActions(bool set);
+    void setVisibleEditorActions(bool set);
 
 signals:
     void cursorChanged (int& pos, int& anchor);

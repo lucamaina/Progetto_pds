@@ -238,6 +238,8 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
     }
     else if (comando.value() == FBODY) {
         loadFile(cmd);
+        emit s_setVisbleFileActions(true);
+        emit s_setVisbleEditorActions(true);
     }
     else if (comando.value() == ULIST) {
         listUser(cmd);
@@ -267,8 +269,9 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         Messaggio.information(nullptr,"Login","Logged in successfully");
         Messaggio.setFixedSize(500,200);
 
-        emit s_changeTitle(this->username, "*", "*");
         this->logged=true;
+        emit s_changeTitle(this->username, "*", "*");
+        emit s_setVisbleFileActions(true);
     }
 
     else if(comando.value()==LOGOUT_OK){
@@ -280,19 +283,21 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         emit deleteListSig();
 
         this->logged=false;
-
+        emit s_setVisbleFileActions(false);
+        emit s_setVisbleEditorActions(false);
     }
-
     else if(comando.value()==REG_OK){
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"Registration","Registered & Logged in successfully");
         Messaggio.setFixedSize(500,200);
 
         this->logged=true;
-    } else if(comando.value()==FILE_OK){
+    }
+    else if(comando.value()==FILE_OK){
         emit this->toStatusBar("File opened successfully");
         this->logged=true;
-    } else {
+    }
+    else {
         qDebug() << comando.key();
     }
 

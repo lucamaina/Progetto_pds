@@ -6,13 +6,13 @@
 
 Client::Client(QObject *parent) : QObject(parent)
 {
-    connectedDB=false;
-    logged=false;
-    username="";
-    docID="";
-    filename="";
-    tempUser="";
-    tempPass="";
+    connectedDB = false;
+    logged = false;
+    username = "";
+    docID = "";
+    filename = "";
+    tempUser = "";
+    tempPass.clear();
     remoteFile = nullptr;
     finestraAddFile = new nuovoFileRemoto();
 
@@ -87,7 +87,6 @@ void Client::handleNuovoFile()
     finestraAddFile->exec();
 
     finestraAddFile->close();
-
 }
 
 /**

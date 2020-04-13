@@ -131,7 +131,7 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this->list, SIGNAL(itemClicked(QListWidgetItem*)),this,SLOT(userListClicked(QListWidgetItem*)));
     //this->layout()->addWidget(list);
 
-    Evidenziatore = new Highlighter(textEdit->document());
+    //Evidenziatore = new Highlighter(textEdit->document());
 
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
     setupUserActions();
@@ -140,6 +140,8 @@ TextEdit::TextEdit(QWidget *parent)
     setupTextActions();
 
     setVisibleFileActions(false);
+    setVisibleEditorActions(false);
+    // this->textEdit->setEnabled(false);   Disabilita editor
 
     {
         QMenu *helpMenu = menuBar()->addMenu(tr("Help"));
@@ -427,8 +429,8 @@ void TextEdit::setupFileActions()
 #ifndef QT_NO_PRINTER
     const QIcon printIcon = QIcon::fromTheme("document-print", QIcon(rsrcPath + "/fileprint.png"));
     actionPrint = menu->addAction(printIcon, tr("&Print..."), this, &TextEdit::filePrint);
-    a->setPriority(QAction::LowPriority);
-    a->setShortcut(QKeySequence::Print);
+    actionPrint->setPriority(QAction::LowPriority);
+    actionPrint->setShortcut(QKeySequence::Print);
     tb->addAction(actionPrint);
 
     const QIcon filePrintIcon = QIcon::fromTheme("fileprint", QIcon(rsrcPath + "/fileprint.png"));
@@ -436,8 +438,8 @@ void TextEdit::setupFileActions()
 
     const QIcon exportPdfIcon = QIcon::fromTheme("exportpdf", QIcon(rsrcPath + "/exportpdf.png"));
     actionExportPDF = menu->addAction(exportPdfIcon, tr("&Export PDF..."), this, &TextEdit::filePrintPdf);
-    a->setPriority(QAction::LowPriority);
-    a->setShortcut(Qt::CTRL + Qt::Key_D);
+    actionExportPDF->setPriority(QAction::LowPriority);
+    actionExportPDF->setShortcut(Qt::CTRL + Qt::Key_D);
     tb->addAction(actionExportPDF);
 
     menu->addSeparator();
@@ -1204,13 +1206,13 @@ void TextEdit::setVisibleFileActions(bool set)
          actionExportPDF != nullptr &&
          actionExitFile != nullptr )
     {
-        actionNewRemote->setVisible(set);
-        actionBrowsRemote->setVisible(set);
-        actionSave->setVisible(set);
-        actionManageUser->setVisible(set);
-        actionPrint->setVisible(set);
-        actionExportPDF->setVisible(set);
-        actionExitFile->setVisible(set);
+        actionNewRemote->setEnabled(set);
+        actionBrowsRemote->setEnabled(set);
+        actionSave->setEnabled(set);
+        actionManageUser->setEnabled(set);
+        actionPrint->setEnabled(set);
+        actionExportPDF->setEnabled(set);
+        actionExitFile->setEnabled(set);
     } else {
         this->statusBarOutput("azione = nullptr");
     }
@@ -1219,14 +1221,16 @@ void TextEdit::setVisibleFileActions(bool set)
 
 void TextEdit::setVisibleEditorActions(bool set)
 {
-    actionTextBold->setVisible(set);
-    actionTextItalic->setVisible(set);
-    actionTextUnderline->setVisible(set);
-    actionTextColor->setVisible(set);
+    this->textEdit->setEnabled(set);    // accende/spegne l'editor
+
+    actionTextBold->setEnabled(set);
+    actionTextItalic->setEnabled(set);
+    actionTextUnderline->setEnabled(set);
+    actionTextColor->setEnabled(set);
     // vale anche per copia incolla
-    actionCut->setVisible(set);
-    actionCopy->setVisible(set);
-    actionPaste->setVisible(set);
+    actionCut->setEnabled(set);
+    actionCopy->setEnabled(set);
+    actionPaste->setEnabled(set);
 }
 
 void TextEdit::currentCharFormatChanged(const QTextCharFormat &format)

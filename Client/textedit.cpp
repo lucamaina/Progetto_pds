@@ -227,69 +227,116 @@ void TextEdit::setupStatusBar(){
     connect(client,&Client::toStatusBar, this, &TextEdit::statusBarOutput);
 }
 
-bool TextEdit::eventFilter(QObject *obj, QEvent *event){
+
+bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
     //qDebug()<<QApplication::clipboard()->mimeData()->text();
     if (obj == this->textEdit) {
         /*
          * modifica shortcut di copia e incolla
          */
-        if(event->type() == QEvent::ShortcutOverride)
+        if (event->type() == QEvent::ShortcutOverride)
         {
             QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
-            if(keyEvent->modifiers().testFlag(Qt::ControlModifier) == true)
+            if (keyEvent->modifiers().testFlag(Qt::ControlModifier) == true)
             {
                 // allow override of all Ctrl+ shortcuts
-                    if(keyEvent->key()==Qt::Key_V){
-                        goPaste();
-                    }
-                    if(keyEvent->key() == Qt::Key_X){
-                        this->setVisibleFileActions(true);
-                    }
-                    if(keyEvent->key() == Qt::Key_C){
-                        QApplication::clipboard()->mimeData()->text()=textEdit->textCursor().selectedText();
-                    }
+                if (keyEvent->key() == Qt::Key_V) {
+                    goPaste();
+                }
+                if (keyEvent->key() == Qt::Key_X) {
+                    this->setVisibleFileActions(true);
+                }
+                if (keyEvent->key() == Qt::Key_C) {
+                    QApplication::clipboard()->mimeData()->text() = textEdit->textCursor().selectedText();
+                }
                 return false;
 
             }
 
         }
 
-        if (!this->client->isLogged()){
+        if (!this->client->isLogged()) {
             this->statusBar()->showMessage("Utente non loggato", 2000);
             return false;   // eseguo normalmente
         }
 
-        if (this->client->remoteFile == nullptr){
+        if (this->client->remoteFile == nullptr) {
             return false;
         }
 
         QTextCursor s = textEdit->textCursor();
         int poss = s.position();
-
+        int anchor = s.anchor();
         if (event->type() == QEvent::KeyPress) {    // verifica key di interesse
 
-            QKeyEvent *e = static_cast<QKeyEvent*>(event);
+            QKeyEvent* e = static_cast<QKeyEvent*>(event);
 
-            if (e->isAutoRepeat()){
+            if (e->isAutoRepeat()) {
                 return true;       // salta le azioni ripetute
             }
 
-            if(e->text()==""){return false;} // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
+            if (e->text() == "") { return false; } // SALTA I PULSANTI CHE NON INSERISCONO CARATTERI
 
-            if(e->key()==Qt::Key_Backspace || e->key()==Qt::Key_Delete){    // 16777219 , 16777223
+            if (e->key() == Qt::Key_Backspace || e->key() == Qt::Key_Delete) {    // 16777219 , 16777223
                 // PULSANTI DI CANCELLAZIONE
 
-                this->cancellamento(poss, e->key());
+
+
+                if (s.anchor() > s.position())
+                {
+                    while (s.anchor() > s.position())
+                    {
+                        this->cancellamento(anchor, Qt::Key_Backspace);
+                        anchor--;
+                    }
+                }
+
+                else if (s.anchor() < s.position())
+                {
+                    while (s.anchor() < s.position())
+                    {
+                        this->cancellamento(poss, Qt::Key_Backspace);
+                        poss--;
+                    }
+                }
+
+                else if (s.anchor() == s.position())
+                {
+                    this->cancellamento(poss, e->key());
+
+                }
 
                 return true;
 
-            } else {
+            }
+            else {
                 // PULSANTI DI INSERIMENTO
 
-                if(!e->text().front().isPrint()&&e->text().front()!='\xd'){return false;}
+                if (!e->text().front().isPrint() && e->text().front() != '\xd') { return false; }
 
                 QChar c = e->text().front();        // carattere da inserire
                 QTextCharFormat format = textEdit->textCursor().charFormat();   // formato del carattere
+
+                if (s.hasSelection())
+                {
+                    if (s.anchor() > s.position())
+                    {
+                        while (s.anchor() > s.position())
+                        {
+                            this->cancellamento(anchor, Qt::Key_Backspace);
+                            anchor--;
+                        }
+                    }
+
+                    else if (s.anchor() < s.position())
+                    {
+                        while (s.anchor() < s.position())
+                        {
+                            this->cancellamento(poss, Qt::Key_Backspace);
+                            poss--;
+                        }
+                    }
+                }
 
                 this->inserimento(poss, c, format);
 

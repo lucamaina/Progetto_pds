@@ -34,14 +34,15 @@ void nuovoFileRemoto::setUpGUI()
 
     connect( buttons->button( QDialogButtonBox::Open ),
         SIGNAL (clicked()), this, SLOT (addNewFile()) );
-
+    this->setResult(QDialog::Rejected);
 }
 
 void nuovoFileRemoto::addNewFile()
 {
     QString str = this->insertName->displayText();
-    qDebug() << "sono in nuovoFileRemoto::addNewFile + " << str;
+    qDebug() << "sono in " << Q_FUNC_INFO << " - " << str;
     emit s_addNewFile(str);
+    this->setResult(QDialog::Accepted);
     this->close();
 }
 

@@ -80,13 +80,11 @@ QString Client::getUsername() const
  * @param filename
  * slot per inviare al server addNewFile
  */
-void Client::handleNuovoFile()
+bool Client::handleNuovoFile()
 {  
-    qDebug() << "sono in Client::handleNuovoFile";
-
+    qDebug() << "sono in " << Q_FUNC_INFO;
     finestraAddFile->exec();
-
-    finestraAddFile->close();
+    return false;
 }
 
 /**
@@ -281,7 +279,9 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         emit s_changeTitle(this->username, "*", "*");
         emit s_setVisbleFileActions(true);
     }
-
+    else if (comando.value() == ADD_FILE_OK) {
+        emit s_brows();
+    }
     else if(comando.value()==LOGOUT_OK){
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"Logout","Logged out successfully");
@@ -363,7 +363,11 @@ void Client::dispatchERR(QMap <QString,QString>cmd){
     }
     else if (comando.value() == ADD_USER_ERR) {
         this->showUserError(cmd);
-
+    }
+    else if (comando.value() == ADD_FILE_ERR1 || comando.value() == ADD_FILE_ERR2) {
+        QMessageBox Messaggio;
+        Messaggio.information(nullptr,"File non aggiunto", comando.value());
+        Messaggio.setFixedSize(500,200);
     }
 }
 
@@ -385,11 +389,6 @@ void Client::handleBrowse(QMap<QString,QString> cmd){
     /****** creo una mappa MAP <DOCID, FILENAME> e poi aggiungo la scelta alla finestra come docid+filename,
      ******  in modo che quando mi viene ritornata la scelta ho l'informazione sull id e sul nome
      ******  ed evito di avere duplicati nella tendina della scelta *****/
-/*
-    foreach(QString s, cmd.keys()){i++; if(s=="filename"+QString::number(i)){ listanomi.push_back(cmd.value(s)); } }
-    i=0;
-    foreach(QString s, cmd.keys()){i++; if(s=="docID"+QString::number(i)){ listaID.push_back(cmd.value(s)); } }
-*/
 
     foreach (QString s, cmd.keys() ){
         if (s == DOCID + QString::number(i)){

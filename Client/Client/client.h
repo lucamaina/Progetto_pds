@@ -26,7 +26,7 @@ public:
 
     // gestori chiamate da icone di texteditor
     void handleBrowse(QMap<QString,QString> cmd);
-    void handleNuovoFile();
+    bool handleNuovoFile();
     void handleAddUser();
     void handleFileExit();
     void listUser(QMap<QString,QString> cmd);
@@ -79,7 +79,7 @@ signals:
     void openFileSignal(QString& filename);
     void s_clearEditor();
     void toStatusBar(QString s);
-
+    void s_brows();
     void s_setText(QChar c, QTextCharFormat f, int posCur);
     void s_removeText(int posCur);
 

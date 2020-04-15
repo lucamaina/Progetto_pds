@@ -20,43 +20,6 @@ void Symbol::setFormato(const QByteArray &value)
     formato = value;
 }
 
-
-
-bool Symbol::insertSym(Symbol &sym, QVector<qint32> idx)
-{
-    /*
-    if (idx.isEmpty()){
-        qDebug() << "errore in " << Q_FUNC_INFO;
-        return false;
-    } else if (idx.length() == 1 && idx.at(0) == sym.getIndex()) {
-        // inserisco symbol in nextLevel
-        this->nextLevel.insert(sym.getIndex(), sym);
-        return true;
-    } else{
-        qint32 val = idx.takeAt(0);
-        Symbol s = this->nextLevel.value(val);
-        return s.insertSym(sym, idx);
-    }
-    */
-}
-
-bool Symbol::deleteSym(Symbol &sym, QVector<qint32> idx)
-{/*
-    if (idx.isEmpty()){
-        qDebug() << "errore in " << Q_FUNC_INFO;
-        return false;
-    } else if (idx.length() == 1 && idx.at(0) == sym.getIndex()) {
-        // elimino symbol da nextLevel
-        this->nextLevel.remove(idx.at(0));
-        return true;
-    } else{
-        qint32 val = idx.takeAt(0);
-        Symbol s = this->nextLevel.value(val);
-        return s.deleteSym(sym, idx);
-    }*/
-}
-
-
 QVector<qint32> Symbol::getIndex() const
 {
     return index;

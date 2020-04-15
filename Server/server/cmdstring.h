@@ -75,6 +75,10 @@
 #define FILE_ERR "error - user cannot open file"
 #define FILE_OK "ok - file open"
 
+#define ADD_FILE_OK "ok - file inserito"
+#define ADD_FILE_ERR1 "error - code 1: file già presente"
+#define ADD_FILE_ERR2 "error - code 2: errore inserimento"
+
 #define INS_ERR "error - inert not possible"
 #define INS_OK "ok - insert done"
 

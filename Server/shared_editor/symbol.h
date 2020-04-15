@@ -47,10 +47,6 @@ public:
     QMap<qint32, Symbol> getNextLevel() const;
     void setNextLevel(const QMap<qint32, Symbol> &value);
 
-    bool insertSym(Symbol& sym, QVector<qint32> idx);
-    bool deleteSym(Symbol& sym, QVector<qint32> idx);
-
-
     QVector<qint32> getIndex() const;
     void setIndex(const QVector<qint32> &value);
 };

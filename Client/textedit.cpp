@@ -212,6 +212,7 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this->client, &Client::s_upCursor, this, &TextEdit::upCursor);
     connect(this->client, &Client::s_changeCursor, this, &TextEdit::changeCursor, Qt::DirectConnection);
     connect(this->client, &Client::s_changeTitle, this, &TextEdit::windowTitle, Qt::DirectConnection);
+    connect(this->client, &Client::s_brows, this, &TextEdit::remoteBrows, Qt::DirectConnection);
 
     connect(this->client, &Client::s_setVisbleFileActions, this, &TextEdit::setVisibleFileActions, Qt::DirectConnection);
     connect(this->client, &Client::s_setVisbleEditorActions, this, &TextEdit::setVisibleEditorActions, Qt::DirectConnection);
@@ -837,7 +838,6 @@ void TextEdit::RegisterDialog()
 void TextEdit::fileNew()
 {
     client->handleNuovoFile();
-    this->remoteBrows();
 }
 
 void TextEdit::fileExit()
@@ -1137,6 +1137,7 @@ void TextEdit::myColorChange(QString& nome){
     QString s=col.name();
     QString p="color";
 }
+
 void TextEdit::textColor()
 {
     QColor col = QColorDialog::getColor(textEdit->textColor(), this);

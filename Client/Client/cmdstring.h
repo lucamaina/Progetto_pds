@@ -72,6 +72,10 @@
 #define FILE_ERR "error - user cannot open file"
 #define FILE_OK "ok - file open"
 
+#define ADD_FILE_OK "ok - file inserito"
+#define ADD_FILE_ERR1 "error - code 1: file già presente"
+#define ADD_FILE_ERR2 "error - code 2: errore inserimento"
+
 #define ADD_USER_ERR "error - Utenti non aggiunti"
 #define REM_USER_ERR "error - Utenti non rimossi"
 

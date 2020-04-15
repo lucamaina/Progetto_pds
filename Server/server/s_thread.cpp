@@ -415,15 +415,15 @@ void s_thread::addFileDB(QMap<QString, QString> &comando)
     if (this->up_conn->addFile(*this->up_user, nomeFile, errorCode)){
         // file inserito
         risp.insert(CMD, OK);
-        risp.insert(MEX, "file inserito");
+        risp.insert(MEX, ADD_FILE_OK);
     } else if (errorCode == 0){
         // nome presente
         risp.insert(CMD, ERR);
-        risp.insert(MEX, "nome file già presente");
+        risp.insert(MEX, ADD_FILE_ERR1);
     } else {
         // errore inserimento
         risp.insert(CMD, ERR);
-        risp.insert(MEX, "errore in inserimento");
+        risp.insert(MEX, ADD_FILE_ERR2);
     }
     // TODO stringa di log
     clientMsg(risp);

@@ -7,6 +7,8 @@
 #include <QDialogButtonBox>
 #include <QLineEdit>
 #include <QComboBox>
+#include <QListWidget>
+#include <QListWidgetItem>
 #include <QGridLayout>
 #include <QStringList>
 #include <QDebug>
@@ -23,8 +25,10 @@ public:
 private:
     void setUpGUI();
 
-    QComboBox* comboScelta;
-    QLabel* labelScelta;
+    QListWidget *listaScelta;
+    // QComboBox* comboScelta;
+    QLabel *labelScelta;
+    QLabel *labelHint;
     QDialogButtonBox* buttons;
     QMap<QString, QString> fileMap;
 

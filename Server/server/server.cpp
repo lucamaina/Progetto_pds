@@ -28,6 +28,19 @@ void server::startServer()
 
 }
 
+/**
+ * @brief server::saveAll
+ * chiamato se capita eccezione, salva tutti gli editor
+ */
+void server::saveAll()
+{
+    this->m.lock();
+
+    Network::getNetwork().salvaTutto();
+
+    this->m.unlock();
+}
+
 void server::deleteThread(s_thread &t)
 {
     m.lock();
@@ -60,6 +73,7 @@ void server::incomingConnection(int socketID)
             newThread->run();
         } catch (std::exception &e) {
             // TODO migliorare gestione
+            this->saveAll();
             log->write(e.what());
             qDebug() << "sono in server: " << e.what();
             std::cin >> a;

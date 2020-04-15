@@ -11,7 +11,7 @@
 class Comando
 {
 public:
-    enum cmdType {  Insert_Ok,
+    enum cmdType { Insert_Ok,
                     Remove_Ok,
                     Insert_Err,
                     Remove_Err,

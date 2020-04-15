@@ -28,6 +28,7 @@ public:
     void handleBrowse(QMap<QString,QString> cmd);
     void handleNuovoFile();
     void handleAddUser();
+    void handleFileExit();
     void listUser(QMap<QString,QString> cmd);
 
 

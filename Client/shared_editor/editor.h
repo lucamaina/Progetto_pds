@@ -51,14 +51,9 @@ public:
     bool cursorChange(Message msg);
     bool remoteSend(Message msg);
 
-    int deleteLocal(double index, char car);
+    void updateFormat(int pos, QTextCharFormat format);
 
-    void updateFormat(double index, QTextCharFormat formato);
-
-
-    QList<Symbol> &getTesto(QList<Symbol>& testo);
-
-
+    QString getNomeFile() const;
 
 private:
 
@@ -70,7 +65,6 @@ signals:
     void s_read();
 
 public slots:
-    void read();
 
 
 };

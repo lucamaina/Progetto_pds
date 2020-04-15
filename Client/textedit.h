@@ -88,6 +88,7 @@ public:
 
 public slots:
     void fileNew();
+    void fileExit();
     void LoginDialog();
     void LogoutDialog();
     void RegisterDialog();
@@ -133,7 +134,7 @@ private slots:
     void textSize(const QString &p);
     void textStyle(int styleIndex);
     void textColor();
-    void textAlign(QAction *a);
+    // void textAlign(QAction *a);
 
     void currentCharFormatChanged(const QTextCharFormat &format);
     void cursorPositionChanged();
@@ -154,7 +155,7 @@ private:
     void fontChanged(const QFont &f);
     void colorChanged(const QColor &c);
     void myColorChange(QString& nome);
-    void alignmentChanged(Qt::Alignment a);
+    // void alignmentChanged(Qt::Alignment a);
     void myTextAlign(QString& a);
 
     //Editor* editor;

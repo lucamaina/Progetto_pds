@@ -26,6 +26,8 @@ public:
 
     Editor& getEditor(QString docId);
 
+    void salvaTutto();
+
 signals:
     void sigSend(void);     // segnale
 

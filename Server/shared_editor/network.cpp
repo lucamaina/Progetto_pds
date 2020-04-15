@@ -125,6 +125,13 @@ Editor &Network::getEditor(QString docId)
     return *this->editorMap.value(docId);
 }
 
+void Network::salvaTutto()
+{
+    for (Editor *e : this->editorMap.values()) {
+        e->save();
+    }
+}
+
 /**
  * @brief Network::dispatch
  * invia il messaggio all'editor corretto

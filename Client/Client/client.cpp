@@ -121,9 +121,18 @@ void Client::handleAddUser()
 
 }
 
+void Client::handleFileExit()
+{
+    qDebug() << "sono in " << Q_FUNC_INFO;
+    QMap<QString, QString> cmd;
+    cmd.insert(CMD, ULIST);
+    cmd.insert(DOCID, this->docID);
+    this->sendMsg(cmd);
+}
+
 void Client::listUser(QMap<QString, QString> cmd)
 {
-    qDebug() << "sono in Client::listUser";
+    qDebug() << "sono in " << Q_FUNC_INFO;
     QList<QString> lista;
     int i = 1;
     for (QString key : cmd.keys() ){
@@ -449,7 +458,11 @@ void Client::loadFile(QMap<QString,QString> cmd)
     connect(this->socket,SIGNAL(readyRead()),this,SLOT(readyRead()));
 
     //emit clearEditor();
-    this->remoteFile = new Editor(this->docID, this->filename, qba,  username);
+    try {
+        this->remoteFile = new Editor(this->docID, this->filename, qba,  username);
+    } catch (...) {
+
+    }
     emit this->s_clearEditor();
 
     int pos = 0;
@@ -858,7 +871,7 @@ bool Client::remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index
 
 bool Client::remoteInsert(Symbol sym, int cursor)
 {
-    return remoteInsert( sym.getChar(),
+    return remoteInsert( sym.getCar(),
                          sym.getFormat(),
                          sym.getIndici(),
                          cursor);
@@ -883,7 +896,7 @@ bool Client::remoteDelete(QChar c, QVector<qint32> index, int cursor)
 
 bool Client::remoteDelete(Symbol s, int cursor)
 {
-    return remoteDelete( s.getChar(),
+    return remoteDelete( s.getCar(),
                          s.getIndici(),
                          cursor);
 }

@@ -5,6 +5,11 @@
 
 #include "editor.h"
 
+QString Editor::getNomeFile() const
+{
+    return nomeFile;
+}
+
 Editor::Editor(QObject *parent) : QObject(parent)
 {
 
@@ -166,28 +171,7 @@ int Editor::findLocalPosCursor(QVector<qint32> &index)
     return -1; // non trovato
 }
 
-
-/*********************************************************************************************************
- ************************ metodi di gestione della mappa **************************************************
- *********************************************************************************************************/
-
-QList<Symbol>& Editor::getTesto(QList<Symbol>& testo)
+void Editor::updateFormat(int pos, QTextCharFormat format)
 {
-    return testo;
-}
-
-void Editor::read()
-{
-
-}
-
-
-
-
-int Editor::deleteLocal(double index, char car){
-    return 0;
-}
-
-void Editor::updateFormat(double index, QTextCharFormat formato){
     return;
 }

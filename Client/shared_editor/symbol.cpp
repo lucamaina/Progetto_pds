@@ -66,20 +66,6 @@ void Symbol::setUserName(const QString &value)
 }
 
 
-
-/**
- * @brief Symbol::getLocalIndex
- * @param posCur
- * @param vec
- * @return
- * scorre le liste contando i symboli che non hanno next level
- */
-qint32 Symbol::getLocalIndex(qint32 posCur, QVector<qint32> &vec)
-{
-    return -1;
-}
-
-
 QDataStream &operator<<(QDataStream &out, const Symbol &sym)
 {
     out.setVersion(QDataStream::Qt_5_12);

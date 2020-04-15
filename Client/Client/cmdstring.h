@@ -24,6 +24,7 @@
 #define ADD_USER "ADD-USER"
 #define REM_USER "REM-USER"
 #define UP_CRS "UP-CRS"
+#define EXFILE "EXIT-FILE"
 
 #define OK "OK"
 #define ERR "ERR"

@@ -316,7 +316,7 @@ bool TextEdit::inserimento(int posCursor, QChar car, QTextCharFormat format)
         this->client->inserimento(index, car, format);
        // this->setText(car, format, s.position());
 
-/*        if(s.hasSelection()){
+        if(s.hasSelection()){
             int poscurs=s.position();
             int posanch=s.anchor();
             for( int i=poscurs+1; i<=posanch; i++){
@@ -448,7 +448,7 @@ void TextEdit::setupFileActions()
 
 
     const QIcon exitFileIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/fileexit.png"));
-    actionExitFile = menu->addAction(exitFileIcon,  tr("&Exit from this file"), this, &TextEdit::fileNew); // slot di connessione
+    actionExitFile = menu->addAction(exitFileIcon,  tr("&Exit from this file"), this, &TextEdit::fileExit); // slot di connessione
     tb->addAction(actionExitFile);
 
     /*
@@ -808,8 +808,8 @@ void TextEdit::LogoutDialog()
 {
     const QMessageBox::StandardButton ret = QMessageBox::warning(this,
                    "Disconnessione in corso",
-                   "Si sta per effettuare la disconnessione dell'utente \" " +
-                        this->client->getUsername() + " \".\n Continuare con la disconeesione?",
+                   "Si sta per effettuare la disconnessione dell'utente: \" " +
+                        this->client->getUsername() + " \".\nContinuare con la disconnesione?",
                    QMessageBox::Yes | QMessageBox::No,
                    QMessageBox::No);
 
@@ -836,12 +836,27 @@ void TextEdit::RegisterDialog()
  */
 void TextEdit::fileNew()
 {
-    /*
-    if (maybeSave()) {
-        textEdit->clear();
-        setCurrentFileName(QString());
+    client->handleNuovoFile();
+    this->remoteBrows();
+}
+
+void TextEdit::fileExit()
+{
+    qDebug() << "sono in " << Q_FUNC_INFO;
+    const QMessageBox::StandardButton ret = QMessageBox::warning(this,
+                   "Esci dal documento corrente",
+                   "Si sta per uscire dal file corrente: \" " +
+                        this->client->remoteFile->getNomeFile() + " \".\nContinuare?",
+                   QMessageBox::Yes | QMessageBox::No,
+                   QMessageBox::No);
+
+    switch (ret){
+    case QMessageBox::Yes : // invio logout
+        this->client->handleFileExit();
+        break;
+    default: // esco
+        break;
     }
-    */
 }
 
 void TextEdit::fileOpen()
@@ -1140,9 +1155,10 @@ void TextEdit::textColor()
     emit stileTesto(p,s);
 }
 
-void TextEdit::textAlign(QAction *a)
-{
 /*
+ * void TextEdit::textAlign(QAction *a)
+{
+
     QString p="align";
     if (a == actionAlignLeft){
         textEdit->setAlignment(Qt::AlignLeft | Qt::AlignAbsolute);
@@ -1171,8 +1187,8 @@ void TextEdit::textAlign(QAction *a)
         QString s="giustficato";
         if(!remoteStile)emit stileTesto(p,s);
     }
-*/
 }
+*/
 
 void TextEdit::myTextAlign(QString& a)
 {
@@ -1396,9 +1412,9 @@ void TextEdit::colorChanged(const QColor &c)
     actionTextColor->setIcon(pix);
 }
 
-void TextEdit::alignmentChanged(Qt::Alignment a)
+/*
+ * void TextEdit::alignmentChanged(Qt::Alignment a)
 {
-    /*
     if (a & Qt::AlignLeft)
         actionAlignLeft->setChecked(true);
     else if (a & Qt::AlignHCenter)
@@ -1406,9 +1422,9 @@ void TextEdit::alignmentChanged(Qt::Alignment a)
     else if (a & Qt::AlignRight)
         actionAlignRight->setChecked(true);
     else if (a & Qt::AlignJustify)
-        actionAlignJustify->setChecked(true);
-        */
+        actionAlignJustify->setChecked(true);       
 }
+*/
 
 void TextEdit::spostaCursor(int& pos,int& anchor,char& car ,QString& user){
     //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento

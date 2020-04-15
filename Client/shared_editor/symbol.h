@@ -32,22 +32,14 @@ public:
     explicit Symbol(QString user, QChar car, QVector<qint32> idx, QTextCharFormat format) :  car(car), userName(user), textFormat(format),indici(idx)
     { formato = serialize(format); }
 
-    QChar getChar(){return this->car;}
     QMap<QString, QString> toMap();
+    QList<Symbol> & read(QList<Symbol> &testo);
 
     void setFormat(const QTextCharFormat &format);
     QTextCharFormat getFormat(void) const;
-    int getNum() const;
-    void setNum(const int &value);
-    int getDen() const;
-    void setDen(const int &value);
+
     QString getUserName() const;
     void setUserName(const QString &value);
-
-
-    QList<Symbol> & read(QList<Symbol> &testo);
-
-     qint32 getLocalIndex(qint32 posCur, QVector<qint32>& vec);
 
     QChar getCar() const;
 

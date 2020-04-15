@@ -43,6 +43,7 @@ void s_thread::disconnected()
 void s_thread::exitThread()
 {
     qDebug() << "sono in " << Q_FUNC_INFO;
+
     // tolgo utente da editor
     Network::getNetwork().remRefToEditor( this->docID,
                                           this->up_user->getUsername() );
@@ -132,6 +133,8 @@ void s_thread::dispatchCmd(QMap<QString, QString> &cmd){
         this->addUsersDB(cmd);
     } else if (comando.value() == REM_USER) {
         this->remUsersDB(cmd);
+    } else if (comando.value() == EXFILE) {
+        this->exitClientFromFile(cmd);
     }
 }
 
@@ -482,7 +485,7 @@ void s_thread::openFile(QMap<QString, QString> &comando)
 
     if(!docID.isEmpty())
         Network::getNetwork().remRefToEditor(this->docID, this->up_user->getUsername());    //  ???
-
+    this->docID = comando.value(DOCID);
 
     QMap<QString,QString> risp;
 
@@ -509,22 +512,46 @@ void s_thread::openFile(QMap<QString, QString> &comando)
     Network &net = Network::getNetwork();
     if (!net.filePresent(comando.value(DOCID))){
         // aggiungi file
-        net.createEditor( comando.value(DOCID),
-                          PATH + comando.value(FNAME),
-                          *up_user,
-                          this->sp_socket );
+        try {
+            net.createEditor( comando.value(DOCID),
+                              PATH + comando.value(FNAME),
+                              *up_user,
+                              this->sp_socket );
+        } catch (...) {
+            Logger::getLog().write("Eccezione in apertura di aditor");
+        }
+
     } else {
         // aumenta contatore user attivi
         net.addRefToEditor( comando.value(DOCID),
                             *this->up_user,
                             this->sp_socket );
     }
-    this->docID = comando.value(DOCID);
+    QString docid = comando.value(DOCID);
     // send Map
-    QByteArray ba = net.getEditor(comando.value(DOCID)).getSymMap();
+    QByteArray ba = net.getEditor(docid).getSymMap();
 
     this->sendBody(ba);
     qDebug() << ba;
+}
+
+/**
+ * @brief s_thread::exitClientFromFile
+ * @param comando
+ * chiamato se utente esce dal file, si aggiorna il contatore degli utenti attivi
+ */
+void s_thread::exitClientFromFile(QMap<QString, QString> &comando)
+{
+    if (!verifyCMD( comando,
+                    QList<QString>({CMD, DOCID})) )
+    {   return;   }
+    if (up_user->isConnected() == false) return;
+
+    QString docid = comando.value(DOCID);
+    Network::getNetwork()
+            .getEditor(docid)
+            .removeUser( up_user->getUsername() );
+    this->docID.clear();
 }
 
 
@@ -680,7 +707,7 @@ void s_thread::sendMsg(QMap<QString, QString> comando)
  * @return true se tutti i campi di list sono chiavi di cmd
  * verifica presenza dei campi nella mappa dei comandi
  */
-bool s_thread::verifyCMD(QMap<QString, QString> &cmd, QList<QString> &list)
+bool s_thread::verifyCMD(QMap<QString, QString> &cmd, const QList<QString> &list)
 {
     QString val;
     foreach (val, list){
@@ -688,73 +715,3 @@ bool s_thread::verifyCMD(QMap<QString, QString> &cmd, QList<QString> &list)
     }
     return true;
 }
-
-
-/*********************************************************************************************************
- ************************ public slots *******************************************************************
- *********************************************************************************************************/
-
-/*
-void s_thread::readyRead()
-{
-    QByteArray out;
-    QByteArray tmp;
-    uint dim;
-    char v[4096] = {};
-
-    out.reserve(4096);
-    tmp.reserve(16);
-
-    if (socket->bytesAvailable() > 0){
-        if (socket->read(v, 4096) < 0){
-            qDebug() << "errore in socket::read()";
-        }
-        this->buffer.append( v );
-    } else {
-        return;
-    }
-
-    while (buffer.contains(INIT)){
-        // presente token iniziale del messaggio
-        int idx = buffer.indexOf(INIT, 0);
-        if ( idx >= 0){
-            buffer.remove(0, idx);
-            command.clear();
-            command.append(buffer);       // |command| contiene token <INIT> e quello che viene ricevuto subito dopo
-            command.remove(0, INIT_DIM);       // rimuovo <INIT> da |out|
-
-            if (command.size() < LEN_NUM){
-                return;
-            }
-
-            tmp = command.left(LEN_NUM);                  // in |tmp| copio 8 byte che descrivono la dimensione del messaggio
-            command.remove(0,LEN_NUM);
-            dim = tmp.toUInt(nullptr, 16); // |dim| ha dimensione di tmp in decimale
-
-            uint len = static_cast<uint>(command.size());
-            uint rimane = 0;
-            if (len < dim){
-                rimane = dim - len;
-            }
-
-            while (rimane > 0){
-                uint i = dim - len;
-                socket->waitForReadyRead(100);      // finisco di leggere il resto del messaggio
-                if (this->socket->read(v, i) < 0){
-                    qDebug() << "errore in socket::read()";
-                }
-                this->command.append( v );
-                len = static_cast<uint>(command.size());
-                rimane = dim - len;
-            }
-            command.remove(static_cast<int>(dim), 4096);
-            buffer.remove(0, LEN_NUM + INIT_DIM + static_cast<int>(dim));
-
-            leggiXML(command);
-            // finito di leggere i byte del messaggio ritorno al ciclo iniziale
-        } else {
-            // token nonn trovato
-        }
-    }
-}
-*/

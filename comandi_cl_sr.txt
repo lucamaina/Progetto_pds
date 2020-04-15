@@ -69,13 +69,19 @@
 
 ## comandi relativi all'editor
 
-// messaggio di apertura di file già presente
+// messaggio di apertura di file
 <?xml version="1.0" encoding="UTF-8"?>
 <OPEN-FILE>
 	<username>val1</username>
 	<docid>val2</docid>
 	<filename>val1</filename>
 </OPEN-FILE>
+
+// messaggio di uscita dell'utente dal file
+<?xml version="1.0" encoding="UTF-8"?>
+<EXIT-FILE>
+	<docid>val2</docid>
+</EXIT-FILE>
 
 // messaggio di inserimento di carattere
 <?xml version="1.0" encoding="UTF-8"?>

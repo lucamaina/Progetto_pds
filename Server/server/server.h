@@ -20,6 +20,7 @@ class server : public QTcpServer
 public:
     explicit server(QObject *parent = nullptr);
     void startServer();
+    void saveAll();
 
 signals:
 

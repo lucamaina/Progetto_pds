@@ -29,6 +29,7 @@ public:
     s_thread(int ID, QObject *parent = nullptr);
     ~s_thread(){ qDebug() << "distruttore s_thread " << this->sockID; }
     void exitThread();
+    void save();
     void run();
 
 public slots:
@@ -43,8 +44,7 @@ signals:
 
 private:
     int sockID;
-    QString docID = "";
-    QTcpSocket *socket = nullptr;
+    QString docID;
 
     // socket con shared pointer
     QSharedPointer<MySocket> sp_socket;
@@ -83,6 +83,7 @@ private:
     void addFileDB(QMap<QString, QString> &comando);
     void browsFile(QMap<QString, QString> &comando);
     void openFile(QMap<QString, QString> &comando);
+    void exitClientFromFile(QMap<QString, QString> &comando);
     void getUsers(QMap<QString, QString> &comando);
     void addUsersDB(QMap<QString, QString> &comando);
     void remUsersDB(QMap<QString, QString> &comando);
@@ -91,7 +92,7 @@ private:
      * metodi accesso a netowrk *************************************************/
     void sendMsg(QMap<QString, QString> comando);
 
-    bool verifyCMD(QMap<QString, QString> &cmd, QList<QString> &list);
+    bool verifyCMD(QMap<QString, QString> &cmd, const QList<QString> &list);
 };
 
 #endif // S_THREAD_H

@@ -13,15 +13,21 @@ Editor::Editor(QString Id, QString fName)
     this->DocId = Id;
     this->refCount = 1;
     dim = 0;
-    this->file = new QFile(this->nomeFile);
-    file->open(QIODevice::ReadWrite | QIODevice::Text);
-    qDebug() << file->size();
-
-    if (this->file->isOpen()){
-        this->loadMap();
+    try {
+        file = new QFile(this->nomeFile);
+        file->open(QIODevice::ReadWrite | QIODevice::Text);
+        if (this->file->isOpen()){
+            this->loadMap();
+        }
+        file->close();
+    } catch (...) {
 
     }
-    file->close();
+
+
+    qDebug() << file->size();
+
+
 }
 
 bool Editor::loadMap()
@@ -144,8 +150,8 @@ bool Editor::send(QSharedPointer<MySocket> &sock, QByteArray ba)
 
 bool Editor::sendToAll(Comando &cmd)
 {
-    QSharedPointer<MySocket> sp;
-    this->sendList_.values();
+    if (this->sendList_.isEmpty())
+        return true;
     qDebug() << "--------------------------------------{";
     for(QSharedPointer<MySocket> sock : this->sendList_.values()){
         this->send(sock, cmd.toByteArray());

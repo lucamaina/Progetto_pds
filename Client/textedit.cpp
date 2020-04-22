@@ -1798,34 +1798,6 @@ void TextEdit::upCursor(QStringList &list)
             }
         }
     }
-    /*
-    mappaCursori.clear();
-    for (QLabel* l : mappaEtichette.values()){
-        l->setVisible(false);   // unico modo per eliminare vecchia label
-    }
-    mappaEtichette.clear();
-    this->list->clear();
-
-    for (QString nome : list){
-        // aggiungo cursore con nuovo nome
-
-        QTextCursor* s = new QTextCursor(textEdit->document());
-        mappaCursori.insert(nome, s);
-
-        QLabel *lbl = new QLabel(nome, textEdit);
-        mappaEtichette.insert(nome, lbl);
-
-        QRect r = textEdit->cursorRect();
-        lbl->move(r.left(), r.bottom());
-        lbl->setFont(QFont("Arial",8,14,true));
-        lbl->setStyleSheet("QLabel { background-color : rgba(255, 0, 0, 64); color : blue; }");
-        if (nome == this->client->getUsername()){
-            lbl->show();
-        }
-
-        this->list->addItem(nome);
-    }
-    */
 }
 
 void TextEdit::nuovoStileSlot(QString& stile,QString& param){
@@ -1876,8 +1848,6 @@ void TextEdit::salvaMappa(){
 
     qDebug()<<deserial.keys();
     f->write(s);
-
-
 
     f->close();
 }

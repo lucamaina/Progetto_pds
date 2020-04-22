@@ -9,19 +9,22 @@
 
 Editor::Editor(QString Id, QString fName)
 {
+    qDebug() << "sono in " << Q_FUNC_INFO << "; nome file: " << fName;
     this->nomeFile = fName;
     this->DocId = Id;
-    this->refCount = 1;
     dim = 0;
     try {
         file = new QFile(this->nomeFile);
-        file->open(QIODevice::ReadWrite | QIODevice::Text);
+        qDebug() << file->open(QIODevice::ReadWrite);
         if (this->file->isOpen()){
             this->loadMap();
+        } else {
+            qDebug() << " 8=======================D - - - - Errore apertura file" << QString("asdfg");
         }
         file->close();
-    } catch (...) {
 
+    } catch (...) {
+        throw;
     }
 
 
@@ -34,10 +37,9 @@ bool Editor::loadMap()
 {
     // TODO verifica eccezioni
     QByteArray ba;
-    //this->file->open(QIODevice::ReadWrite);
-
     ba = file->readAll();
-
+    qDebug() << "sono in " << Q_FUNC_INFO;
+    qDebug() << ba;
     if (!ba.isEmpty()){
         QDataStream out(&ba, QIODevice::ReadWrite);
         out >> this->symList;
@@ -340,10 +342,14 @@ bool Editor::remoteSend(Message msg)
  */
 bool Editor::save()
 {
+    qDebug() << "sono in " << Q_FUNC_INFO;
     QByteArray ba;
     QDataStream out (&ba, QIODevice::ReadWrite);
     out << this->symList;
-    file->open(QIODevice::WriteOnly | QIODevice::Text);
+
+    qDebug() << ba;
+
+    file->open(QIODevice::WriteOnly);
 
     file->write(ba);
     file->close();

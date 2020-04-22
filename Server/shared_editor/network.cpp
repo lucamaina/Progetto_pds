@@ -110,7 +110,9 @@ bool Network::remRefToEditor(QString fileId, QString user)
     if (this->editorMap.contains(fileId)){
         Editor *ed = editorMap.value(fileId);
         ed->removeUser(user);
+        qDebug() << "sono in " << Q_FUNC_INFO << ed->isEmpty();
         if(ed->isEmpty()){ // ref count
+            qDebug() << "salvo editor";
             ed->save();
             this->editorMap.remove(fileId);
         }

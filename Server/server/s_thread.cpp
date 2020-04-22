@@ -325,6 +325,9 @@ void s_thread::logoffDB(QMap<QString, QString> &comando)
         risp.insert(CMD, OK);
         risp.insert(MEX, LOGOUT_OK);
         logStr = QString::number(this->sockID) + " log out a db con utente: " + up_user->getUsername();
+
+        Network::getNetwork().remRefToEditor(this->docID, this->up_user->getUsername());
+
     } else {
         risp.insert(CMD, ERR);
         risp.insert(MEX, LOGOUT_ERR);
@@ -484,7 +487,7 @@ void s_thread::openFile(QMap<QString, QString> &comando)
     }
 
     if(!docID.isEmpty())
-        Network::getNetwork().remRefToEditor(this->docID, this->up_user->getUsername());    //  ???
+        Network::getNetwork().remRefToEditor(this->docID, this->up_user->getUsername());
     this->docID = comando.value(DOCID);
 
     QMap<QString,QString> risp;
@@ -519,6 +522,7 @@ void s_thread::openFile(QMap<QString, QString> &comando)
                               this->sp_socket );
         } catch (...) {
             Logger::getLog().write("Eccezione in apertura di aditor");
+            qDebug()  << "eccezione in " << Q_FUNC_INFO;
         }
 
     } else {

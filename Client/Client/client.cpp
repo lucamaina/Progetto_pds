@@ -290,7 +290,10 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         connect(this,SIGNAL(deleteListSig()),this->parent(),SLOT(deleteListSlot()));
         emit deleteListSig();
 
-        this->logged=false;
+        this->logged = false;
+        this->username.clear();
+
+        emit Client::s_changeTitle("","","");
         emit s_setVisbleFileActions(false);
         emit s_setVisbleEditorActions(false);
     }
@@ -679,13 +682,21 @@ void Client::handleLogin(QString& username, QString& password)
 
         return;
     }
+
+    qDebug() << "sono in " << Q_FUNC_INFO << "; logged: " << logged << "; username: " << this->username;
+    if ( this->logged == true || !this->username.isEmpty()) {
+        comando.insert(CMD, LOGOUT);
+        comando.insert(UNAME, this->username);
+        this->sendMsg(comando);
+    }
+
     this->username=username;
     this->logged=true;
 
     comando.insert(CMD, LOGIN);
     comando.insert(UNAME, username);
     comando.insert(PASS, password);
-    this->sendMsg(comando);
+    this->sendMsg(comando);    
 }
 
 void Client::handleLogout(){
@@ -701,7 +712,6 @@ void Client::handleLogout(){
 
     comando.insert(CMD, LOGOUT);
     comando.insert(UNAME, username);
-    //comando.insert("password", password);
     this->sendMsg(comando);
 
 }

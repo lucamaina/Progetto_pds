@@ -28,7 +28,6 @@ private:
     QString DocId;      // id usato nel db
 
     QFile *file;
-    int refCount;
     qint32 dim;
     qint32 maxDim = std::numeric_limits<qint32>::max();
 

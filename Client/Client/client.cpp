@@ -123,9 +123,13 @@ void Client::handleFileExit()
 {
     qDebug() << "sono in " << Q_FUNC_INFO;
     QMap<QString, QString> cmd;
-    cmd.insert(CMD, ULIST);
+    cmd.insert(CMD, EXFILE);
     cmd.insert(DOCID, this->docID);
     this->sendMsg(cmd);
+
+    emit s_clearEditor();
+    emit s_setVisbleFileActions(true);
+    emit s_setVisbleEditorActions(false);
 }
 
 void Client::listUser(QMap<QString, QString> cmd)

@@ -276,6 +276,8 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         Messaggio.setFixedSize(500,200);
 
         this->logged=true;
+        this->username = tempUser;
+
         emit s_changeTitle(this->username, "*", "*");
         emit s_setVisbleFileActions(true);
     }
@@ -690,8 +692,9 @@ void Client::handleLogin(QString& username, QString& password)
         this->sendMsg(comando);
     }
 
-    this->username=username;
-    this->logged=true;
+    this->username = username;
+    this->tempUser = username;
+    this->logged = true;
 
     comando.insert(CMD, LOGIN);
     comando.insert(UNAME, username);

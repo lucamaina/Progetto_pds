@@ -15,11 +15,13 @@ Editor::Editor(QString Id, QString fName)
     dim = 0;
     try {
         file = new QFile(this->nomeFile);
-        qDebug() << file->open(QIODevice::ReadWrite);
-        if (this->file->isOpen()){
+        if ( file->open(QIODevice::ReadWrite | QIODevice::Text) ){
             this->loadMap();
         } else {
-            qDebug() << " 8=======================D - - - - Errore apertura file" << QString("asdfg");
+            qDebug() << endl
+                     << " !!!!!!!!!!!!!!!!!!!!!!!!! Errore apertura file"
+                     << file->errorString()
+                     << endl;
         }
         file->close();
 

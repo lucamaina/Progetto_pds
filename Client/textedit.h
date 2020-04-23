@@ -235,10 +235,10 @@ public slots:
     void windowTitle(QString utente, QString nomeFile, QString docid);
     void setVisibleFileActions(bool set);
     void setVisibleEditorActions(bool set);
+    void acceptLogout();
 
 signals:
     void cursorChanged (int& pos, int& anchor);
-    void acceptLogout();
     void stileTesto(QString& stile,QString& param);
     void connectSig();
     void pasteSig(QString& clipboard);

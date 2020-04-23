@@ -217,6 +217,8 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this->client, &Client::s_setVisbleFileActions, this, &TextEdit::setVisibleFileActions, Qt::DirectConnection);
     connect(this->client, &Client::s_setVisbleEditorActions, this, &TextEdit::setVisibleEditorActions, Qt::DirectConnection);
 
+    connect(this->client, &Client::s_logOut, this, &TextEdit::acceptLogout, Qt::DirectConnection);
+
     setupStatusBar();
 }
 
@@ -645,7 +647,7 @@ void TextEdit::loadEditor(QString str)
     this->textEdit->setText(str);
 }
 
-void TextEdit::windowTitle(QString utente, QString nomeFile, QString docid)
+void TextEdit::windowTitle(QString utente = "", QString nomeFile = "", QString docid = "")
 {
     setWindowTitle(tr("%1[*] @ %2[*] = %3[*] - [*]").arg(utente, nomeFile, docid, QCoreApplication::applicationName()));
     setWindowModified(false);
@@ -1297,6 +1299,16 @@ void TextEdit::setVisibleEditorActions(bool set)
     actionPaste->setEnabled(set);
 }
 
+void TextEdit::acceptLogout()
+{
+    this->textEdit->clear();
+    this->setVisibleEditorActions(false);
+    this->setVisibleFileActions(false);
+    this->mappaEtichette.clear();
+    this->mappaCursori.clear();
+
+}
+
 void TextEdit::currentCharFormatChanged(const QTextCharFormat &format)
 {
     fontChanged(format.font());
@@ -1476,7 +1488,6 @@ void TextEdit::colorChanged(const QColor &c)
 
 void TextEdit::spostaCursor(int& pos,int& anchor,char& car ,QString& user){
     //ATTENZIONE!!! oltre a gestire il cursore gestisce anche l'inserimento
-    user=user;
     qDebug()<< "sono in " << Q_FUNC_INFO;
     qDebug()<<pos<<car<<user;
 

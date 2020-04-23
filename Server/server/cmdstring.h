@@ -33,7 +33,7 @@
 
 #define MAX_THREAD 8
 
-#define PATH "./files/"
+#define PATH "files\\"
 
 /****************************************************************************
  * dimensioni messaggi definiti *********************************************/

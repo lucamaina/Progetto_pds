@@ -82,7 +82,7 @@ signals:
     void s_brows();
     void s_setText(QChar c, QTextCharFormat f, int posCur);
     void s_removeText(int posCur);
-
+    void s_logOut();
     void s_loadEditor(QString& str);
 
     void s_userList(QList<QString> &list);

@@ -649,7 +649,7 @@ void TextEdit::loadEditor(QString str)
 
 void TextEdit::windowTitle(QString utente = "", QString nomeFile = "", QString docid = "")
 {
-    setWindowTitle(tr("%1[*] @ %2[*] = %3[*] - [*]").arg(utente, nomeFile, docid, QCoreApplication::applicationName()));
+    setWindowTitle(tr("%1[*] @ %2[*] (%3[*]) - %4").arg(utente, nomeFile, docid, QCoreApplication::applicationName()));
     setWindowModified(false);
 }
 
@@ -835,7 +835,7 @@ void TextEdit::setCurrentFileName(const QString &fileName)
     else
         shownName = QFileInfo(fileName).fileName();
 
-    setWindowTitle(tr("%1[*] - %2").arg(shownName, QCoreApplication::applicationName()));
+    setWindowTitle(tr("%1 - %2").arg(shownName, QCoreApplication::applicationName()));
     setWindowModified(false);
 }
 

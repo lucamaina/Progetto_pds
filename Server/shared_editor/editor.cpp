@@ -22,8 +22,9 @@ Editor::Editor(QString Id, QString fName)
         qDebug() << endl
                  << " !!!!!!!!!!!!!!!!!!!!!!!!! Errore apertura file"
                  << file->errorString()
-                 << endl;
-        Logger::getLog().write("Errore apertura file: "+nomeFile);
+                 << endl
+                 << this->nomeFile;
+        Logger::getLog().write("Errore apertura file: " + this->nomeFile);
 
        throw std::logic_error("Errore apertura file");
        //fffffff

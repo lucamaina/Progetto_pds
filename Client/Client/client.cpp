@@ -300,6 +300,7 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
         this->username.clear();
 
         emit Client::s_changeTitle("","","");
+        emit s_clearEditor();
         emit s_setVisbleFileActions(false);
         emit s_setVisbleEditorActions(false);
     }

@@ -44,11 +44,14 @@ bool Network::createEditor(QString fileId, QString nomeFile, utente &user, QShar
         // file già presente, non posso crearlo
         return false;
     }
-    Editor *ed = new Editor(fileId, nomeFile);
-    ed->addUser(user, sock);
-    this->editorMap.insert(fileId, ed);
 
-    // TODO leggi file e carica symMap
+    try {
+        Editor *ed = new Editor(fileId, nomeFile);
+        ed->addUser(user, sock);
+        this->editorMap.insert(fileId, ed);
+    } catch (std::logic_error le) {
+        throw le;
+    }
 
     return true;
 }

@@ -10,6 +10,8 @@
 #include <QTcpSocket>
 #include <QPointer>
 #include <limits>
+#include <logger/logger.h>
+#include <exception>
 
 #include "message.h"
 #include "symbol.h"
@@ -82,8 +84,6 @@ public:
     bool serialize();
     bool deserialise(QByteArray &ba);
 
-
-    void editProva(void);
 
 private:
 

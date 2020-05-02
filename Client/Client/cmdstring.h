@@ -69,7 +69,7 @@
 #define REG_ERR "error - registration failed"
 #define REG_OK "ok - registration success"
 
-#define FILE_ERR "error - user cannot open file"
+#define FILE_ERR "error - user cannot open file or server cannot open file"
 #define FILE_OK "ok - file open"
 
 #define ADD_FILE_OK "ok - file inserito"

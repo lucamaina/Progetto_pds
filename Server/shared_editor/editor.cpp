@@ -9,25 +9,27 @@
 
 Editor::Editor(QString Id, QString fName)
 {
+
     qDebug() << "sono in " << Q_FUNC_INFO << "; nome file: " << fName;
-    this->nomeFile = fName;
+    this->nomeFile = PATH + fName;
     this->DocId = Id;
     dim = 0;
-    try {
-        file = new QFile(this->nomeFile);
-        if ( file->open(QIODevice::ReadWrite | QIODevice::Text) ){
-            this->loadMap();
-        } else {
-            qDebug() << endl
-                     << " !!!!!!!!!!!!!!!!!!!!!!!!! Errore apertura file"
-                     << file->errorString()
-                     << endl;
-        }
-        file->close();
 
-    } catch (...) {
-        throw;
+    file = new QFile(this->nomeFile);
+    if ( file->open(QIODevice::ReadWrite | QIODevice::Text) ){
+        this->loadMap();
+    } else {
+        qDebug() << endl
+                 << " !!!!!!!!!!!!!!!!!!!!!!!!! Errore apertura file"
+                 << file->errorString()
+                 << endl;
+        Logger::getLog().write("Errore apertura file: "+nomeFile);
+
+       throw std::logic_error("Errore apertura file");
+       //fffffff
+
     }
+    file->close();
 
 
     qDebug() << file->size();
@@ -189,9 +191,6 @@ bool Editor::deserialise(QByteArray &ba)
     qDebug() << "size qByteArray = " << ba.size();
     return true;
 }
-
-void Editor::editProva(){}
-
 
 
 /*********************************************************************************************************

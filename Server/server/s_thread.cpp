@@ -503,7 +503,7 @@ void s_thread::openFile(QMap<QString, QString> &comando)
     } else {
         risp.insert(CMD, ERR);
         risp.insert(MEX, FILE_ERR);
-        logStr = QString::number(this->sockID) + " File non apribile dallì'utente: " + up_user->getUsername();
+        logStr = QString::number(this->sockID) + " File non apribile dall'utente: " + up_user->getUsername();
         Logger::getLog().write(logStr);
         clientMsg(risp);
         return;
@@ -517,12 +517,17 @@ void s_thread::openFile(QMap<QString, QString> &comando)
         // aggiungi file
         try {
             net.createEditor( comando.value(DOCID),
-                              PATH + comando.value(FNAME),
+                              comando.value(FNAME),
                               *up_user,
                               this->sp_socket );
-        } catch (...) {
-            Logger::getLog().write("Eccezione in apertura di aditor");
+        } catch (std::logic_error le) {
+            QString s = "Eccezione in apertura di editor" + QString(le.what());
+            Logger::getLog().write(s);
             qDebug()  << "eccezione in " << Q_FUNC_INFO;
+            risp.insert(CMD, ERR);
+            risp.insert(MEX, FILE_ERR);
+            clientMsg(risp);
+            return;
         }
 
     } else {

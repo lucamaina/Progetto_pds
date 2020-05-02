@@ -369,6 +369,10 @@ void Client::dispatchERR(QMap <QString,QString>cmd){
         QMessageBox Messaggio;
         Messaggio.information(nullptr,"File open", comando.value());
         Messaggio.setFixedSize(500,200);
+
+        emit Client::s_changeTitle(this->username,"","");
+        emit s_setVisbleFileActions(false);
+        emit s_setVisbleEditorActions(false);
     }
     else if (comando.value() == ADD_USER_ERR) {
         this->showUserError(cmd);

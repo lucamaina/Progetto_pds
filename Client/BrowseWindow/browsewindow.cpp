@@ -29,25 +29,25 @@ void BrowseWindow::setUpGUI(){
     labelScelta->setText( tr( "Choose a file:" ) );
     labelScelta->setBuddy( listaScelta );
 
-    labelHint = new QLabel("Apri un documento \n"
-                           "esistente o \n"
-                           "creane uno nuovo", this);
+    //labelHint = new QLabel("Apri un documento \n"
+                         //  "esistente o \n"
+//                           "creane uno nuovo", this);
 
     buttons = new QDialogButtonBox( this );
     buttons->addButton( QDialogButtonBox::Ok );
     buttons->addButton( QDialogButtonBox::Cancel );
-    buttons->addButton( QDialogButtonBox::Open);
+    //buttons->addButton( QDialogButtonBox::Open);
 
     buttons->button( QDialogButtonBox::Ok )->setText( tr("Apri") );
-    buttons->button( QDialogButtonBox::Open )->setText( tr("Nuovo File") );
+    //buttons->button( QDialogButtonBox::Open )->setText( tr("Nuovo File") );
     buttons->button( QDialogButtonBox::Cancel )->setText( tr("Cancel") );
 
     formGridLayout->addWidget( labelScelta, 0, 0 );
     formGridLayout->addWidget( listaScelta, 1, 0 ); //comboScelta
-    formGridLayout->addWidget( labelHint, 1, 1);
+    //formGridLayout->addWidget( labelHint, 1, 1);
     formGridLayout->addWidget( buttons->button(QDialogButtonBox::Ok), 2, 0);
     formGridLayout->addWidget( buttons->button(QDialogButtonBox::Cancel), 2, 1);
-    formGridLayout->addWidget( buttons->button(QDialogButtonBox::Open), 0, 1);
+    //formGridLayout->addWidget( buttons->button(QDialogButtonBox::Open), 0, 1);
 
 
     connect( buttons->button( QDialogButtonBox::Cancel ),
@@ -66,10 +66,10 @@ void BrowseWindow::setUpGUI(){
             SLOT(slotOpenFile()),
             Qt::DirectConnection);
 
-   connect( buttons->button( QDialogButtonBox::Open ),
+   /*connect( buttons->button( QDialogButtonBox::Open ),
             SIGNAL(clicked()),
             this,
-            SLOT(slotAddFile()) );
+            SLOT(slotAddFile()) );*/
 
     setLayout( formGridLayout );
 }

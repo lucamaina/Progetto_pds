@@ -236,10 +236,6 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
     else if(comando.value()==ERR){
         dispatchERR(cmd);
     }
-    /*
-    else if(comando.value()=="STILE"){
-        dispatchStile(cmd);
-    }*/
     else if (comando.value() == REM_IN){
         inserimentoRemoto(cmd);
     }
@@ -248,6 +244,7 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
     }
     else if (comando.value() == FBODY) {
         loadFile(cmd);
+        emit s_changeTitle(this->username, this->remoteFile->getNomeFile(), this->remoteFile->getDocId());
         emit s_setVisbleFileActions(true);
         emit s_setVisbleEditorActions(true);
     }
@@ -341,7 +338,7 @@ void Client::dispatchERR(QMap <QString,QString>cmd){
         Messaggio.information(nullptr,"Login Error", comando.value());
         Messaggio.setFixedSize(500,200);
         this->username = "";
-        emit s_changeTitle("*", "*", "*");
+        emit s_changeTitle("", "", "");
 
         LoginDialog* loginDialog = new LoginDialog( );
         connect( loginDialog, SIGNAL (acceptLogin(QString&,QString&)), this, SLOT (handleLogin(QString&,QString&)) );

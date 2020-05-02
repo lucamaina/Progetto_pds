@@ -55,6 +55,8 @@ public:
 
     QString getNomeFile() const;
 
+    QString getDocId() const;
+
 private:
 
     // metodi non definiti

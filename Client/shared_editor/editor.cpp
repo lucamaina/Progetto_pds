@@ -10,9 +10,14 @@ QString Editor::getNomeFile() const
     return nomeFile;
 }
 
+QString Editor::getDocId() const
+{
+    return DocId;
+}
+
 Editor::Editor(QObject *parent) : QObject(parent)
 {
-
+    
 }
 
 Editor::Editor(QString Id, QString fName, QByteArray& body, QString username)

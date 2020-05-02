@@ -27,8 +27,6 @@ Editor::Editor(QString Id, QString fName)
         Logger::getLog().write("Errore apertura file: " + this->nomeFile);
 
        throw std::logic_error("Errore apertura file");
-       //fffffff
-
     }
     file->close();
 

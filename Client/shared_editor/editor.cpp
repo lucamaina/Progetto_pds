@@ -28,7 +28,6 @@ Editor::Editor(QString Id, QString fName, QByteArray& body, QString username)
 
     QDataStream stream(&body, QIODevice::ReadWrite);
     stream >> this->symVec;
-
 }
 
 

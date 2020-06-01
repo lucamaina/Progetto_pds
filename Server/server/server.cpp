@@ -16,6 +16,12 @@ server::server(QObject *parent) : QTcpServer (parent)
     mioDB->setUpUtenti();
     tVec.reserve(MAX_THREAD);
     tVec.clear();
+
+    //creazione cartella per i documenti
+    QDir dir = QDir::current();
+
+    if (!dir.exists("files"))
+        dir.mkdir("files");
 }
 
 void server::startServer()

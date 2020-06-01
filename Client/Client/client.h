@@ -45,7 +45,7 @@ public:
     void cancellamentoRemoto(QMap<QString,QString> cmd);
 
     void loadFile(QMap<QString,QString> cmd);
-    QString serialize(const QTextCharFormat &format);
+    QByteArray serialize(const QTextCharFormat &format);
     QTextCharFormat deserialize(QByteArray &s);
 
     bool isLogged(void){
@@ -109,6 +109,7 @@ public slots:
     void sendAddUsers(QStringList& lista);
     void sendRemoveUsers(QStringList& lista);
 
+
 private:
     QMap<QString,QString> files;
     QString username;
@@ -121,9 +122,9 @@ private:
     QString tempPass;
     // nuova versione ready read
     QByteArray buffer_, command;
+    UserManager *finestraUsers;
 
     nuovoFileRemoto *finestraAddFile;
-    UserManager *finestraUsers;
 
     /****************************************************************************
      ***************** metodi controllo dei comandi ricevuti ********************/

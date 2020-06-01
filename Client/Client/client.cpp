@@ -255,6 +255,10 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
         this->upCursor(cmd);
     }
 
+    else if (comando.value() == STILE) {
+        this->dispatchStile(cmd);
+    }
+
     //TODO
 }
 
@@ -477,7 +481,14 @@ void Client::loadFile(QMap<QString,QString> cmd)
 
     int pos = 0;
     for( Symbol s : remoteFile->symVec){
-        emit s_setText(s.car, s.textFormat, pos++);
+
+        QTextCharFormat formatoDecode;
+        QByteArray esadecimale=QByteArray::fromHex(s.formato);
+        formatoDecode=deserialize(esadecimale);
+        s.textFormat=formatoDecode;
+        emit s_setText(s.car, formatoDecode, pos++);
+
+
     }
 
 }
@@ -499,13 +510,20 @@ void Client::inserimentoRemoto(QMap<QString,QString> cmd)
     }
     QByteArray format = QByteArray::fromHex(cmd.find(FORMAT).value().toUtf8());
     QTextCharFormat charform = deserialize(format);
+
+
     QChar c = cmd.find(CAR).value().at(0);
 
     int posCursor = remoteFile->localPosCursor(index);
     if (posCursor > -1){
         Symbol newS = Symbol(user, c, index, charform);
         remoteFile->symVec.insert(posCursor, newS);
+
+
+
         emit s_setText(c, charform, posCursor);
+
+
     }
 
 }
@@ -656,11 +674,12 @@ void Client::disconnected(){
 }
 void Client::handleStile(QString& stile,QString& param){
     QMap<QString, QString> comando;
-    comando.insert(CMD, "STILE");
-    comando.insert("stile", stile);
+    comando.insert(CMD, STILE);
+    comando.insert(DOCID, this->docID);
+    comando.insert(UNAME, this->username);
+    comando.insert(STILE, stile);
     comando.insert("param", param);
-
-    // qDebug()<<comando;
+    qDebug()<<comando;
 
     this->sendMsg(comando);
 }
@@ -824,13 +843,13 @@ void Client::remoteAdd(QString& name){
     sendMsg(comando);
 }
 
-QString Client::serialize(const QTextCharFormat &format)
+QByteArray Client::serialize(const QTextCharFormat &format)
 {
     QByteArray s;
     QDataStream out(&s,QIODevice::ReadWrite);
     out <<format;
     // qDebug() << s;
-    return QString(s.toHex());
+    return s;
 }
 
 QTextCharFormat Client::deserialize(QByteArray &s)
@@ -876,7 +895,10 @@ bool Client::remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index
         indici.append(QString::number(val) + ";");
     }
     cmd.insert(IDX, indici);
-    cmd.insert(FORMAT, QString(this->serialize(format)));
+    qDebug()<<"laaaaaaaa";
+
+    qDebug()<<QString(this->serialize(format).toHex());
+    cmd.insert(FORMAT, QString(this->serialize(format).toHex()));
     cmd.insert(UNAME, username);
     cmd.insert(DOCID, docID);
 

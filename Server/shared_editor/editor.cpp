@@ -11,7 +11,7 @@ Editor::Editor(QString Id, QString fName)
 {
 
     qDebug() << "sono in " << Q_FUNC_INFO << "; nome file: " << fName;
-    this->nomeFile = PATH + fName;
+    this->nomeFile = "files/"+fName;
     this->DocId = Id;
     dim = 0;
 

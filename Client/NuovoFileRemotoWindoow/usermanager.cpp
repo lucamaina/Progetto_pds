@@ -76,7 +76,7 @@ void UserManager::caricaUsers(QList<QString> & lista)
         } else {
             item.setFlags(Qt::ItemFlag::ItemIsUserCheckable);
             item.setFlags(Qt::ItemFlag::ItemIsEnabled);
-            item.setCheckState(Qt::CheckState::Unchecked);
+            item.setCheckState(Qt::CheckState::Checked);
             listItem->append(item);
             // this->listaUser->addItem(&listItem->back());
         }

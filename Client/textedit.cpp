@@ -213,6 +213,7 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this->client, &Client::s_changeCursor, this, &TextEdit::changeCursor, Qt::DirectConnection);
     connect(this->client, &Client::s_changeTitle, this, &TextEdit::windowTitle, Qt::DirectConnection);
     connect(this->client, &Client::s_brows, this, &TextEdit::remoteBrows, Qt::DirectConnection);
+    connect(this, SIGNAL(stileTesto(QString&, QString&)), this->client, SLOT(handleStile(QString&, QString&)));
 
     connect(this->client, &Client::s_setVisbleFileActions, this, &TextEdit::setVisibleFileActions, Qt::DirectConnection);
     connect(this->client, &Client::s_setVisbleEditorActions, this, &TextEdit::setVisibleEditorActions, Qt::DirectConnection);
@@ -340,7 +341,12 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
                         }
                     }
                 }
-
+                qDebug()<<format.fontItalic();
+                qDebug()<<this->client->serialize(format);
+                QByteArray q=this->client->serialize(format);
+                QTextCharFormat k=this->client->deserialize(q);
+                qDebug()<<q;
+                qDebug()<<k;
                 this->inserimento(poss, c, format);
 
                 return true;
@@ -630,7 +636,8 @@ void TextEdit::setText(QChar c, QTextCharFormat f, int posCursor)
 {
     QTextCursor s = textEdit->textCursor();
     s.setPosition(posCursor, QTextCursor::MoveAnchor);
-    s.insertText(c, f);    
+
+    s.insertText(c, f);
 }
 
 void TextEdit::removeText(int posCursor)
@@ -1424,18 +1431,18 @@ void TextEdit::about()
 void TextEdit::mergeFormatOnWordOrSelection(const QTextCharFormat &format)
 {
     QTextCursor cursor = textEdit->textCursor();
-    if (!cursor.hasSelection()){
-        cursor.select(QTextCursor::WordUnderCursor);
-        int curs=cursor.position();
-        int anch=cursor.anchor();
-        qDebug()<<"curs: "<<curs<<" anch: "<<anch;
+//    if (!cursor.hasSelection()){
+//        cursor.select(QTextCursor::WordUnderCursor);
+//        int curs=cursor.position();
+//        int anch=cursor.anchor();
+//        qDebug()<<"curs: "<<curs<<" anch: "<<anch;
 
-        for(int i=anch; i<=curs; i++){
-            this->client->remoteFile->updateFormat(i+1,format);
-        }
-    }
+//        for(int i=anch; i<=curs; i++){
+//            this->client->remoteFile->updateFormat(i+1,format);
+//        }
+//    }
 
-    else{
+//    else{
         int pos=cursor.position();
         int anchor=cursor.anchor();
 
@@ -1450,7 +1457,7 @@ void TextEdit::mergeFormatOnWordOrSelection(const QTextCharFormat &format)
             }
 
         }
-    }
+//    }
 
     cursor.mergeCharFormat(format);
     textEdit->mergeCurrentCharFormat(format);
@@ -1517,7 +1524,6 @@ void TextEdit::spostaCursor(int& pos,int& anchor,char& car ,QString& user){
             s->movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,pos);
             s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,pos-anchor);
         }
-
 
 
         QLabel *lab=new QLabel(user, textEdit);
@@ -1813,7 +1819,7 @@ void TextEdit::upCursor(QStringList &list)
 
 void TextEdit::nuovoStileSlot(QString& stile,QString& param){
     remoteStile=true;
-
+    qDebug()<<"ciaooooooooooooooooooooooooooooooooooooooooooooooooooooo";
     if(stile=="bold"){
         this->actionTextBold->toggle();
         this->textBold();

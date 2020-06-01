@@ -25,6 +25,8 @@
 #define REM_USER "REM-USER"
 #define UP_CRS "UP-CRS"
 #define EXFILE "EXIT-FILE"
+#define STILE "Stile"
+
 
 #define OK "OK"
 #define ERR "ERR"

@@ -278,7 +278,7 @@ QMap<QString, QString> db::browsFile(utente &user)
         risp.insert(FNAME + QString::number(counter), FileSysPath);
         risp.insert(DOCID + QString::number(counter), DocId);
         counter++;
-        qDebug() <<"res: "<< DocId << ", "<<FileSysPath<<", "<<LinkPath;
+        qDebug() <<"res: "<< DocId << ", "<<FileSysPath;
     }
     return risp;
 }

@@ -78,6 +78,7 @@ bool MySocket::write(QByteArray data)
 
 bool MySocket::write(QMap<QString, QString> comando)
 {
+    qDebug() << "write: " << comando.size();
     QByteArray data = Comando(comando).toByteArray();
     return this->write( data );
 }

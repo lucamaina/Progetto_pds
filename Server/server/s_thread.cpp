@@ -465,9 +465,10 @@ void s_thread::browsFile(QMap<QString, QString> &comando)
     }
     QString logStr;
     QMap<QString, QString> map = this->up_conn->browsFile(*up_user);
-        logStr = QString::number(this->sockID) + "Browsing con utente: " + up_user->getUsername();
+    logStr = QString::number(this->sockID) + "Browsing con utente: " + up_user->getUsername();
 
     Logger::getLog().write(logStr);
+    qDebug() << map.toStdMap();
     this->clientMsg(map);
 }
 

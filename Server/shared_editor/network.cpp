@@ -24,18 +24,14 @@ void Network::push(Message &msg)
     return;
 }
 
-/**
- * @brief Network::msgRead
- * @param msg
- * legge i valori del messaggio e cerca il rapporto con file e utente
- */
-void Network::msgRead(Message &msg)
-{
-    // se file esiste e user presente nell'editor lo passa
-    if ( this->editorMap.contains(msg.getFile()) ){
 
-    }
-}
+//void Network::msgRead(Message &msg)
+//{
+//    // se file esiste e user presente nell'editor lo passa
+//    if ( this->editorMap.contains(msg.getFile()) ){
+
+//    }
+//}
 
 bool Network::createEditor(QString fileId, QString nomeFile, utente &user, QSharedPointer<MySocket> &sock)
 {
@@ -72,18 +68,13 @@ void Network::sendToEdit(Message &msg)
     }
 }
 
-/**
- * @brief Network::sendToUsers
- * @param msg
- * @return
- * invia msg a tutti gli altri utenti
- */
-bool Network::sendToUsers(Message &msg)
-{
-    QString sendUser = msg.getUser();
 
-    return true;
-}
+//bool Network::sendToUsers(Message &msg)
+//{
+//    QString sendUser = msg.getUser();
+
+//    return true;
+//}
 
 /**
  * @brief Network::filePresent

@@ -27,7 +27,7 @@ class s_thread : public QThread
 
 public:
     s_thread(int ID, QObject *parent = nullptr);
-    ~s_thread(){ qDebug() << "distruttore s_thread " << this->sockID; }
+//    ~s_thread(){ qDebug() << "distruttore s_thread " << this->sockID; }
     void exitThread();
     void save();
     void run();
@@ -59,12 +59,12 @@ private:
 
     /****************************************************************************
      * metodi controllo dei comandi ricevuti ************************************/
-    void leggiXML(QByteArray data);
+//    void leggiXML(QByteArray data);
 
 
     /****************************************************************************
      * metodi controllo dei messaggi inviati ************************************/
-    bool scriviXML(QMap<QString, QString> comando);
+//    bool scriviXML(QMap<QString, QString> comando);
     bool clientMsg(QByteArray data);
     bool clientMsg_(QMap<QString, QString> comando);
     bool clientMsg(QMap<QString, QString> comando);

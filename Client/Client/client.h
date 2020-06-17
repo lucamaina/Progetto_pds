@@ -30,7 +30,7 @@ public:
     void handleAddUser();
     void handleFileExit();
     void listUser(QMap<QString,QString> cmd);
-
+    void connectToHost();
 
     bool remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index, int cursor);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
     bool remoteInsert(Symbol sym, int cursor);
@@ -86,6 +86,7 @@ signals:
     void s_loadEditor(QString& str);
 
     void s_userList(QList<QString> &list);
+    void s_warning(QString str);
 
 public slots:
     void connected();

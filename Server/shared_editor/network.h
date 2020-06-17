@@ -15,11 +15,11 @@ class Network : public QObject
 public:
     static Network& getNetwork();
     void push(Message &msg);
-    void msgRead(Message &msg);
+//    void msgRead(Message &msg);
     bool createEditor(QString fileID, QString nomeFile, utente& userName, QSharedPointer<MySocket> &sock);
     bool createEditor(QMap<QString, QString> cmd);
     void sendToEdit(Message& msg);
-    bool sendToUsers(Message & msg);
+//    bool sendToUsers(Message & msg);
     bool filePresent(QString fileId);
     bool addRefToEditor(QString fileId, utente& user, QSharedPointer<MySocket> &sock);
     bool remRefToEditor(QString fileId, QString user);

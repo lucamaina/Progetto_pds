@@ -26,7 +26,6 @@ SOURCES += \
         server/mysocket.cpp \
         server/s_thread.cpp \
         server/server.cpp \
-        server_main.cpp \
         shared_editor/editor.cpp \
         shared_editor/message.cpp \
         shared_editor/network.cpp \

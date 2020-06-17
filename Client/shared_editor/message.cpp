@@ -43,7 +43,7 @@ bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
         }
     }
 
-    if (comando.contains(CAR)){
+    if (comando.contains(CAR) && !comando.value(CAR).isNull()){
         car = comando.value(CAR).at(0);
     } else {
         car = QChar::Null;

@@ -47,7 +47,7 @@ Editor::~Editor()
  */
 bool Editor::getLocalIndexDelete(int posCursor, Symbol& sym)
 {
-    if (symVec.size() < posCursor || posCursor < 0){
+    if ( posCursor < 0 || posCursor > symVec.size() ){
         // cursore fuori dalla mappa, errore
         return false;
     }
@@ -177,5 +177,7 @@ int Editor::findLocalPosCursor(QVector<qint32> &index)
 
 void Editor::updateFormat(int pos, QTextCharFormat format)
 {
+    // update formato
+
     return;
 }

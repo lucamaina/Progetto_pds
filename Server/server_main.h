@@ -1,26 +1,25 @@
 #ifndef SERVER_MAIN_H
 #define SERVER_MAIN_H
 
-#include <QObject>
-#include <database/db.h>
 #include "server/server.h"
 
-class server_main : public QObject
+/** modifiche per togliere qobject non usato **/
+
+class server_main /*: public QObject*/
 {
-    Q_OBJECT
+//    Q_OBJECT
 
 private:
-    db* mydb;
+    // db* mydb;
     server *myServer;
 
 public:
-    explicit server_main(QObject *parent = nullptr);
-
-
-
-signals:
-
-public slots:
+    explicit server_main() /*QObject *parent = nullptr);*/
+    {
+        this->myServer = new server();
+        myServer->startServer();
+        Logger::getLog().write("Start new logger process");
+    }
 };
 
 #endif // SERVER_MAIN_H

@@ -31,7 +31,7 @@
 #define OK "OK"
 #define ERR "ERR"
 
-#define MAX_THREAD 8
+#define MAX_THREAD 4
 
 #define PATH "files/"
 

@@ -93,7 +93,7 @@ public slots:
     void LogoutDialog();
     void RegisterDialog();
     void ConnectDialog();
-
+    void warningDialog(QString str);
 
 protected:
     void closeEvent(QCloseEvent *e) override;

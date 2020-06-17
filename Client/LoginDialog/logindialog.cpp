@@ -85,7 +85,6 @@ void LoginDialog::setPassword(QString &password){
 void LoginDialog::slotAcceptLogin(){
     QString username = comboUsername->currentText();
     QString password = editPassword->text();
-    int index = comboUsername->currentIndex();
 
     if(password.size()==0 || username.size()==0){
         QMessageBox q;

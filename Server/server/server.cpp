@@ -51,10 +51,10 @@ void server::deleteThread(s_thread &t)
 {
     m.lock();
     numThread--;
-    m.unlock();
-    qDebug() << "sono in " << Q_FUNC_INFO;
     tVec.removeOne(&t);
     t.exitThread();
+    m.unlock();
+    qDebug() << "sono in " << Q_FUNC_INFO;
 }
 
 void server::incomingConnection(int socketID)

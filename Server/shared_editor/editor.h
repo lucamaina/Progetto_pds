@@ -40,14 +40,15 @@ private:
 public:
     explicit Editor(QString Id, QString nome);
 
+
     static Editor& getFile();
     bool loadMap();
-    bool sendMap(QString nomeUtente);
+//    bool sensendMadMap(QString nomeUtente);
     bool sendBody(QSharedPointer<MySocket> &sock);
 
     QByteArray getSymMap();
 
-    bool loadFile(const QString &nomeUser, const int dimFile);        // leggo socket dell'utente e carico il file
+//    bool loadFile(const QString &nomeUser, const int dimFile);        // leggo socket dell'utente e carico il file
     ~Editor();
 
         bool save();
@@ -76,18 +77,16 @@ public:
     bool send(QSharedPointer<MySocket> &sock, QByteArray ba);
 
     bool sendToAll(Comando &cmd);
-    bool rispErr(Message &msg);
+//    bool rispErr(Message &msg);
     bool process(Message& msg);
 
     /****************************************************************************
      * metodi di serialize e deserialize ****************************************/
     bool serialize();
-    bool deserialise(QByteArray &ba);
+//    bool deserialise(QByteArray &ba);
 
 
 private:
-
-
     // metodi non definiti
     Editor(const Editor & hold) = delete;
     const Editor &operator=(const Editor & hold) = delete;

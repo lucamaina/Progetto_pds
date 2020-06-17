@@ -17,7 +17,6 @@ Client::Client(QObject *parent) : QObject(parent)
     finestraAddFile = new nuovoFileRemoto();
 
     socket = new QTcpSocket(this);
-    socket->connectToHost(QHostAddress::LocalHost, 2000);
 
     connect(socket, &QTcpSocket::connected, this, &Client::connected);
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
@@ -144,6 +143,15 @@ void Client::listUser(QMap<QString, QString> cmd)
         }
     }
     emit this->s_userList(lista);
+}
+
+void Client::connectToHost()
+{
+    socket->connectToHost(QHostAddress::LocalHost, 2000);
+    if (!socket->waitForConnected(3000)) {
+        qDebug() << "Error: " << socket->errorString();
+        emit this->s_warning("Error: " + socket->errorString());
+    }
 }
 
 bool Client::sendMsg(QMap<QString, QString> cmd){
@@ -511,19 +519,27 @@ void Client::inserimentoRemoto(QMap<QString,QString> cmd)
     QByteArray format = QByteArray::fromHex(cmd.find(FORMAT).value().toUtf8());
     QTextCharFormat charform = deserialize(format);
 
-
-    QChar c = cmd.find(CAR).value().at(0);
+    QChar c;
+    if (cmd.contains(CAR) && !cmd.value(CAR).isNull()){
+        c = cmd.value(CAR).at(0);
+    } else {
+        c = QChar();
+    }
 
     int posCursor = remoteFile->localPosCursor(index);
+    Symbol newS;
     if (posCursor > -1){
-        Symbol newS = Symbol(user, c, index, charform);
-        remoteFile->symVec.insert(posCursor, newS);
-
-
-
-        emit s_setText(c, charform, posCursor);
-
-
+        if (c.isNull()){
+            posCursor--;
+            this->remoteFile->getLocalIndexDelete(posCursor, newS);
+            this->remoteFile->symVec.replace(posCursor, newS);
+            emit s_removeText(posCursor);
+            emit s_setText(newS.car, charform, posCursor);
+        } else {
+            newS = Symbol(user, c, index, charform);
+            remoteFile->symVec.insert(posCursor, newS);
+            emit s_setText(c, charform, posCursor);
+        }
     }
 
 }
@@ -537,16 +553,26 @@ bool Client::inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format)
         return false;
     }
     // creo symbol
-    Symbol newSym = Symbol(this->username, car, newIndex, format);
+    Symbol newSym;
+    if (car.isNull()) {
+        // update
+        this->remoteFile->getLocalIndexDelete(pos, newSym);
+        this->remoteFile->symVec.replace(pos, newSym);
+        emit s_removeText(pos);
+        emit s_setText(newSym.car, format, pos);
+        newSym.car = QChar();
+        this->remoteInsert(newSym.car, format, newSym.indici, pos);
 
-    // inserisco in locale
-    this->remoteFile->symVec.insert(pos, newSym);
+    } else {
+        newSym = Symbol(this->username, car, newIndex, format);
+        // inserisco in locale
+        this->remoteFile->symVec.insert(pos, newSym);
+        // scrivo in editor
+        emit s_setText(newSym.car, format, pos);
+            // invio al server
+        this->remoteInsert(newSym.car, format, newIndex, pos);
 
-    // scrivo in editor
-    emit s_setText(car, format, pos);
-
-    // invio al server
-    this->remoteInsert(car, format, newIndex, pos);
+    }
     return true;
 }
 
@@ -669,7 +695,7 @@ void Client::connected(){
 }
 
 void Client::disconnected(){
-    qDebug()<<"Disconnesso dal server\n";
+    qDebug()<<"Disconnesso dal server" << endl;
     this->connectedDB=false;
 }
 void Client::handleStile(QString& stile,QString& param){

@@ -61,46 +61,41 @@ void s_thread::exitThread()
  ************************ metodi di connessione con client ***********************************************
  *********************************************************************************************************/
 
-/**
- * @brief s_thread::leggiXML
- * @param dim
- * metodo di lettura del file XML. Gli elementi del file vengono mappati su una map di key, value
- * e quindi mandati a una funzione che esegue distinzione tra i comandi
- */
-void s_thread::leggiXML(QByteArray qb)
-{
-    qDebug().noquote() << endl << endl << "-> Leggo XML from client: " << this->sockID << endl << qb;
 
-    QMap<QString, QString> command;
-    QXmlStreamReader stream(qb);
+//void s_thread::leggiXML(QByteArray qb)
+//{
+//    qDebug().noquote() << endl << endl << "-> Leggo XML from client: " << this->sockID << endl << qb;
 
-    while (!stream.atEnd() && !stream.hasError() ){
-        QXmlStreamReader::TokenType token = stream.readNext();
-        token = stream.readNext();
-        // leggo elemento con nome del comando
-        if (token == QXmlStreamReader::StartElement){
-            //qDebug() << "comando: " << stream.name();
-            QString cmd = stream.name().toString();
-            command.insert(CMD, cmd);
-        }
-        token = stream.readNext();
-        // leggo elemnto variabile
-        while ( token == QXmlStreamReader::StartElement ){
-            QString name = stream.name().toString(), text = stream.readElementText();
-            command.insert(name, text);
-            //qDebug() << "   start elem: " << name << " val: " << text;
-            token = stream.readNext();
-        }
-    }
+//    QMap<QString, QString> command;
+//    QXmlStreamReader stream(qb);
 
-    // TODO in caso di messaggio non corretto riparti da stato corretto
-    if (stream.hasError()){
-        qDebug() << "err in lettura XML" << stream.errorString();
-    } else {
-        // qDebug() << "finito lettura xml no errori " << stream.errorString();
-        this->dispatchCmd(command);
-    }
-}
+//    while (!stream.atEnd() && !stream.hasError() ){
+//        QXmlStreamReader::TokenType token = stream.readNext();
+//        token = stream.readNext();
+//        // leggo elemento con nome del comando
+//        if (token == QXmlStreamReader::StartElement){
+//            //qDebug() << "comando: " << stream.name();
+//            QString cmd = stream.name().toString();
+//            command.insert(CMD, cmd);
+//        }
+//        token = stream.readNext();
+//        // leggo elemnto variabile
+//        while ( token == QXmlStreamReader::StartElement ){
+//            QString name = stream.name().toString(), text = stream.readElementText();
+//            command.insert(name, text);
+//            //qDebug() << "   start elem: " << name << " val: " << text;
+//            token = stream.readNext();
+//        }
+//    }
+
+//    // TODO in caso di messaggio non corretto riparti da stato corretto
+//    if (stream.hasError()){
+//        qDebug() << "err in lettura XML" << stream.errorString();
+//    } else {
+//        // qDebug() << "finito lettura xml no errori " << stream.errorString();
+//        this->dispatchCmd(command);
+//    }
+//}
 
 /**
  * @brief s_thread::dispatchCmd
@@ -144,43 +139,37 @@ void s_thread::dispatchCmd(Comando &cmd)
     (void) cmd;
 }
 
-/**
- * @brief s_thread::scriviXML
- * @param comando
- * @return
- * trasforma il comando da mappa in XML inviabile al client
- * legge coppia chiave - valore, la scrive in XML e la cancella dalla mappa
- */
-bool s_thread::scriviXML(QMap<QString, QString> comando)
-{
-    QList<QString> list = {CMD};
-    if (!verifyCMD(comando, list)){ return false;   }
-    QByteArray ba;
-    QXmlStreamWriter wr(&ba);
-    wr.writeStartDocument();
-    wr.writeTextElement(comando.value(CMD), "");
-    comando.remove(CMD);
 
-    while (!comando.empty()){
-        QString elem, val;
-        elem = comando.firstKey();
-        val = comando.value(elem);
-        qDebug() << elem << " : " << val;
-        wr.writeTextElement(elem, val);
-        comando.remove(elem);
-    }
-    wr.writeEndDocument();
+//bool s_thread::scriviXML(QMap<QString, QString> comando)
+//{
+//    QList<QString> list = {CMD};
+//    if (!verifyCMD(comando, list)){ return false;   }
+//    QByteArray ba;
+//    QXmlStreamWriter wr(&ba);
+//    wr.writeStartDocument();
+//    wr.writeTextElement(comando.value(CMD), "");
+//    comando.remove(CMD);
 
-    int dim = ba.size();
-    QByteArray len;
-    len = QByteArray::number(dim, 16);
-    len.prepend(8 - len.size(), '0');
+//    while (!comando.empty()){
+//        QString elem, val;
+//        elem = comando.firstKey();
+//        val = comando.value(elem);
+//        qDebug() << elem << " : " << val;
+//        wr.writeTextElement(elem, val);
+//        comando.remove(elem);
+//    }
+//    wr.writeEndDocument();
 
-    ba.prepend(len);
-    ba.prepend(INIT);
-    qDebug() << QString(ba);
-    return false;
-}
+//    int dim = ba.size();
+//    QByteArray len;
+//    len = QByteArray::number(dim, 16);
+//    len.prepend(8 - len.size(), '0');
+
+//    ba.prepend(len);
+//    ba.prepend(INIT);
+//    qDebug() << QString(ba);
+//    return false;
+//}
 
 /**
  * @brief s_thread::clientMEX

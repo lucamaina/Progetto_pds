@@ -30,7 +30,6 @@ Editor::Editor(QString Id, QString fName, QByteArray& body, QString username)
     stream >> this->symVec;
 }
 
-
 /**
  * @brief Editor::~Editor
  */
@@ -173,11 +172,4 @@ int Editor::findLocalPosCursor(QVector<qint32> &index)
         }
     }
     return -1; // non trovato
-}
-
-void Editor::updateFormat(int pos, QTextCharFormat format)
-{
-    // update formato
-
-    return;
 }

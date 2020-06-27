@@ -1,6 +1,5 @@
 #include "symbol.h"
 
-
 QChar Symbol::getCar() const
 {
     return car;
@@ -19,11 +18,6 @@ void Symbol::setFormato(const QByteArray &value)
 QVector<qint32> Symbol::getIndici() const
 {
     return indici;
-}
-
-Symbol::Symbol()
-{
-
 }
 
 QMap<QString, QString> Symbol::toMap()

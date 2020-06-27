@@ -14,7 +14,6 @@
 #include "../NuovoFileRemotoWindoow/usermanager.h"
 #include "cmdstring.h"
 #include "shared_editor/editor.h"
-#include "shared_editor/eventbuffer.h"
 
 class Client : public QObject
 {
@@ -32,11 +31,11 @@ public:
     void listUser(QMap<QString,QString> cmd);
     void connectToHost();
 
-    bool remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index, int cursor);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
-    bool remoteInsert(Symbol sym, int cursor);
+    bool remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index);  // vecchia -> bool remoteInsert(QChar& c, QTextCharFormat format, double index, int posy, int anchor);
+    bool remoteInsert(Symbol sym);
 
-    bool remoteDelete(QChar c, QVector<qint32> index, int cursor);
-    bool remoteDelete(Symbol s, int cursor);
+    bool remoteDelete(QChar c, QVector<qint32> index);
+    bool remoteDelete(Symbol s);
 
     void inserimentoRemoto(QMap<QString,QString> cmd);
     bool inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format);
@@ -59,9 +58,6 @@ public:
 
     // puntatore all'editor remoto
     Editor* remoteFile;
-    QList<EventBuffer> eventBuf;
-
-
     QString getUsername() const;
 
 signals:
@@ -121,10 +117,8 @@ private:
     QByteArray buffer;
     QString tempUser;
     QString tempPass;
-    // nuova versione ready read
     QByteArray buffer_, command;
     UserManager *finestraUsers;
-
     nuovoFileRemoto *finestraAddFile;
 
     /****************************************************************************
@@ -135,13 +129,11 @@ private:
     void dispatchOK(QMap <QString, QString> cmd);
     void dispatchERR(QMap <QString,QString> cmd);
     void spostaCursori(QMap <QString,QString> cmd);
-    void sendCursore(int pos);
 
     /****************************************************************************
      ***************** metodi controllo dei comandi inviati ********************/
 
     void showUserError(QMap<QString, QString> cmd);
-
 
 };
 

@@ -26,7 +26,6 @@ private:
     void setUpGUI();
 
     QListWidget *listaScelta;
-    // QComboBox* comboScelta;
     QLabel *labelScelta;
     QLabel *labelHint;
     QDialogButtonBox* buttons;
@@ -34,13 +33,10 @@ private:
 
 public slots:
     void slotOpenFile();
-    void slotAddFile();
-
 
 signals:
     void openFileSignal(QString& filename, QString& docId);
     void addFileSignal(QString& filename);
-
 };
 
 #endif // BROWSEWINDOW_H

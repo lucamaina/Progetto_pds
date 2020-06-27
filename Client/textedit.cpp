@@ -597,12 +597,9 @@ void TextEdit::goPaste(){
     int pos=textEdit->textCursor().position();
     int i=0;
     if(client->isLogged()){
-        for(QChar c : s)
-        {
-            qDebug()<<c;
+        for(QChar c : s){
             QVector<qint32> newIndex=this->client->remoteFile->getLocalIndexInsert(pos+i);
-            //this->inserimento(textEdit->textCursor().position(), c, textEdit->textCursor().charFormat());
-            this->client->remoteInsert(c,  textEdit->textCursor().charFormat(), newIndex, pos+i);
+            this->client->remoteInsert(c,  textEdit->textCursor().charFormat(), newIndex);
 
             //creo simbolo
             Symbol newSym = Symbol(this->client->getUsername(), c, newIndex, textEdit->textCursor().charFormat());
@@ -613,8 +610,6 @@ void TextEdit::goPaste(){
             i++;
         }
     }
-    //emit pasteSig(s);
-    qDebug()<<"lalla";
 }
 
 void TextEdit::clear()
@@ -660,7 +655,7 @@ void TextEdit::loadEditor(QString str)
 
 void TextEdit::windowTitle(QString utente = "", QString nomeFile = "", QString docid = "")
 {
-    setWindowTitle(tr("%1[*] @ %2[*] (%3[*]) - %4").arg(utente, nomeFile, docid, QCoreApplication::applicationName()));
+    setWindowTitle(tr("%1 @ %2 (%3) - %4").arg(utente, nomeFile, docid, QCoreApplication::applicationName()));
     setWindowModified(false);
 }
 
@@ -672,7 +667,6 @@ void TextEdit::setupTextActions()
 
     const QIcon boldIcon = QIcon::fromTheme("format-text-bold", QIcon(rsrcPath + "/textbold.png"));
     actionTextBold = menu->addAction(boldIcon, tr("&Bold"), this, &TextEdit::textBold);
-    //actionTextBold->setShortcut(Qt::CTRL + Qt::Key_B);
     actionTextBold->setPriority(QAction::LowPriority);
     QFont bold;
     bold.setBold(true);
@@ -683,7 +677,6 @@ void TextEdit::setupTextActions()
     const QIcon italicIcon = QIcon::fromTheme("format-text-italic", QIcon(rsrcPath + "/textitalic.png"));
     actionTextItalic = menu->addAction(italicIcon, tr("&Italic"), this, &TextEdit::textItalic);
     actionTextItalic->setPriority(QAction::LowPriority);
-    //actionTextItalic->setShortcut(Qt::CTRL + Qt::Key_I);
     QFont italic;
     italic.setItalic(true);
     actionTextItalic->setFont(italic);
@@ -701,47 +694,6 @@ void TextEdit::setupTextActions()
     actionTextUnderline->setCheckable(true);
 
     menu->addSeparator();
-/*
-    const QIcon leftIcon = QIcon::fromTheme("format-justify-left", QIcon(rsrcPath + "/textleft.png"));
-    actionAlignLeft = new QAction(leftIcon, tr("&Left"), this);
-    actionAlignLeft->setShortcut(Qt::CTRL + Qt::Key_L);
-    actionAlignLeft->setCheckable(true);
-    actionAlignLeft->setPriority(QAction::LowPriority);
-    const QIcon centerIcon = QIcon::fromTheme("format-justify-center", QIcon(rsrcPath + "/textcenter.png"));
-    actionAlignCenter = new QAction(centerIcon, tr("C&enter"), this);
-    actionAlignCenter->setShortcut(Qt::CTRL + Qt::Key_E);
-    actionAlignCenter->setCheckable(true);
-    actionAlignCenter->setPriority(QAction::LowPriority);
-    const QIcon rightIcon = QIcon::fromTheme("format-justify-right", QIcon(rsrcPath + "/textright.png"));
-    actionAlignRight = new QAction(rightIcon, tr("&Right"), this);
-    actionAlignRight->setShortcut(Qt::CTRL + Qt::Key_R);
-    actionAlignRight->setCheckable(true);
-    actionAlignRight->setPriority(QAction::LowPriority);
-    const QIcon fillIcon = QIcon::fromTheme("format-justify-fill", QIcon(rsrcPath + "/textjustify.png"));
-    actionAlignJustify = new QAction(fillIcon, tr("&Justify"), this);
-    actionAlignJustify->setShortcut(Qt::CTRL + Qt::Key_J);
-    actionAlignJustify->setCheckable(true);
-    actionAlignJustify->setPriority(QAction::LowPriority);
-
-    // Make sure the alignLeft  is always left of the alignRight
-    QActionGroup *alignGroup = new QActionGroup(this);
-    connect(alignGroup, &QActionGroup::triggered, this, &TextEdit::textAlign);
-
-    if (QApplication::isLeftToRight()) {
-        alignGroup->addAction(actionAlignLeft);
-        alignGroup->addAction(actionAlignCenter);
-        alignGroup->addAction(actionAlignRight);
-    } else {
-        alignGroup->addAction(actionAlignRight);
-        alignGroup->addAction(actionAlignCenter);
-        alignGroup->addAction(actionAlignLeft);
-    }
-    alignGroup->addAction(actionAlignJustify);
-
-    tb->addActions(alignGroup->actions());
-    menu->addActions(alignGroup->actions());
-*/
-    menu->addSeparator();
 
     QPixmap pix(16, 16);
     pix.fill(Qt::black);
@@ -752,30 +704,6 @@ void TextEdit::setupTextActions()
     tb->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
     addToolBarBreak(Qt::TopToolBarArea);
     addToolBar(tb);
-
-/*
- *  NON UTILIZZABILE
- *
-    comboStyle = new QComboBox(tb);
-    tb->addWidget(comboStyle);
-    comboStyle->addItem("Standard");
-    comboStyle->addItem("Bullet List (Disc)");
-    comboStyle->addItem("Bullet List (Circle)");
-    comboStyle->addItem("Bullet List (Square)");
-    comboStyle->addItem("Ordered List (Decimal)");
-    comboStyle->addItem("Ordered List (Alpha lower)");
-    comboStyle->addItem("Ordered List (Alpha upper)");
-    comboStyle->addItem("Ordered List (Roman lower)");
-    comboStyle->addItem("Ordered List (Roman upper)");
-    comboStyle->addItem("Heading 1");
-    comboStyle->addItem("Heading 2");
-    comboStyle->addItem("Heading 3");
-    comboStyle->addItem("Heading 4");
-    comboStyle->addItem("Heading 5");
-    comboStyle->addItem("Heading 6");
-
-    connect(comboStyle, QOverload<int>::of(&QComboBox::activated), this, &TextEdit::textStyle);
-*/
 
     comboFont = new QFontComboBox(tb);
     tb->addWidget(comboFont);
@@ -815,25 +743,6 @@ bool TextEdit::load(const QString &f)
     setCurrentFileName(f);
     return true;
 }
-
-/*
-bool TextEdit::maybeSave()
-{
-    if (!textEdit->document()->isModified())
-        return true;
-
-    const QMessageBox::StandardButton ret =
-        QMessageBox::warning(this, QCoreApplication::applicationName(),
-                             tr("The document has been modified.\n"
-                                "Do you want to save your changes?"),
-                             QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-    if (ret == QMessageBox::Save)
-        return fileSave();
-    else if (ret == QMessageBox::Cancel)
-        return false;
-    return true;
-}
-*/
 
 void TextEdit::setCurrentFileName(const QString &fileName)
 {
@@ -1222,60 +1131,16 @@ void TextEdit::textColor()
     emit stileTesto(p,s);
 }
 
-/*
- * void TextEdit::textAlign(QAction *a)
-{
-
-    QString p="align";
-    if (a == actionAlignLeft){
-        textEdit->setAlignment(Qt::AlignLeft | Qt::AlignAbsolute);
-
-        QString s="left";
-        if(!remoteStile)emit stileTesto(p,s);
-    }
-
-    else if (a == actionAlignCenter){
-        textEdit->setAlignment(Qt::AlignHCenter);
-
-        QString s="center";
-        if(!remoteStile)emit stileTesto(p,s);
-    }
-
-    else if (a == actionAlignRight){
-        textEdit->setAlignment(Qt::AlignRight | Qt::AlignAbsolute);
-
-        QString s="rigt";
-        if(!remoteStile)emit stileTesto(p,s);
-    }
-
-    else if (a == actionAlignJustify){
-        textEdit->setAlignment(Qt::AlignJustify);
-
-        QString s="giustficato";
-        if(!remoteStile)emit stileTesto(p,s);
-    }
-}
-*/
-
 void TextEdit::myTextAlign(QString& a)
 {
     if (a == "left"){
         textEdit->setAlignment(Qt::AlignLeft | Qt::AlignAbsolute);
-    }
-
-    else if (a == "center"){
+    } else if (a == "center"){
         textEdit->setAlignment(Qt::AlignHCenter);
-
-    }
-
-    else if (a == "right"){
+    } else if (a == "right"){
         textEdit->setAlignment(Qt::AlignRight | Qt::AlignAbsolute);
-
-    }
-
-    else if (a == "giustificato"){
+    } else if (a == "giustificato"){
         textEdit->setAlignment(Qt::AlignJustify);
-
     }
 }
 
@@ -1333,47 +1198,7 @@ void TextEdit::currentCharFormatChanged(const QTextCharFormat &format)
 }
 
 void TextEdit::cursorPositionChanged()
-{
-    /*
-    alignmentChanged(textEdit->alignment());
-    QTextList *list = textEdit->textCursor().currentList();
-    if (list) {
-        switch (list->format().style()) {
-        case QTextListFormat::ListDisc:
-            comboStyle->setCurrentIndex(1);
-            break;
-        case QTextListFormat::ListCircle:
-            comboStyle->setCurrentIndex(2);
-            break;
-        case QTextListFormat::ListSquare:
-            comboStyle->setCurrentIndex(3);
-            break;
-        case QTextListFormat::ListDecimal:
-            comboStyle->setCurrentIndex(4);
-            break;
-        case QTextListFormat::ListLowerAlpha:
-            comboStyle->setCurrentIndex(5);
-            break;
-        case QTextListFormat::ListUpperAlpha:
-            comboStyle->setCurrentIndex(6);
-            break;
-        case QTextListFormat::ListLowerRoman:
-            comboStyle->setCurrentIndex(7);
-            break;
-        case QTextListFormat::ListUpperRoman:
-            comboStyle->setCurrentIndex(8);
-            break;
-        default:
-            comboStyle->setCurrentIndex(-1);
-            break;
-        }
-    } else {
-        int headingLevel = textEdit->textCursor().blockFormat().headingLevel();
-        comboStyle->setCurrentIndex(headingLevel ? headingLevel + 8 : 0);
-    }
-    */
-
-    /*
+{    /*
      *  Posizione del cursore nel testo
      */
     QTextCursor cursore = textEdit->textCursor();
@@ -1384,9 +1209,6 @@ void TextEdit::cursorPositionChanged()
     //qDebug()<<"cursor at:"<<posx<<posy<<"\n"; DEBUG
 
     /****************** QUA INSERISCO ME STESSO NELLA LISTA DELLE PERSONE ONLINE E DEI CURSORI ************/
-
-
-
     if(mappaCursori.contains(client->getUsername())){
 
         // muovo il cursore
@@ -1409,7 +1231,6 @@ void TextEdit::cursorPositionChanged()
     }
     else{//qDebug()<<"probabilmente sono offline";
     }
-
 
     if(mappaEtichette.contains(client->getUsername())){
         QLabel* l=mappaEtichette.find(client->getUsername()).value();
@@ -1449,12 +1270,10 @@ void TextEdit::mergeFormatOnWordOrSelection(const QTextCharFormat &format)
     QTextCharFormat form = cursor.charFormat();
     if(pos>anchor){
         for(int i=anchor; i<pos; i++){
-//            this->client->remoteFile->updateFormat(i+1,format);
             this->client->inserimentoLocale(i, QChar(), form);
         }
     } else {
         for(int i=pos; i<anchor; i++){
-//            this->client->remoteFile->updateFormat(i+1,format);
             this->client->inserimentoLocale(i, QChar(), form);
         }
     }
@@ -1525,8 +1344,6 @@ void TextEdit::spostaCursor(int& pos,int& anchor,char& car ,QString& user){
 
         connect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
-
-
     }
 
     else if(mappaCursori.contains(user)){
@@ -1534,9 +1351,7 @@ void TextEdit::spostaCursor(int& pos,int& anchor,char& car ,QString& user){
         disconnect(textEdit, &QTextEdit::cursorPositionChanged,this, &TextEdit::cursorPositionChanged);
 
         // muovo il cursore
-
         QTextCursor *s1= mappaCursori.find(user).value();
-
 
         if(anchor>pos){
             s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
@@ -1567,14 +1382,8 @@ void TextEdit::spostaCursor(int& pos,int& anchor,char& car ,QString& user){
 
         connect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
-
-
     }
-    /* if list(item).isChecked){
-     * label set visible
-     * else
-     * label.setVisible(false)
-     * }*/
+
     QList<QListWidgetItem *> tmp = list->findItems(user, Qt::MatchExactly);
     if (tmp.size() != 1) {
         return;
@@ -1615,7 +1424,6 @@ void TextEdit::deleteListSlot(){
 void TextEdit::userListClicked(QListWidgetItem* item)
 {
     //rendo visibile il cursore appena cliccato
-
     qDebug() << "sono in " << Q_FUNC_INFO;
     qDebug() << item->text();
     QTextCursor oldCursor = this->textEdit->textCursor();
@@ -1645,12 +1453,9 @@ void TextEdit::userListClicked(QListWidgetItem* item)
 void TextEdit::cancellaAtCursor(int& posX,int& posY,int& anchor,char& car ,QString& user){
 
     if(!mappaCursori.contains(user)){
-
         //Se non ho mai visto questo user lo metto nella lista di user
-
         this->list->addItem(user);
         //Se non ho mai visto questo user creo un nuovo Cursore
-
         mappaCursori.insert(user,new QTextCursor(textEdit->document()));
         //muovo il cursore
         QTextCursor *s= mappaCursori.find(user).value();
@@ -1663,27 +1468,16 @@ void TextEdit::cancellaAtCursor(int& posX,int& posY,int& anchor,char& car ,QStri
 
         if(anchor<=poss){
             s->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
-        }
-       else{
+        } else{
             s->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
         }
 
-
         if(car=='\x3'){
             s->deletePreviousChar();
-        }
-
-        else if(car=='\x7'){
+        } else if(car=='\x7'){
             s->deleteChar();
         }
-
-
-        //textEdit->setTextCursor(* mappaCursori.find(user).value()); //Rende visibile il cursore nel textedit (DEBUG)
-
-    }
-
-    else{
-
+    } else{
         // muovo il cursore
         QTextCursor *s1= mappaCursori.find(user).value();
         s1->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
@@ -1695,34 +1489,28 @@ void TextEdit::cancellaAtCursor(int& posX,int& posY,int& anchor,char& car ,QStri
 
         if(anchor<=poss){
             s1->movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,poss-anchor);
-        }
-       else{
+        } else{
             s1->movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor,anchor-poss);
         }
 
         if(car=='\x3'){
             s1->deletePreviousChar();
-        }
-
-        else if(car=='\x7'){
+        } else if(car=='\x7'){
             s1->deleteChar();
-
         }
-
     }
-
 }
 
-void TextEdit::nuovoFile(QString& filename){
-
-    if (load(filename))
+void TextEdit::nuovoFile(QString& filename)
+{
+    if (load(filename)){
         statusBar()->showMessage(tr("Opened \"%1\"").arg(QDir::toNativeSeparators(filename)));
-    else{
+    } else {
         statusBar()->showMessage(tr("NOT Opened \"%1\"").arg(QDir::toNativeSeparators(filename)));
         QMessageBox Messaggio;
         Messaggio.critical(nullptr,"OpenFile ERROR",filename);
         Messaggio.setFixedSize(500,200);
-}
+    }
     return;
 }
 
@@ -1776,32 +1564,24 @@ void TextEdit::upCursor(QStringList &list)
 
 void TextEdit::nuovoStileSlot(QString& stile,QString& param){
     remoteStile=true;
-    qDebug()<<"ciaooooooooooooooooooooooooooooooooooooooooooooooooooooo";
     if(stile=="bold"){
         this->actionTextBold->toggle();
         this->textBold();
-    }
-    else if(stile=="underline"){
+    } else if(stile=="underline"){
         this->actionTextUnderline->toggle();
         this->textUnderline();
-     }
-    else if(stile=="italic"){
+    } else if(stile=="italic"){
         this->actionTextItalic->toggle();
         this->textItalic();
-     }
-    else if(stile=="font"){
+    } else if(stile=="font"){
         this->textFamily(param);
-     }
-    else if(stile=="size"){
+    } else if(stile=="size"){
         this->textSize(param);
-     }
-    else if(stile=="color"){
+    } else if(stile=="color"){
         this->myColorChange(param);
-     }
-
-    else if(stile=="align"){
+    } else if(stile=="align"){
         this->myTextAlign(param);
-     }
+    }
 
     remoteStile=false;
     return;
@@ -1825,5 +1605,3 @@ void TextEdit::salvaMappa(){
 
     f->close();
 }
-
-

@@ -66,7 +66,6 @@
 #include <QPainter>
 #include <QAbstractTextDocumentLayout>
 #include"NuovoFileRemotoWindoow/nuovofileremoto.h"
-#include "shared_editor/eventbuffer.h"
 
 class QAction;
 class QComboBox;

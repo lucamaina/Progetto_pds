@@ -15,15 +15,12 @@ Client::Client(QObject *parent) : QObject(parent)
     tempPass.clear();
     remoteFile = nullptr;
     finestraAddFile = new nuovoFileRemoto();
-
     socket = new QTcpSocket(this);
 
     connect(socket, &QTcpSocket::connected, this, &Client::connected);
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
-//    connect(this, SIGNAL(spostaCursSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(spostaCursor(int&,int&,int&,char&,QString&)));
     connect(this, SIGNAL(cancellaSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(cancellaAtCursor(int&,int&,int&,char&,QString&)));
-//    connect(this, SIGNAL(cambiaFile(QString&)),this->parent(),SLOT(loadFile(QString&)));
     connect(this, SIGNAL(addMe()),this->parent(),SLOT(addMeSlot()));
     connect(this, SIGNAL(nuovoStile(QString&,QString&)), this->parent(),SLOT(nuovoStileSlot(QString&,QString&)));
     connect(finestraAddFile, SIGNAL(s_addNewFile(QString&)), this, SLOT(remoteAdd(QString&)));
@@ -50,7 +47,7 @@ void Client::sendAddUsers(QStringList &lista)
     cmd.insert(DOCID, this->docID);
     int i = 1;
     for (QString utente: lista){
-        cmd.insert(UNAME + QString::number(i), utente);
+        cmd.insert(UNAME + QString::number(i++), utente);
     }
     this->sendMsg(cmd);
 }
@@ -195,7 +192,6 @@ bool Client::leggiXML(QByteArray qb)
         token = stream.readNext();
         // leggo elemento con nome del comando
         if (token == QXmlStreamReader::StartElement){
-            //qDebug() << "comando: " << stream.name();
             QString cmd = stream.name().toString();
             command.insert(CMD, cmd);
         }
@@ -204,12 +200,10 @@ bool Client::leggiXML(QByteArray qb)
         while ( token == QXmlStreamReader::StartElement ){
             QString name = stream.name().toString(), text = stream.readElementText();
             command.insert(name, text);
-            //qDebug() << "   start elem: " << name << " val: " << text;
             token = stream.readNext();
         }
     }
 
-    // TODO in caso di messaggio non corretto riparti da stato corretto
     if (stream.hasError()){
         qDebug() << "finito lettura xml con errore" << stream.errorString();
     } else {
@@ -230,8 +224,10 @@ bool Client::leggiXML(QByteArray qb)
  * riceve comando e chiama funzione correlata
  */
 void Client::dispatchCmd(QMap<QString, QString> cmd){
+    if (!cmd.contains(CMD)){
+        return;
+    }
     auto comando = cmd.find(CMD);
-
     if(comando.value()==CRS){
         spostaCursori(cmd);
     }
@@ -262,12 +258,9 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
     else if (comando.value() == UP_CRS) {
         this->upCursor(cmd);
     }
-
     else if (comando.value() == STILE) {
         this->dispatchStile(cmd);
     }
-
-    //TODO
 }
 
 /**
@@ -418,7 +411,6 @@ void Client::handleBrowse(QMap<QString,QString> cmd){
             QString codId = cmd.value(s);
             QString fileName = cmd.value(FNAME + QString::number(i));
             fileMap.insert(codId, fileName);
-            //b->addScelta(fileName);
             i++;
         }
     }
@@ -426,18 +418,6 @@ void Client::handleBrowse(QMap<QString,QString> cmd){
 
     b->exec();
     b->close();
-/*
-    for(int j=0; j<i; j++){
-        files.insert(listaID[j],listanomi[j]);
-    }
-
-
-    foreach(QString s, cmd.keys()){
-        QString temp=s+delimiter+cmd.value(s);
-        b->addScelta(temp);
-    }
-
-    b->exec();*/
 }
 
 /**
@@ -495,10 +475,7 @@ void Client::loadFile(QMap<QString,QString> cmd)
         formatoDecode=deserialize(esadecimale);
         s.textFormat=formatoDecode;
         emit s_setText(s.car, formatoDecode, pos++);
-
-
     }
-
 }
 
 /**
@@ -561,7 +538,7 @@ bool Client::inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format)
         emit s_removeText(pos);
         emit s_setText(newSym.car, format, pos);
         newSym.car = QChar();
-        this->remoteInsert(newSym.car, format, newSym.indici, pos);
+        this->remoteInsert(newSym.car, format, newSym.indici);
 
     } else {
         newSym = Symbol(this->username, car, newIndex, format);
@@ -570,7 +547,7 @@ bool Client::inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format)
         // scrivo in editor
         emit s_setText(newSym.car, format, pos);
             // invio al server
-        this->remoteInsert(newSym.car, format, newIndex, pos);
+        this->remoteInsert(newSym.car, format, newIndex);
 
     }
     return true;
@@ -591,7 +568,7 @@ bool Client::cancellamentoLocale(int posCursor)
     emit s_removeText(posCursor);
 
     // invio al server
-    this->remoteDelete(oldSym, posCursor);
+    this->remoteDelete(oldSym);
     return true;
 }
 
@@ -615,17 +592,6 @@ void Client::cancellamentoRemoto(QMap<QString, QString> cmd)
 
 void Client::spostaCursori(QMap <QString,QString>cmd)
 {
-//    qDebug() << "sono in " << Q_FUNC_INFO;
-//    QString user = cmd.value(UNAME);
-//    if(user == this->username){
-//        return; // non considero
-//    }
-//    // trovo posizione da index
-//    double idx = cmd.value(IDX).toDouble();
-//    int pos = remoteFile->localPosCursor();
-//    if (pos != -1)
-//        emit s_changeCursor(user, pos);
-//    return;
     qDebug()<<cmd;
     QString user=cmd.find(UNAME).value();
     QString indici=cmd.find(IDX).value();
@@ -640,16 +606,6 @@ void Client::spostaCursori(QMap <QString,QString>cmd)
     if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; } //non lo considero
     //user="lalla";
     emit spostaCursSignal(pos,anchor,c,user);
-}
-
-void Client::sendCursore(int pos)
-{/*
-    QMap<QString, QString> map;
-    map.insert(CMD, CRS);
-    map.insert(DOCID, this->docID);
-    map.insert(UNAME, this->username);
-    map.insert(IDX, QString::number(index) );
-    this->sendMsg(map);*/
 }
 
 /**
@@ -911,7 +867,7 @@ bool Client::upCursor(QMap<QString, QString> cmd)
     return true;
 }
 
-bool Client::remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index, int cursor)
+bool Client::remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index)
 {
     QMap<QString,QString> cmd;
     cmd.insert(CMD, REM_IN);
@@ -931,19 +887,17 @@ bool Client::remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index
     qDebug() << cmd;
     this->sendMsg(cmd);
 
-    this->sendCursore(cursor);
     return true;
 }
 
-bool Client::remoteInsert(Symbol sym, int cursor)
+bool Client::remoteInsert(Symbol sym)
 {
     return remoteInsert( sym.getCar(),
                          sym.getFormat(),
-                         sym.getIndici(),
-                         cursor);
+                         sym.getIndici());
 }
 
-bool Client::remoteDelete(QChar c, QVector<qint32> index, int cursor)
+bool Client::remoteDelete(QChar c, QVector<qint32> index)
 {
     QMap<QString,QString> cmd;
     cmd.insert(CMD, REM_DEL);
@@ -956,19 +910,13 @@ bool Client::remoteDelete(QChar c, QVector<qint32> index, int cursor)
     cmd.insert(UNAME,username);
     cmd.insert(DOCID,docID);
 
-    this->sendCursore(cursor);
     return this->sendMsg(cmd);
 }
 
-bool Client::remoteDelete(Symbol s, int cursor)
+bool Client::remoteDelete(Symbol s)
 {
-    return remoteDelete( s.getCar(),
-                         s.getIndici(),
-                         cursor);
+    return remoteDelete( s.getCar(), s.getIndici());
 }
-
-
-
 
 void Client::readyRead(){
     QByteArray out;

@@ -13,7 +13,7 @@ class Symbol
 {
 public:
     QChar car;
-    QString userName;           // identifica utente che inserische il carattere
+    QString userName;   // identifica utente che inserische il carattere
     QTextCharFormat textFormat;
     QByteArray formato;
     // versione con QVector
@@ -25,7 +25,7 @@ friend QDataStream &operator >>(QDataStream& in, Symbol& sym);
 bool operator ==(const Symbol &s);
 
 public:
-    explicit Symbol();
+    explicit Symbol(){}
     explicit Symbol(QString user, QChar car, QVector<qint32> idx, QByteArray formato) :  car(car), userName(user), formato(formato), indici(idx)
     { textFormat = deserialize<QTextCharFormat>(formato);}
 
@@ -50,7 +50,6 @@ public:
 
 signals:
     void s_read(QChar c, QTextCharFormat f, qint32 pos);
-
 };
 
 

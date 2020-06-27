@@ -72,16 +72,13 @@ void UserManager::caricaUsers(QList<QString> & lista)
         QListWidgetItem item(s, listaUser);
         if ( s == this->myself){
             listItem->prepend(item);
-            // this->listaUser->insertItem(0, &listItem->back());
         } else {
             item.setFlags(Qt::ItemFlag::ItemIsUserCheckable);
             item.setFlags(Qt::ItemFlag::ItemIsEnabled);
             item.setCheckState(Qt::CheckState::Checked);
             listItem->append(item);
-            // this->listaUser->addItem(&listItem->back());
         }
     }
-//    qDebug() << std::for_each(listItem->begin(), listItem->end(), [](QListWidgetItem &i){return i.text();});
     std::sort(++this->listItem->begin(), listItem->end());
     std::for_each(listItem->begin(),
                   listItem->end(),

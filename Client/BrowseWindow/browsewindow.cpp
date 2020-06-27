@@ -22,33 +22,21 @@ void BrowseWindow::setUpGUI(){
     listaScelta = new QListWidget(this);
     listaScelta->setMinimumSize(5, 1);
 
-    // comboScelta= new QComboBox(this);
-    // comboScelta->setEditable(true);
-
     labelScelta= new QLabel(this);
     labelScelta->setText( tr( "Choose a file:" ) );
     labelScelta->setBuddy( listaScelta );
 
-    //labelHint = new QLabel("Apri un documento \n"
-                         //  "esistente o \n"
-//                           "creane uno nuovo", this);
-
     buttons = new QDialogButtonBox( this );
     buttons->addButton( QDialogButtonBox::Ok );
     buttons->addButton( QDialogButtonBox::Cancel );
-    //buttons->addButton( QDialogButtonBox::Open);
 
     buttons->button( QDialogButtonBox::Ok )->setText( tr("Apri") );
-    //buttons->button( QDialogButtonBox::Open )->setText( tr("Nuovo File") );
     buttons->button( QDialogButtonBox::Cancel )->setText( tr("Cancel") );
 
     formGridLayout->addWidget( labelScelta, 0, 0 );
     formGridLayout->addWidget( listaScelta, 1, 0 ); //comboScelta
-    //formGridLayout->addWidget( labelHint, 1, 1);
     formGridLayout->addWidget( buttons->button(QDialogButtonBox::Ok), 2, 0);
     formGridLayout->addWidget( buttons->button(QDialogButtonBox::Cancel), 2, 1);
-    //formGridLayout->addWidget( buttons->button(QDialogButtonBox::Open), 0, 1);
-
 
     connect( buttons->button( QDialogButtonBox::Cancel ),
              SIGNAL(clicked()),
@@ -66,17 +54,11 @@ void BrowseWindow::setUpGUI(){
             SLOT(slotOpenFile()),
             Qt::DirectConnection);
 
-   /*connect( buttons->button( QDialogButtonBox::Open ),
-            SIGNAL(clicked()),
-            this,
-            SLOT(slotAddFile()) );*/
-
     setLayout( formGridLayout );
 }
 
 void BrowseWindow::addScelta(QString& nome)
 {
-//    this->comboScelta->addItem(nome);
     QIcon icona = QIcon::fromTheme("document-new", QIcon(srcPath + "/filenew.png"));
     QListWidgetItem *item = new QListWidgetItem(icona, nome, listaScelta);
     this->listaScelta->addItem(item);
@@ -99,18 +81,3 @@ void BrowseWindow::slotOpenFile()
     emit openFileSignal(filename, docId);
     close();
 }
-
-/**
- * @brief BrowseWindow::slotAddFile
- * invia massaggio di apertura del file selezionato
- */
-void BrowseWindow::slotAddFile()
-{
-    /*
-    QString filename = comboScelta->currentText();
-    QString docId = this->fileMap.key(filename);
-
-    emit addFileSignal(filename);
-*/
-}
-

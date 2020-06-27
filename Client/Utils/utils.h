@@ -10,7 +10,6 @@ QByteArray serialize(T toserial){
     QByteArray s;
     QDataStream out(&s, QIODevice::ReadWrite);
     out << toserial;
-    //qDebug()<<"serial: "<<s;
     return s;
 }
 
@@ -20,8 +19,6 @@ T deserialize(QByteArray qba){
     T deserial;
     QDataStream in(&qba, QIODevice::ReadWrite);
     in >> deserial;
-
-
     return deserial;
 }
 

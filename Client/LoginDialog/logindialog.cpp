@@ -53,7 +53,6 @@ void LoginDialog::setUpGUI(){
      formGridLayout->addWidget( buttons, 2, 0, 1, 2 );
 
     setLayout( formGridLayout );
-
 }
 
 void LoginDialog::setUsername(QString&& username){
@@ -69,17 +68,13 @@ void LoginDialog::setUsername(QString&& username){
         int index = comboUsername->count();
         qDebug() << "Select username " << index;
         comboUsername->addItem( username );
-
         comboUsername->setCurrentIndex( index );
-        // auto lista=new QStringList(username);
     }
-
-    // place the focus on the password field
-     editPassword->setFocus();
+    editPassword->setFocus();
 }
 
 void LoginDialog::setPassword(QString &password){
-     editPassword->setText( password );
+    editPassword->setText( password );
 }
 
 void LoginDialog::slotAcceptLogin(){

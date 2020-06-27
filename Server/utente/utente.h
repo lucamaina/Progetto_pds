@@ -24,7 +24,6 @@ public:
     utente(QString username, QString password)
         : username(username), password(password){}
     utente(){}
-    ~utente() = default;
 
 public:
     QString getUsername();

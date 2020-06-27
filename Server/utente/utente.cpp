@@ -1,14 +1,8 @@
 /*
  * Classe per gestire i dettagli degli utenti connessi.
- *
- *
- *
  */
 
-
 #include "utente.h"
-
-
 
 /**
  * @brief utente::utente
@@ -24,7 +18,6 @@ QTcpSocket *utente::getSocket() const
 {
     return mioSocket;
 }
-
 
 QString utente::getUsername(){   return this->username;}
 
@@ -52,7 +45,7 @@ bool utente::prepareUtente(QMap<QString, QString> map)
     QString passtmp = map.values(PASS).first();
     QString passHash = hash.hash(passtmp.toUtf8(), QCryptographicHash::Sha3_256).toHex();
 
-    if (passtmp.isEmpty()) return false;
+    if (passtmp.isEmpty()){ return false;   }
     this->username = nametmp;
     this->password = passHash;
 

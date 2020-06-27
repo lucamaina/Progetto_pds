@@ -14,15 +14,11 @@ class MySocket : public QObject
 private:
     int sockId;
     QTcpSocket sock;
-    // nuova versione ready read
     QByteArray buffer, command;
 
 public:
-    MySocket(int sockId);
-    // ~MySocket() = default;
-
+    explicit MySocket(int sockId);
     void leggiXML(QByteArray data);
-
     bool write(QByteArray data);
     bool write(QMap<QString, QString> comando);
 
@@ -34,11 +30,6 @@ signals:
 public slots:
     void readyRead();
     void disconnected();
-
-//    void s_receiveCmd(Comando & cmd);
-
-    //  void s_receiveCmd(QMap<QString, QString> & cmd);
 };
-
 
 #endif // MYSOCKET_H

@@ -19,19 +19,9 @@ void Network::push(Message &msg)
 {
     std::unique_lock<std::mutex> lg(mQueue);
     this->msgQueue.push_back(msg);
-//    qDebug() << "sono in " << Q_FUNC_INFO;
     emit sigSend();
     return;
 }
-
-
-//void Network::msgRead(Message &msg)
-//{
-//    // se file esiste e user presente nell'editor lo passa
-//    if ( this->editorMap.contains(msg.getFile()) ){
-
-//    }
-//}
 
 bool Network::createEditor(QString fileId, QString nomeFile, utente &user, QSharedPointer<MySocket> &sock)
 {
@@ -68,14 +58,6 @@ void Network::sendToEdit(Message &msg)
     }
 }
 
-
-//bool Network::sendToUsers(Message &msg)
-//{
-//    QString sendUser = msg.getUser();
-
-//    return true;
-//}
-
 /**
  * @brief Network::filePresent
  * @param fileId
@@ -88,7 +70,6 @@ bool Network::filePresent(QString fileId)
         return true;
     return false;
 }
-
 
 bool Network::addRefToEditor(QString fileId, utente &user, QSharedPointer<MySocket>&sock)
 {

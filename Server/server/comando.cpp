@@ -26,7 +26,7 @@ Comando::Comando(Comando::cmdType tipo)
         cmdMap.insert(CMD, UP_CRS);
         break;
     default:
-        cmdMap.insert(CMD, "Error");
+        cmdMap.insert(CMD, ERR);
         break;
     }
 }
@@ -70,7 +70,9 @@ bool Comando::verifyCMD(QList<QString> &list)
 {
     QString val;
     foreach (val, list){
-        if (!this->cmdMap.contains(val)){    return false;   }
+        if ( !this->cmdMap.contains(val) ){
+            return false;
+        }
     }
     return true;
 }

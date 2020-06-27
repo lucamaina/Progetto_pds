@@ -22,7 +22,7 @@ private:
     QVector<qint32> indici;
 
 public:
-    explicit Message();
+    explicit Message(){}
     bool prepareMsg(QMap<QString, QString> comando, QString username);
     msgType getTipo() const;
     Symbol getSym() const;

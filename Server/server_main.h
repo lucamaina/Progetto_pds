@@ -3,18 +3,14 @@
 
 #include "server/server.h"
 
-/** modifiche per togliere qobject non usato **/
-
-class server_main /*: public QObject*/
+class server_main
 {
-//    Q_OBJECT
 
 private:
-    // db* mydb;
     server *myServer;
 
 public:
-    explicit server_main() /*QObject *parent = nullptr);*/
+    explicit server_main()
     {
         this->myServer = new server();
         myServer->startServer();

@@ -104,8 +104,3 @@ void Message::setIndici(const QVector<qint32> &value)
 {
     indici = value;
 }
-
-Message::Message()
-{
-    
-}

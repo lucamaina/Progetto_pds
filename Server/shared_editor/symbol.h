@@ -10,15 +10,13 @@
 
 #include "../server/cmdstring.h"
 
-// class QTextCharFormat;
-
 
 class Symbol
 {
 private:
     QChar car;
     QVector<qint32> index;
-    QString userName;           // identifica utente che inserische il carattere
+    QString userName;   // identifica utente che inserische il carattere
     QByteArray formato;
 
 public:
@@ -32,7 +30,6 @@ public:
     QString getUserName() const;
     void setUserName(const QString &value);
 
-
     friend QDataStream &operator <<(QDataStream &out, const Symbol &sym);
     friend QDataStream &operator >>(QDataStream &in, Symbol &sym);
     bool operator ==(const Symbol &s);
@@ -42,7 +39,6 @@ public:
 
     QByteArray getFormato() const;
     void setFormato(const QByteArray &value);
-
 
     QMap<qint32, Symbol> getNextLevel() const;
     void setNextLevel(const QMap<qint32, Symbol> &value);

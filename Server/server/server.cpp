@@ -73,18 +73,14 @@ void server::incomingConnection(int socketID)
         m.unlock();
 
         connect(newThread, &s_thread::deleteThreadSig, this, &server::deleteThread, Qt::ConnectionType::DirectConnection);
-        // connect(newThread, &s_thread::finished, newThread, &s_thread::test, Qt::DirectConnection);
-        // TODO exception
         try {
             newThread->run();
         } catch (std::exception &e) {
-            // TODO migliorare gestione
             this->saveAll();
             log->write(e.what());
             qDebug() << "sono in server: " << e.what();
             std::cin >> a;
         }
-
     } else {
         qDebug() << "connessione rifiutata, max utenti raggiunti";
         return;

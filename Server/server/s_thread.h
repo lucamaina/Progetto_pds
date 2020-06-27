@@ -27,7 +27,6 @@ class s_thread : public QThread
 
 public:
     s_thread(int ID, QObject *parent = nullptr);
-//    ~s_thread(){ qDebug() << "distruttore s_thread " << this->sockID; }
     void exitThread();
     void save();
     void run();
@@ -37,8 +36,6 @@ public slots:
     void dispatchCmd(QMap<QString, QString> &cmd);
     void dispatchCmd(Comando &cmd);
 
-    void test(){ qDebug() << "signal finished"; }
-
 signals:
     void deleteThreadSig(s_thread &t);
 
@@ -46,31 +43,20 @@ private:
     int sockID;
     QString docID;
 
-    // socket con shared pointer
-    QSharedPointer<MySocket> sp_socket;
-
-    //utente *user = nullptr;     // usare unique_ptr
+    QSharedPointer<MySocket> sp_socket;    // socket con shared pointer per QObject
     std::unique_ptr<utente> up_user;
-    //db *conn;
     std::unique_ptr<db> up_conn;
 
     QStringList toQStringList(QMap<QString, QString> cmd);
 
-
-    /****************************************************************************
-     * metodi controllo dei comandi ricevuti ************************************/
-//    void leggiXML(QByteArray data);
-
+    bool sendBody(QByteArray &ba);
+    bool verifyCMD(QMap<QString, QString> &cmd, const QList<QString> &list);
 
     /****************************************************************************
      * metodi controllo dei messaggi inviati ************************************/
-//    bool scriviXML(QMap<QString, QString> comando);
     bool clientMsg(QByteArray data);
     bool clientMsg_(QMap<QString, QString> comando);
     bool clientMsg(QMap<QString, QString> comando);
-
-    bool sendBody(QByteArray &ba);
-
 
     /****************************************************************************
      * metodi accesso a database *************************************************/
@@ -91,8 +77,6 @@ private:
     /****************************************************************************
      * metodi accesso a netowrk *************************************************/
     void sendMsg(QMap<QString, QString> comando);
-
-    bool verifyCMD(QMap<QString, QString> &cmd, const QList<QString> &list);
 };
 
 #endif // S_THREAD_H

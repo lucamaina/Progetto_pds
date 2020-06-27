@@ -22,22 +22,19 @@ public:
     void startServer();
     void saveAll();
 
-signals:
-
 public slots:
     void deleteThread(s_thread &t);
 
 private:
-    void incomingConnection(int socketID);
-
-    Logger *log;    
+    Logger *log;
     s_thread *newThread;
     std::mutex m;
     int numThread = 0;
     int maxThread = MAX_THREAD;
     db *mioDB;
-
     QVector<s_thread*> tVec;
+
+    void incomingConnection(int socketID);
 };
 
 #endif // SERVER_H

@@ -38,11 +38,9 @@ class db
 {
 private:
     QSqlDatabase myDb;
-    //utente user;
     Logger *log;
 
 public:
-    explicit db();
     explicit db(int connName);
     bool conn();
     bool conn(utente & user);
@@ -62,9 +60,6 @@ public:
     QList<QString> getUsers(const QString docId);
     bool addUser(utente& user, QString docId, QString& newUser);
     bool remUser(utente& user, QString docId, QString& newUser);
-
-
-
 };
 
 #endif // DB_H

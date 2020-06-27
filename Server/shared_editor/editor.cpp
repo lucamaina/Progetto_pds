@@ -106,13 +106,6 @@ QByteArray Editor::getSymMap()
     return ba;
 }
 
-//bool Editor::loadFile(const QString &nomeUser, const int dimFile)
-//{
-//    if (!this->sendList_.contains(nomeUser)){    return false;   }
-//    (void) dimFile;
-
-//    return true;
-//}
 
 Editor::~Editor()
 {
@@ -121,7 +114,7 @@ Editor::~Editor()
         save();
     } catch (std::exception& e) {
         qDebug() << e.what();
-        // TODO altro
+        Logger::getLog().write("Eccezione nel salvataggio del file " + this->nomeFile );
     }
 }
 
@@ -132,7 +125,9 @@ bool Editor::process(Message &msg)
         if (this->localInsert(msg) == true) {
             this->remoteSend(msg);
         } else {
-            // rispondi con err
+            Comando err = Comando( Comando::Insert_Err);
+            QSharedPointer<MySocket> ptr = this->sendList_.value(msg.getUser());
+            this->send(ptr, err.toByteArray());
         }
     } else if (tipo == Message::msgType::Rem_Del) {
         // call localDel
@@ -143,7 +138,6 @@ bool Editor::process(Message &msg)
     } else {
         return false;
     }
-
     return false;
 }
 
@@ -165,33 +159,6 @@ bool Editor::sendToAll(Comando &cmd)
     return true;
 }
 
-//bool Editor::rispErr(Message &msg)
-//{
-//    QSharedPointer<MySocket> tmpSock = this->sendList_.value(msg.getUser());
-//    return this->send( tmpSock,
-//                       Comando( Comando::Insert_Err ).toByteArray());
-//}
-
-//bool Editor::deserialise(QByteArray &ba)
-//{
-//    QMap<qint32, Symbol> map;
-//    map.clear();
-//    QByteArray p;
-//    QDataStream o(&p, QIODevice::ReadWrite);
-//    o << this->symList;
-
-//    QDataStream i(&p, QIODevice::ReadWrite);
-//    i >> map;
-//    p = p.toBase64(QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals);
-//    QByteArray _new = QByteArray::fromBase64(ba);
-//    QDataStream stream(&_new, QIODevice::ReadWrite);
-//    map.clear();
-//    stream >> map;
-//    qDebug() << "size qByteArray = " << ba.size();
-//    return true;
-//}
-
-
 /*********************************************************************************************************
  ************************ metodi di gestione di utente ***************************************************
  *********************************************************************************************************/
@@ -210,7 +177,6 @@ bool Editor::addUser(utente &user, QSharedPointer<MySocket> & sock)
     QStringList list = this->sendList_.keys();
     Comando cmd(Comando::Up_Cursor);
     cmd.insertMulti(UNAME, list).insert(DOCID, this->DocId);
-    //cmd.insert(DOCID, this->DocId);
 
     // invio a tutti
     this->sendToAll(cmd);

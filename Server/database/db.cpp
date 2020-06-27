@@ -1,8 +1,6 @@
 /*
  * Classe per gestione delle connessioni al database MYSQL in localhost.
  * Ogni thread figlio deve gestire la sua connessione.
- *
- *
  */
 
 #include "db.h"
@@ -105,7 +103,6 @@ bool db::userLogin(utente &user)
             this->myDb.commit();    // chiudo connessione con commit
             return true;
         }
-
     }
     this->myDb.rollback();      // chiudo transazione con rollback
     return false;
@@ -174,26 +171,6 @@ bool db::addFile(utente &user, QString nomefile, int& errorCode)
 
     QVector<QString> val;
     QSqlQuery res;
-    // verifica utente (superfluo ??)
-    /*
-    val.push_back(user.getUsername());
-    val.push_back(user.getPass());
-    QSqlQuery res = this->query(queryLOGIN, val);
-    if (res.first()){
-        QString nick = res.value(1).toString();
-        connesso = res.value(0).toBool();
-        if (!connesso){
-            qDebug() << "utente non connesso " << user.getUsername();
-            this->myDb.rollback();
-            return false;
-        }
-    } else {
-        qDebug() << "utente non connesso " << user.getUsername();
-        this->myDb.rollback();
-        return false;
-    }
-    val.clear();
-    */
 
     // verifica file
     val.push_back(nomefile);
@@ -237,7 +214,6 @@ bool db::addFile(utente &user, QString nomefile, int& errorCode)
     res.bindValue(":DocId", tmpDocId);
     res.bindValue(":UserName", user.getUsername());
     res.exec();
-    qDebug()<<"---- " << res.lastQuery();
 
     this->myDb.commit();
     val.clear();

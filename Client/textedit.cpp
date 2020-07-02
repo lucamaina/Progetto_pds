@@ -471,7 +471,7 @@ void TextEdit::setupFileActions()
     tb->addAction(actionNewRemote);
 
     const QIcon remoteBrowse = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/remoteBrows.png"));
-    actionBrowsRemote = menu->addAction(remoteBrowse, tr("&Remote Brows..."), this, &TextEdit::remoteBrows);
+    actionBrowsRemote = menu->addAction(remoteBrowse, tr("&Remote Browse..."), this, &TextEdit::remoteBrows);
     tb->addAction(actionBrowsRemote);
 
     const QIcon saveIcon = QIcon::fromTheme("document-save", QIcon(rsrcPath + "/filesave.png"));

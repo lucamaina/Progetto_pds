@@ -229,9 +229,10 @@ bool Editor::localInsert(Message msg)
     if (posCursor > -1){
         if (!msg.getSym().getChar().isNull()){
             this->symList.insert(posCursor, newSym);
-        }else if (posCursor < symList.size()){
-            newSym.setCar( this->symList.at(posCursor).getCar() );
-                    this->symList.replace(posCursor, newSym);
+        }else if (posCursor-1 < symList.size()){
+
+            newSym.setCar( this->symList.at(posCursor-1).getCar() );
+                    this->symList.replace(posCursor-1, newSym);
         }
         return true;
     }

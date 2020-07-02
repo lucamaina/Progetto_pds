@@ -549,19 +549,6 @@ void TextEdit::setupEditActions()
     QToolBar *tb = addToolBar(tr("Edit Actions"));
     QMenu *menu = menuBar()->addMenu(tr("&Edit"));
 
-/*
-    const QIcon undoIcon = QIcon::fromTheme("edit-undo", QIcon(rsrcPath + "/editundo.png"));
-    actionUndo = menu->addAction(undoIcon, tr("&Undo"), textEdit, &QTextEdit::undo);
-    actionUndo->setShortcut(QKeySequence::Undo);
-    tb->addAction(actionUndo);
-
-    const QIcon redoIcon = QIcon::fromTheme("edit-redo", QIcon(rsrcPath + "/editredo.png"));
-    actionRedo = menu->addAction(redoIcon, tr("&Redo"), textEdit, &QTextEdit::redo);
-    actionRedo->setPriority(QAction::LowPriority);
-    actionRedo->setShortcut(QKeySequence::Redo);
-    tb->addAction(actionRedo);  
-*/
-
     menu->addSeparator();
 
 #ifndef QT_NO_CLIPBOARD
@@ -586,8 +573,7 @@ void TextEdit::setupEditActions()
 
     if (const QMimeData *md = QApplication::clipboard()->mimeData())
         actionPaste->setEnabled(md->hasText());
-    connect(actionPaste,SIGNAL(triggered()),this,SLOT(goPaste()));
-
+    connect(actionPaste,SIGNAL(triggered()),this,SLOT(goPasteBtn()));
 
 #endif
 }
@@ -610,6 +596,19 @@ void TextEdit::goPaste(){
             i++;
         }
     }
+}
+
+void TextEdit::goPasteBtn()
+{
+    QString s(QApplication::clipboard()->mimeData()->text());
+    int size = s.size();
+    QTextCursor c = textEdit->textCursor();
+    int pos = c.position();
+    c.setPosition(pos - size, QTextCursor::KeepAnchor);
+    c.removeSelectedText();
+
+    pos = c.position();
+    goPaste();
 }
 
 void TextEdit::clear()
@@ -1179,9 +1178,9 @@ void TextEdit::setVisibleEditorActions(bool set)
     actionTextUnderline->setEnabled(set);
     actionTextColor->setEnabled(set);
     // vale anche per copia incolla
-    actionCut->setEnabled(set);
-    actionCopy->setEnabled(set);
-    actionPaste->setEnabled(set);
+//    actionCut->setEnabled(set);
+//    actionCopy->setEnabled(set);
+//    actionPaste->setEnabled(set);
 }
 
 void TextEdit::acceptLogout()

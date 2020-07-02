@@ -628,12 +628,14 @@ void Client::showUserError(QMap<QString, QString> cmd)
         if (cmd.contains(UNAME+QString::number(i))){
             nome = cmd.value(UNAME+QString::number(i), "");
             str += nome + "; ";
+            i++;
+        } else {
+            nome.clear();
         }
     } while (nome != "");
 
     QMessageBox Messaggio;
-    Messaggio.setText("Errore inserimento utenti");
-    Messaggio.information(nullptr,"Errore: ", str);
+    Messaggio.information(nullptr,"Errore inserimento utenti", "Utente non esiste: " +str );
     Messaggio.setFixedSize(500,200);
 }
 

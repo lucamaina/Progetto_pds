@@ -880,7 +880,7 @@ void TextEdit::remoteBrows()
 {
     if (this->client->isLogged()){
         QMap<QString, QString> comando;
-        comando.insert("CMD","BROWS");
+        comando.insert(CMD, BROWSE);
         this->client->sendMsg(comando);
     }
 }

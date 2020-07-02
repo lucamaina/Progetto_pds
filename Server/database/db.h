@@ -15,6 +15,7 @@
 #define queryFILEexist "SELECT Count(*) FROM documenti AS d WHERE d.FileSysPath = :FileSysPath;"
 #define queryFILEadd "INSERT INTO documenti(FileSysPath, LinkPath) VALUE (:FileSysPath, :LinkPath);"
 #define queryRELAZIONEadd "INSERT INTO relazioni(DocId, UserName) VALUE (:DocId, :UserName);"
+#define queryUTENTIVerifica "SELECT Count(*) FROM relazioni WHERE DocId = :DocId and UserName = :UserName;"
 #define queryRELAZIONErem "DELETE FROM relazioni WHERE DocId = :DocId and UserName = :UserName;"
 
 #define queryBROWSE "SELECT * FROM documenti WHERE DocId IN (SELECT DocId FROM relazioni WHERE UserName = :UserName);"

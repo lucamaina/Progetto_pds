@@ -495,7 +495,7 @@ void s_thread::getUsers(QMap<QString, QString> &comando)
     QString logStr;
     QList<QString> lista = this->up_conn->getUsers(docId);
 
-    clientMsg("getUsers effettuato");
+//    clientMsg("getUsers effettuato");
     logStr = QString::number(this->sockID) + "getUsers con utente: " + up_user->getUsername();
     Logger::getLog().write(logStr);
 

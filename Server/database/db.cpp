@@ -311,12 +311,21 @@ bool db::addUser(utente &user, QString docId, QString &newUser)
         return false;
     }
 
-    // aggiungi relazione
+    // verifica utente già presente
     values.clear();
     values.push_back(docId);
     values.push_back(newUser);
-    res = this->query(queryRELAZIONEadd, values);
-
+    res = this->query(queryUTENTIVerifica, values);
+    if (res.first()){
+        valid = res.value(0).toInt();
+    }
+    if (valid == 0){
+        // aggiungi relazione
+        values.clear();
+        values.push_back(docId);
+        values.push_back(newUser);
+        res = this->query(queryRELAZIONEadd, values);
+    }
     return true;
 }
 

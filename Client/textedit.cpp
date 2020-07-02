@@ -247,17 +247,54 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
             QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
             if (keyEvent->modifiers().testFlag(Qt::ControlModifier) == true)
             {
-//                // allow override of all Ctrl+ shortcuts
-//                if (keyEvent->key() == Qt::Key_V) {
-//                    goPaste();
-//                }
-//                if (keyEvent->key() == Qt::Key_X) {
-//                    this->setVisibleFileActions(true);
-//                }
-//                if (keyEvent->key() == Qt::Key_C) {
-//                    QApplication::clipboard()->mimeData()->text() = textEdit->textCursor().selectedText();
-//                }
-//                return false;
+                // allow override of all Ctrl+ shortcuts
+                if (keyEvent->key() == Qt::Key_V) {
+                    goPaste();
+                }
+                if (keyEvent->key() == Qt::Key_X) {
+                    this->setVisibleFileActions(true);
+                }
+                if (keyEvent->key() == Qt::Key_C) {
+                    listaFormati.clear();
+                    QTextCursor cur = textEdit->textCursor();
+                    QApplication::clipboard()->mimeData()->text() = textEdit->textCursor().selectedText();
+
+                    qDebug()<<cur.position()<<cur.anchor();
+                    int anch, cu;
+                    anch=cur.anchor();
+                    cu=cur.position();
+
+                    if(cur.position()<cur.anchor()){
+                        cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
+
+                        while(cur.position()<anch){
+                            listaFormati.push_back(cur.charFormat());
+                            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
+                        }
+                            listaFormati.push_back(cur.charFormat());
+
+                    }
+
+                    else if(cur.position()>cur.anchor()){
+
+                        cur.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveMode::KeepAnchor,cu-anch-1);
+
+                        qDebug()<<cur.position()<<cur.anchor()<<anch<<cu;
+                        while(cur.position()<cu){
+                            listaFormati.push_back(cur.charFormat());
+                            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
+                        }
+                        listaFormati.push_back(cur.charFormat());
+
+                    }
+
+
+                    //cur.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveMode::KeepAnchor);
+
+
+                    qDebug()<<listaFormati;
+                }
+                return false;
 
             }
 
@@ -587,15 +624,15 @@ void TextEdit::goPaste(){
     if(client->isLogged()){
         for(QChar c : s){
             QVector<qint32> newIndex=this->client->remoteFile->getLocalIndexInsert(pos+i);
-            QTextCharFormat currentFormat = cur.charFormat();
-            this->client->remoteInsert(c, cur.charFormat()/*textEdit->textCursor().charFormat()*/, newIndex);
+
+            this->client->remoteInsert(c, listaFormati[i]/*textEdit->textCursor().charFormat()*/, newIndex);
 
             //creo simbolo
-            Symbol newSym = Symbol(this->client->getUsername(), c, newIndex, cur.charFormat()/*textEdit->textCursor().charFormat()*/);
+            Symbol newSym = Symbol(this->client->getUsername(), c, newIndex, listaFormati[i]/*textEdit->textCursor().charFormat()*/);
 
             // inserisco in locale
             this->client->remoteFile->symVec.insert(pos+i, newSym);
-//            cur.setPosition(pos++);
+            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
             i++;
         }
     }

@@ -247,17 +247,17 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
             QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
             if (keyEvent->modifiers().testFlag(Qt::ControlModifier) == true)
             {
-                // allow override of all Ctrl+ shortcuts
-                if (keyEvent->key() == Qt::Key_V) {
-                    goPaste();
-                }
-                if (keyEvent->key() == Qt::Key_X) {
-                    this->setVisibleFileActions(true);
-                }
-                if (keyEvent->key() == Qt::Key_C) {
-                    QApplication::clipboard()->mimeData()->text() = textEdit->textCursor().selectedText();
-                }
-                return false;
+//                // allow override of all Ctrl+ shortcuts
+//                if (keyEvent->key() == Qt::Key_V) {
+//                    goPaste();
+//                }
+//                if (keyEvent->key() == Qt::Key_X) {
+//                    this->setVisibleFileActions(true);
+//                }
+//                if (keyEvent->key() == Qt::Key_C) {
+//                    QApplication::clipboard()->mimeData()->text() = textEdit->textCursor().selectedText();
+//                }
+//                return false;
 
             }
 
@@ -546,30 +546,31 @@ void TextEdit::setupFileActions()
 
 void TextEdit::setupEditActions()
 {
-    QToolBar *tb = addToolBar(tr("Edit Actions"));
-    QMenu *menu = menuBar()->addMenu(tr("&Edit"));
+//    QToolBar *tb = addToolBar("");
+    QMenu *menu = menuBar()->addMenu(tr(""));
 
-    menu->addSeparator();
+    //menu->addSeparator();
 
 #ifndef QT_NO_CLIPBOARD
     const QIcon cutIcon = QIcon::fromTheme("edit-cut", QIcon(rsrcPath + "/editcut.png"));
     actionCut = menu->addAction(cutIcon, tr("Cu&t"), textEdit, &QTextEdit::cut);
     actionCut->setPriority(QAction::LowPriority);
     actionCut->setShortcut(QKeySequence::Cut);
-    tb->addAction(actionCut);
+//    tb->addAction(actionCut);
+    connect(actionCut,SIGNAL(triggered()),this,SLOT(goCut()));
 
     const QIcon copyIcon = QIcon::fromTheme("edit-copy", QIcon(rsrcPath + "/editcopy.png"));
     actionCopy = menu->addAction(copyIcon, tr("&Copy"), textEdit, &QTextEdit::copy);
     actionCopy->setPriority(QAction::LowPriority);
     actionCopy->setShortcut(QKeySequence::Copy);
-    tb->addAction(actionCopy);
+//    tb->addAction(actionCopy);
 
     const QIcon pasteIcon = QIcon::fromTheme("edit-paste", QIcon(rsrcPath + "/editpaste.png"));
     actionPaste = menu->addAction(pasteIcon, tr("&Paste"), textEdit, &QTextEdit::paste);
 
     //actionPaste->setPriority(QAction::LowPriority);
     actionPaste->setShortcut(QKeySequence::Paste);
-    tb->addAction(actionPaste);
+//    tb->addAction(actionPaste);
 
     if (const QMimeData *md = QApplication::clipboard()->mimeData())
         actionPaste->setEnabled(md->hasText());
@@ -581,18 +582,20 @@ void TextEdit::setupEditActions()
 void TextEdit::goPaste(){
     QString s(QApplication::clipboard()->mimeData()->text());
     int pos=textEdit->textCursor().position();
+    QTextCursor cur = textEdit->textCursor();
     int i=0;
     if(client->isLogged()){
         for(QChar c : s){
             QVector<qint32> newIndex=this->client->remoteFile->getLocalIndexInsert(pos+i);
-            this->client->remoteInsert(c,  textEdit->textCursor().charFormat(), newIndex);
+            QTextCharFormat currentFormat = cur.charFormat();
+            this->client->remoteInsert(c, cur.charFormat()/*textEdit->textCursor().charFormat()*/, newIndex);
 
             //creo simbolo
-            Symbol newSym = Symbol(this->client->getUsername(), c, newIndex, textEdit->textCursor().charFormat());
+            Symbol newSym = Symbol(this->client->getUsername(), c, newIndex, cur.charFormat()/*textEdit->textCursor().charFormat()*/);
 
             // inserisco in locale
             this->client->remoteFile->symVec.insert(pos+i, newSym);
-
+//            cur.setPosition(pos++);
             i++;
         }
     }
@@ -604,11 +607,31 @@ void TextEdit::goPasteBtn()
     int size = s.size();
     QTextCursor c = textEdit->textCursor();
     int pos = c.position();
-    c.setPosition(pos - size, QTextCursor::KeepAnchor);
+    c.setPosition(pos - size, QTextCursor::MoveAnchor);
     c.removeSelectedText();
 
     pos = c.position();
+    textEdit->setTextCursor(c);
     goPaste();
+}
+
+void TextEdit::goCut()
+{
+    QString s(QApplication::clipboard()->mimeData()->text());
+    int size = s.size();
+    QTextCursor c = textEdit->textCursor();
+    int pos = c.position();
+    for (int i =0; i<size; i++) {
+//        this->client->cancellamentoLocale(pos);
+        Symbol oldSym;
+        if ( this->client->remoteFile->getLocalIndexDelete(pos, oldSym)){
+            // cancello in locale
+            this->client->remoteFile->symVec.remove(pos);
+        }
+        // invio al server
+        this->client->remoteDelete(oldSym);
+    }
+
 }
 
 void TextEdit::clear()
@@ -1178,9 +1201,9 @@ void TextEdit::setVisibleEditorActions(bool set)
     actionTextUnderline->setEnabled(set);
     actionTextColor->setEnabled(set);
     // vale anche per copia incolla
-//    actionCut->setEnabled(set);
-//    actionCopy->setEnabled(set);
-//    actionPaste->setEnabled(set);
+    actionCut->setVisible(false);
+    actionCopy->setVisible(false);
+    actionPaste->setVisible(false);
 }
 
 void TextEdit::acceptLogout()
@@ -1549,16 +1572,18 @@ void TextEdit::upCursor(QStringList &list)
         }
     }
     // rimuovi vecchi
+    bool find = false;
     for (QString exNome : old){
         mappaCursori.remove(exNome);
         mappaEtichette.value(exNome)->setVisible(false);
         mappaEtichette.remove(exNome);
         int t = this->list->count();
-        for (int i = 0; i < t; i++){
+        for (int i = 0; i < t && find == false; i++){
             QListWidgetItem *item = this->list->item(i);
             QString str = item->text();
             if ( exNome == item->text() ){
                 this->list->takeItem(i);
+                find = true;
             }
         }
     }

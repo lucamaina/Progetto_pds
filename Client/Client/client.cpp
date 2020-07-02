@@ -118,7 +118,7 @@ void Client::handleAddUser()
 void Client::handleFileExit()
 {
     qDebug() << "sono in " << Q_FUNC_INFO;
-    if (this->docID.isNull()){
+    if (this->remoteFile == nullptr){
         return;
     }
     QMap<QString, QString> cmd;

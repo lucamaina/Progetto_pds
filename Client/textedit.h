@@ -226,6 +226,7 @@ private:
 public slots:
     void goPaste();
     void goPasteBtn();
+    void goCut();
     void clear();
     void refresh();
     void statusBarOutput(QString s);

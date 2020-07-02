@@ -74,7 +74,7 @@ void s_thread::dispatchCmd(QMap<QString, QString> &cmd){
         this->disconnectDB();
     } else if (comando.value() == ADD_FILE) {
         this->addFileDB(cmd);
-    } else if (comando.value() == BROWS) {
+    } else if (comando.value() == BROWSE) {
         this->browsFile(cmd);
     } else if (comando.value() == OPEN_FILE) {
         this->openFile(cmd);

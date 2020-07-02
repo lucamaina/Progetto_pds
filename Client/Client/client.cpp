@@ -118,6 +118,9 @@ void Client::handleAddUser()
 void Client::handleFileExit()
 {
     qDebug() << "sono in " << Q_FUNC_INFO;
+    if (this->docID.isNull()){
+        return;
+    }
     QMap<QString, QString> cmd;
     cmd.insert(CMD, EXFILE);
     cmd.insert(DOCID, this->docID);
@@ -308,10 +311,14 @@ void Client::dispatchOK(QMap <QString, QString> cmd){
     }
     else if(comando.value()==REG_OK){
         QMessageBox Messaggio;
-        Messaggio.information(nullptr,"Registration","Registered & Logged in successfully");
+        Messaggio.information(nullptr,"Registration","Registered successfully");
         Messaggio.setFixedSize(500,200);
 
         this->logged=true;
+//        this->username = tempUser;
+
+//        emit s_changeTitle(this->username, "*", "*");
+//        emit s_setVisbleFileActions(true);
     }
     else if(comando.value()==FILE_OK){
         emit this->toStatusBar("File opened successfully");

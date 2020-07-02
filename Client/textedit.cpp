@@ -818,6 +818,9 @@ void TextEdit::fileNew()
 
 void TextEdit::fileExit()
 {
+    if (this->client->remoteFile == nullptr){
+        return;
+    }
     qDebug() << "sono in " << Q_FUNC_INFO;
     const QMessageBox::StandardButton ret = QMessageBox::warning(this,
                    "Esci dal documento corrente",

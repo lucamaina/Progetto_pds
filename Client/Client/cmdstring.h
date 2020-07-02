@@ -18,7 +18,7 @@
 #define REMOVE_FILE "REMOVE-FILE"
 #define FBODY "FILE-BODY"
 #define CMD "CMD"
-#define BROWS "BROWS"
+#define BROWSE "BROWSE"
 #define CRS "CURSOR"
 #define ULIST "USER-LIST"
 #define ADD_USER "ADD-USER"

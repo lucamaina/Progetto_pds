@@ -241,11 +241,11 @@ QMap<QString, QString> db::browsFile(utente &user)
 {
     int counter = 1;
     QMap<QString, QString> risp;
-    risp.insert(CMD, BROWS);
+    risp.insert(CMD, BROWSE);
     QVector<QString> values;
     values.push_back(user.getUsername());
     qDebug() << values;
-    QSqlQuery res = this->query(queryBROWS, values);
+    QSqlQuery res = this->query(queryBROWSE, values);
 
     while (res.next()){
         QString DocId = res.value(0).toString();

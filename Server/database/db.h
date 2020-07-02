@@ -17,7 +17,7 @@
 #define queryRELAZIONEadd "INSERT INTO relazioni(DocId, UserName) VALUE (:DocId, :UserName);"
 #define queryRELAZIONErem "DELETE FROM relazioni WHERE DocId = :DocId and UserName = :UserName;"
 
-#define queryBROWS "SELECT * FROM documenti WHERE DocId IN (SELECT DocId FROM relazioni WHERE UserName = :UserName);"
+#define queryBROWSE "SELECT * FROM documenti WHERE DocId IN (SELECT DocId FROM relazioni WHERE UserName = :UserName);"
 #define queryOPEN "SELECT Count(*) FROM relazioni WHERE UserName = :UserName AND DocId = :DocId;"
 
 #define querySetUpUtenti "UPDATE utenti SET connesso = '0';"

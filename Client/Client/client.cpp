@@ -234,7 +234,7 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
     if(comando.value()==CRS){
         spostaCursori(cmd);
     }
-    else if(comando.value()==BROWS){
+    else if(comando.value()==BROWSE){
         handleBrowse(cmd);
     }
     else if(comando.value()==OK){

@@ -164,6 +164,7 @@ private:
     QMap<QString,QTextCursor*> mappaCursori; //mappa con nome utente e relativo cursore;
     QMap<QString,QLabel*> mappaEtichette; //mappa con nome utente e relativo cursore;
 
+    QVector<QTextCharFormat> listaFormati;
     Highlighter* Evidenziatore;
     Client *client;
 

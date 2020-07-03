@@ -22,7 +22,7 @@ private:
     QString DocId;      // id usato nel db
     QFile *file;
     qint32 dim = 0;
-    qint32 maxDim = std::numeric_limits<qint32>::max()/10;
+    qint32 maxDim = std::numeric_limits<qint32>::max()/2;
 
 public:
     QVector<Symbol> symVec;

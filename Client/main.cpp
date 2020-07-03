@@ -83,7 +83,13 @@ int main(int argc, char *argv[])
         mw.fileNew();
 
     mw.show();
+    int ret;
+    try {
+        ret=a.exec();
+    } catch (std::exception e) {
+        qDebug()<<e.what();
+    }
 
-    return a.exec();
+    return ret;
 }
 

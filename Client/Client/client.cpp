@@ -492,6 +492,7 @@ void Client::loadFile(QMap<QString,QString> cmd)
  */
 void Client::inserimentoRemoto(QMap<QString,QString> cmd)
 {
+    qDebug()<<cmd;
     QString user = cmd.find(UNAME).value();
     if (user == this->username)
         return;// ignoro
@@ -599,18 +600,18 @@ void Client::cancellamentoRemoto(QMap<QString, QString> cmd)
 
 void Client::spostaCursori(QMap <QString,QString>cmd)
 {
-    qDebug()<<cmd;
+    //qDebug()<<cmd;
     QString user=cmd.find(UNAME).value();
     QString indici=cmd.find(IDX).value();
 
     int pos=indici.split(";", QString::SkipEmptyParts)[0].toInt();
-    qDebug()<<pos;
+    //qDebug()<<pos;
     int anchor=indici.split(";", QString::SkipEmptyParts)[1].toInt();
-    qDebug()<<anchor;
+    //qDebug()<<anchor;
 
     char c='\0';
 
-    if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; } //non lo considero
+    if(user==this->username){ /*qDebug()<<"Questo messaggio non doveva arrivare a me!!!"*/; return; } //non lo considero
     //user="lalla";
     emit spostaCursSignal(pos,anchor,c,user);
 }
@@ -886,7 +887,6 @@ bool Client::remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index
         indici.append(QString::number(val) + ";");
     }
     cmd.insert(IDX, indici);
-    qDebug()<<"laaaaaaaa";
 
     qDebug()<<QString(this->serialize(format).toHex());
     cmd.insert(FORMAT, QString(this->serialize(format).toHex()));

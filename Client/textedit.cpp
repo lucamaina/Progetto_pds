@@ -255,44 +255,7 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
                     this->setVisibleFileActions(true);
                 }
                 if (keyEvent->key() == Qt::Key_C) {
-                    listaFormati.clear();
-                    QTextCursor cur = textEdit->textCursor();
                     QApplication::clipboard()->mimeData()->text() = textEdit->textCursor().selectedText();
-
-                    qDebug()<<cur.position()<<cur.anchor();
-                    int anch, cu;
-                    anch=cur.anchor();
-                    cu=cur.position();
-
-                    if(cur.position()<cur.anchor()){
-                        cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
-
-                        while(cur.position()<anch){
-                            listaFormati.push_back(cur.charFormat());
-                            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
-                        }
-                            listaFormati.push_back(cur.charFormat());
-
-                    }
-
-                    else if(cur.position()>cur.anchor()){
-
-                        cur.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveMode::KeepAnchor,cu-anch-1);
-
-                        qDebug()<<cur.position()<<cur.anchor()<<anch<<cu;
-                        while(cur.position()<cu){
-                            listaFormati.push_back(cur.charFormat());
-                            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
-                        }
-                        listaFormati.push_back(cur.charFormat());
-
-                    }
-
-
-                    //cur.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveMode::KeepAnchor);
-
-
-                    qDebug()<<listaFormati;
                 }
                 return false;
 
@@ -382,13 +345,15 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
                         }
                     }
                 }
-                qDebug()<<format.fontItalic();
-                qDebug()<<this->client->serialize(format);
-                QByteArray q=this->client->serialize(format);
-                QTextCharFormat k=this->client->deserialize(q);
-                qDebug()<<q;
-                qDebug()<<k;
-                this->inserimento(poss, c, format);
+//                qDebug()<<format.fontItalic();
+//                qDebug()<<this->client->serialize(format);
+//                QByteArray q=this->client->serialize(format);
+//                QTextCharFormat k=this->client->deserialize(q);
+//                qDebug()<<q;
+//                qDebug()<<k;
+                if(!this->inserimento(poss, c, format)){
+                    return false;
+                }
 
                 return true;
             }
@@ -406,29 +371,13 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
 bool TextEdit::inserimento(int posCursor, QChar car, QTextCharFormat format)
 {
     QTextCursor s = this->textEdit->textCursor();
-    this->client->inserimentoLocale(posCursor, car, format);
 
-     /*else if (this->client->remoteInsert(car,format,index)) {// INSERIMENTO REMOTO, manda comando a server
-        // true se server risp OK
-        this->client->inserimento(index, car, format);
-       // this->setText(car, format, s.position());
-
-        if(s.hasSelection()){
-            int poscurs=s.position();
-            int posanch=s.anchor();
-            for( int i=poscurs+1; i<=posanch; i++){
-                //TODO remote delete per ogni carattere
-                this->client->remoteDelete(car, index, anchor);
-            }
-        }
-
-        this->statusBar()->showMessage("At position: " + QString::number(posCursor) + " Text insert: " + car, 1000);
-
-    } else {
-        this->statusBar()->showMessage("impossibile inserire da remoto", 1000);
+    if(this->client->inserimentoLocale(posCursor, car, format)){
+        qDebug()<<"ERRORE DI INSERIMENTO LOCALE (TEXTEDIT LINE 375)\n";
+        return true;
     }
-*/
-    return false; // true per evitare inserimento
+
+    return false;
 }
 
 bool TextEdit::cancellamento(int posCursor, int key)
@@ -624,15 +573,16 @@ void TextEdit::goPaste(){
     if(client->isLogged()){
         for(QChar c : s){
             QVector<qint32> newIndex=this->client->remoteFile->getLocalIndexInsert(pos+i);
-
-            this->client->remoteInsert(c, listaFormati[i]/*textEdit->textCursor().charFormat()*/, newIndex);
+            QTextCharFormat currentFormat = cur.charFormat();
+            this->client->remoteInsert(c, cur.charFormat()/*textEdit->textCursor().charFormat()*/, newIndex);
 
             //creo simbolo
-            Symbol newSym = Symbol(this->client->getUsername(), c, newIndex, listaFormati[i]/*textEdit->textCursor().charFormat()*/);
+            Symbol newSym = Symbol(this->client->getUsername(), c, newIndex, cur.charFormat()/*textEdit->textCursor().charFormat()*/);
 
             // inserisco in locale
             this->client->remoteFile->symVec.insert(pos+i, newSym);
-            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
+            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::MoveAnchor,1);
+//            cur.setPosition(pos++);
             i++;
         }
     }

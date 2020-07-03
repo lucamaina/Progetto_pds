@@ -166,6 +166,7 @@ private:
 
     Highlighter* Evidenziatore;
     Client *client;
+    QVector<QTextCharFormat> listaFormati;
 
 /** azioni legate all'utente **/
     QAction *actionLogin;
@@ -208,6 +209,7 @@ private:
     QToolBar *tb;
     QString fileName;
     QTextEdit *textEdit;
+    QList<QTextCharFormat> listFormat;
 
  // prove
 public:

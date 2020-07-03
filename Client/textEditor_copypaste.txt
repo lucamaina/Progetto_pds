@@ -390,7 +390,7 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
                 qDebug()<<k;
                 this->inserimento(poss, c, format);
 
-                return false;
+                return true;
             }
 
 

@@ -30,6 +30,7 @@ Client::Client(QObject *parent) : QObject(parent)
 
 bool Client::sendMsg(QByteArray ba){
     if (socket->isOpen() && socket->isWritable()){
+        qDebug() << "sto per inviare";
         if (this->socket->write(ba, ba.size()) == -1){
             // errore
             qDebug() << "errore scrittura verso server";
@@ -495,6 +496,7 @@ void Client::inserimentoRemoto(QMap<QString,QString> cmd)
     QString user = cmd.find(UNAME).value();
     if (user == this->username)
         return;// ignoro
+    qDebug() << "ricevo";
     QString indici = cmd.find(IDX).value();
     QVector<qint32> index;
     for (QString s : indici.split(";", QString::SkipEmptyParts)){
@@ -542,8 +544,8 @@ bool Client::inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format)
         // update
         this->remoteFile->getLocalIndexDelete(pos, newSym);
         this->remoteFile->symVec.replace(pos, newSym);
-        emit s_removeText(pos);
-        emit s_setText(newSym.car, format, pos);
+//        emit s_removeText(pos);
+//        emit s_setText(newSym.car, format, pos);
         newSym.car = QChar();
         this->remoteInsert(newSym.car, format, newSym.indici);
 
@@ -552,7 +554,7 @@ bool Client::inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format)
         // inserisco in locale
         this->remoteFile->symVec.insert(pos, newSym);
         // scrivo in editor
-        emit s_setText(newSym.car, format, pos);
+        //emit s_setText(newSym.car, format, pos);
             // invio al server
         this->remoteInsert(newSym.car, format, newIndex);
 

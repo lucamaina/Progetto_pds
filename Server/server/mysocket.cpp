@@ -70,68 +70,159 @@ bool MySocket::write(QMap<QString, QString> comando)
     return this->write( data );
 }
 
-void MySocket::readyRead()
-{
-    QByteArray out;
-    QByteArray tmp;
-    uint dim;
-    char v[4096] = {};
+//void MySocket::readyRead()
+//{
+//    QByteArray out;
+//    QByteArray tmp;
+//    uint dim;
+//    qint64 dimRead = 0;
 
-    out.reserve(4096);
-    tmp.reserve(16);
+//    char v[4096] = {};
 
-    if (this->sock.bytesAvailable() > 0){
-        if (this->sock.read(v, 4096) < 0){
-            qDebug() << "errore in socket::read()";
-        }
-        this->buffer.append( v );
-    } else {
-        return;
-    }
+//    out.reserve(4096);
+//    tmp.reserve(16);
 
-    while (buffer.contains(INIT)){
-        // presente token iniziale del messaggio
-        int idx = buffer.indexOf(INIT, 0);
-        if ( idx >= 0){
-            buffer.remove(0, idx);
-            command.clear();
-            command.append(buffer);         // |command| contiene token <INIT> e quello che viene ricevuto subito dopo
-            command.remove(0, INIT_DIM);    // rimuovo <INIT> da |out|
+//    if (this->sock.bytesAvailable() > 0){
+//        if (this->sock.read(v, 4096) < 0){
+//            qDebug() << "errore in socket::read()";
+//        }
+//        this->buffer.append( v );
+//    } else {
+//        return;
+//    }
 
-            if (command.size() < LEN_NUM){
-                return;
+//    while (buffer.contains(INIT)){
+//        // presente token iniziale del messaggio
+//        int idx = buffer.indexOf(INIT, 0);
+//        if ( idx >= 0){
+//            buffer.remove(0, idx);
+//            command.clear();
+//            command.append(buffer);         // |command| contiene token <INIT> e quello che viene ricevuto subito dopo
+//            command.remove(0, INIT_DIM);    // rimuovo <INIT> da |out|
+
+//            if (command.size() < LEN_NUM){
+//                return;
+//            }
+
+//            tmp = command.left(LEN_NUM);    // in |tmp| copio 8 byte che descrivono la dimensione del messaggio
+//            command.remove(0,LEN_NUM);
+//            dim = tmp.toUInt(nullptr, 16);  // |dim| ha dimensione di tmp in decimale
+
+//            uint len = static_cast<uint>(command.size());
+//            uint rimane = 0;
+//            if (len < dim){
+//                rimane = dim - len;
+//            }
+
+//            while (rimane > 0){
+//                qDebug()<<dim<<len<<dim-len;
+//                //socket->waitForReadyRead(100);      // finisco di leggere il resto del messaggio
+//                dimRead = sock.read(v, rimane);
+//                if ( dimRead < 0){
+//                    qDebug() << "errore in socket::read()";
+//                }
+//                this->command.append( v, static_cast<int>(dimRead) );
+//                len = static_cast<uint>(command.size());
+//                rimane = dim - len;
+//            }
+//            command.remove(static_cast<int>(dim), 4096);
+//            buffer.remove(0, LEN_NUM + INIT_DIM + static_cast<int>(dim));
+
+//            leggiXML(command);
+
+////            while (rimane > 0){
+////                uint i = dim - len;
+////                //sock.waitForReadyRead(100); // finisco di leggere il resto del messaggio
+////                if (this->sock.read(v, rimane) < 0){
+////                    qDebug() << "errore in socket::read()";
+////                }
+////                this->command.append( v );
+////                len = static_cast<uint>(command.size());
+////                rimane = dim - len;
+////            }
+///
+///
+////            command.remove(static_cast<int>(dim), 4096);
+////            buffer.remove(0, LEN_NUM + INIT_DIM + static_cast<int>(dim));
+
+////            leggiXML(command);
+//            // finito di leggere i byte del messaggio ritorno al ciclo iniziale
+//        } else {
+//            // token nonn trovato
+//        }
+//    }
+//}
+
+    void MySocket::readyRead(){
+        QByteArray out;
+        QByteArray tmp;
+        uint dim;
+        char v[4096] = {};
+        qint64 dimRead = 0;
+
+        out.reserve(4096);
+        tmp.reserve(16);
+
+        if (sock.bytesAvailable() > 0){
+            dimRead = sock.read(v, 4096);
+            if ( dimRead < 0){
+                qDebug() << "errore in socket::read()";
             }
-
-            tmp = command.left(LEN_NUM);    // in |tmp| copio 8 byte che descrivono la dimensione del messaggio
-            command.remove(0,LEN_NUM);
-            dim = tmp.toUInt(nullptr, 16);  // |dim| ha dimensione di tmp in decimale
-
-            uint len = static_cast<uint>(command.size());
-            uint rimane = 0;
-            if (len < dim){
-                rimane = dim - len;
-            }
-
-            while (rimane > 0){
-                uint i = dim - len;
-                sock.waitForReadyRead(100); // finisco di leggere il resto del messaggio
-                if (this->sock.read(v, i) < 0){
-                    qDebug() << "errore in socket::read()";
-                }
-                this->command.append( v );
-                len = static_cast<uint>(command.size());
-                rimane = dim - len;
-            }
-            command.remove(static_cast<int>(dim), 4096);
-            buffer.remove(0, LEN_NUM + INIT_DIM + static_cast<int>(dim));
-
-            leggiXML(command);
-            // finito di leggere i byte del messaggio ritorno al ciclo iniziale
+            this->buffer.append( v, static_cast<int>(dimRead) );
         } else {
-            // token nonn trovato
+            return;
+        }
+
+        while (buffer.contains(INIT)){
+            // presente token iniziale del messaggio
+            int idx = buffer.indexOf(INIT, 0);
+            if ( idx >= 0){
+                buffer.remove(0, idx);
+                command.clear();
+                command.append(buffer);       // |command| contiene token <INIT> e quello che viene ricevuto subito dopo
+                command.remove(0, INIT_DIM);       // rimuovo <INIT> da |out|
+
+                if (command.size() < LEN_NUM){
+                    return;
+                }
+
+                tmp = command.left(LEN_NUM);                  // in |tmp| copio 8 byte che descrivono la dimensione del messaggio
+                command.remove(0,LEN_NUM);
+                dim = tmp.toUInt(nullptr, 16); // |dim| ha dimensione di tmp in decimale
+
+                uint len = static_cast<uint>(command.size());
+                uint rimane = 0;
+                if (len < dim){
+                    rimane = dim - len;
+                }
+
+                while (rimane > 0){
+                    qDebug()<<dim<<len<<dim-len;
+                    //socket->waitForReadyRead(100);      // finisco di leggere il resto del messaggio
+                    dimRead = sock.read(v, rimane);
+                    if ( dimRead < 0){
+                        qDebug() << "errore in socket::read()";
+                    }
+                    this->command.append( v, static_cast<int>(dimRead) );
+                    len = static_cast<uint>(command.size());
+                    rimane = dim - len;
+                }
+
+
+                command.remove(static_cast<int>(dim), 4096);
+                buffer.remove(0, LEN_NUM + INIT_DIM + static_cast<int>(dim));
+
+//                if (sock.bytesAvailable() > 0){
+//                emit readyRead();
+//                }
+
+                leggiXML(command);
+                // finito di leggere i byte del messaggio ritorno al ciclo iniziale
+            } else {
+                // token nonn trovato
+            }
         }
     }
-}
 
 void MySocket::disconnected()
 {

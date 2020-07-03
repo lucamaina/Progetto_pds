@@ -155,6 +155,7 @@ void Client::connectToHost()
 }
 
 bool Client::sendMsg(QMap<QString, QString> cmd){
+
     QByteArray ba;
     QXmlStreamWriter wr(&ba);
     wr.writeStartDocument();
@@ -446,6 +447,7 @@ void Client::loadFile(QMap<QString,QString> cmd)
     //lettura socket
     dim = dim - qba.size();
     while (dim > 0){
+
         if (socket->bytesAvailable() > 0){
             qint64 read = socket->read(v, 4096);
             if ( read < 0){
@@ -894,6 +896,7 @@ bool Client::remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index
     cmd.insert(DOCID, docID);
 
     qDebug() << cmd;
+
     this->sendMsg(cmd);
 
     return true;
@@ -971,8 +974,9 @@ void Client::readyRead(){
             }
 
             while (rimane > 0){
+                qDebug()<<dim<<len<<dim-len;
                 //socket->waitForReadyRead(100);      // finisco di leggere il resto del messaggio
-                dimRead = socket->read(v, 4096);
+                dimRead = socket->read(v, rimane);
                 if ( dimRead < 0){
                     qDebug() << "errore in socket::read()";
                 }

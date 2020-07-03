@@ -278,7 +278,6 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
         if (event->type() == QEvent::KeyPress) {    // verifica key di interesse
 
             QKeyEvent* e = static_cast<QKeyEvent*>(event);
-
             if (e->isAutoRepeat()) {
                 return true;       // salta le azioni ripetute
             }
@@ -345,12 +344,8 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
                         }
                     }
                 }
-//                qDebug()<<format.fontItalic();
-//                qDebug()<<this->client->serialize(format);
-//                QByteArray q=this->client->serialize(format);
-//                QTextCharFormat k=this->client->deserialize(q);
-//                qDebug()<<q;
-//                qDebug()<<k;
+
+
                 if(!this->inserimento(poss, c, format)){
                     return false;
                 }
@@ -373,10 +368,10 @@ bool TextEdit::inserimento(int posCursor, QChar car, QTextCharFormat format)
     QTextCursor s = this->textEdit->textCursor();
 
     if(this->client->inserimentoLocale(posCursor, car, format)){
-        qDebug()<<"ERRORE DI INSERIMENTO LOCALE (TEXTEDIT LINE 375)\n";
+
         return true;
     }
-
+    qDebug()<<"ERRORE DI INSERIMENTO LOCALE (TEXTEDIT LINE 375)\n";
     return false;
 }
 

@@ -135,6 +135,7 @@ private:
 
     void showUserError(QMap<QString, QString> cmd);
 
+
 };
 
 #endif // CLIENT_H

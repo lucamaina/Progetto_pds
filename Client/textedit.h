@@ -209,6 +209,7 @@ private:
     QString fileName;
     QTextEdit *textEdit;
 
+
  // prove
 public:
 

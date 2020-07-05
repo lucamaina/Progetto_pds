@@ -249,13 +249,52 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
             {
                 // allow override of all Ctrl+ shortcuts
                 if (keyEvent->key() == Qt::Key_V) {
+                    if(listaFormati.empty()){return true;}
                     goPaste();
+
                 }
                 if (keyEvent->key() == Qt::Key_X) {
                     this->setVisibleFileActions(true);
                 }
                 if (keyEvent->key() == Qt::Key_C) {
-                    QApplication::clipboard()->mimeData()->text() = textEdit->textCursor().selectedText();
+                   listaFormati.clear();
+                   QTextCursor cur = textEdit->textCursor();
+                   QApplication::clipboard()->mimeData()->text() = textEdit->textCursor().selectedText();
+
+                   qDebug()<<cur.position()<<cur.anchor();
+                   int anch, cu;
+                   anch=cur.anchor();
+                   cu=cur.position();
+
+                   if(cur.position()<cur.anchor()){
+                       cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
+
+                       while(cur.position()<anch){
+                           listaFormati.push_back(cur.charFormat());
+                           cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
+                       }
+                           listaFormati.push_back(cur.charFormat());
+
+                   }
+
+                   else if(cur.position()>cur.anchor()){
+
+                       cur.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveMode::KeepAnchor,cu-anch-1);
+
+                       qDebug()<<cur.position()<<cur.anchor()<<anch<<cu;
+                       while(cur.position()<cu){
+                           listaFormati.push_back(cur.charFormat());
+                           cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
+                       }
+                       listaFormati.push_back(cur.charFormat());
+
+                   }
+
+
+                   //cur.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveMode::KeepAnchor);
+
+
+                   qDebug()<<listaFormati;
                 }
                 return false;
 
@@ -564,23 +603,35 @@ void TextEdit::goPaste(){
     QString s(QApplication::clipboard()->mimeData()->text());
     int pos=textEdit->textCursor().position();
     QTextCursor cur = textEdit->textCursor();
+
+
+    if(listaFormati.empty()){
+        return;
+
+    }
+
     int i=0;
     if(client->isLogged()){
-        for(QChar c : s){
-            QVector<qint32> newIndex=this->client->remoteFile->getLocalIndexInsert(pos+i);
-            QTextCharFormat currentFormat = cur.charFormat();
-            this->client->remoteInsert(c, cur.charFormat()/*textEdit->textCursor().charFormat()*/, newIndex);
+           for(QChar c : s){
 
-            //creo simbolo
-            Symbol newSym = Symbol(this->client->getUsername(), c, newIndex, cur.charFormat()/*textEdit->textCursor().charFormat()*/);
+               QVector<qint32> newIndex=this->client->remoteFile->getLocalIndexInsert(pos+i);
 
-            // inserisco in locale
-            this->client->remoteFile->symVec.insert(pos+i, newSym);
-            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::MoveAnchor,1);
-//            cur.setPosition(pos++);
-            i++;
-        }
-    }
+               this->client->remoteInsert(c, listaFormati[i]/*textEdit->textCursor().charFormat()*/, newIndex);
+
+               //creo simbolo
+               Symbol newSym = Symbol(this->client->getUsername(), c, newIndex, listaFormati[i]/*textEdit->textCursor().charFormat()*/);
+
+               // inserisco in locale
+               this->client->remoteFile->symVec.insert(pos+i, newSym);
+               cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::MoveAnchor,1);
+   //            cur.setPosition(pos++);
+               i++;
+           }
+       }
+
+    //PROVA
+
+
 }
 
 void TextEdit::goPasteBtn()
@@ -638,8 +689,12 @@ void TextEdit::statusBarOutput(QString s)
 void TextEdit::setText(QChar c, QTextCharFormat f, int posCursor)
 {
     QTextCursor s = textEdit->textCursor();
-    s.setPosition(posCursor, QTextCursor::MoveAnchor);
 
+//    s.movePosition(QTextCursor::Start, QTextCursor::MoveMode::MoveAnchor);
+//    s.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::MoveAnchor,posCursor);
+
+    s.setPosition(posCursor, QTextCursor::MoveAnchor);
+    qDebug()<<f.fontItalic();
     s.insertText(c, f);
 }
 
@@ -1245,7 +1300,10 @@ void TextEdit::cursorPositionChanged()
         l->move(s.left(), s.bottom());
     }
     int pos=this->textEdit->textCursor().position();
+
     emit cursorChanged(pos,anchor);
+
+
     //statusBar()->showMessage(str, 0);
 
 }
@@ -1268,22 +1326,28 @@ void TextEdit::about()
 
 void TextEdit::mergeFormatOnWordOrSelection(const QTextCharFormat &format)
 {
-    QTextCursor cursor = textEdit->textCursor();
-    int pos=cursor.position();
-    int anchor=cursor.anchor();
+    QTextCursor cursor = this->textEdit->textCursor();
+    int pos=this->textEdit->textCursor().position();
+    int anchor=this->textEdit->textCursor().anchor();
     cursor.mergeCharFormat(format);
     textEdit->mergeCurrentCharFormat(format);
 
+    if(pos<anchor){
+        cursor.movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+        cursor.movePosition(QTextCursor::NextCharacter,QTextCursor::MoveAnchor,pos);
+        cursor.movePosition(QTextCursor::NextCharacter,QTextCursor::KeepAnchor,anchor-pos);
+        int tmp=pos;
+        pos=anchor;
+        anchor=tmp;
+        }
+
+
     QTextCharFormat form = cursor.charFormat();
-    if(pos>anchor){
+
         for(int i=anchor; i<pos; i++){
             this->client->inserimentoLocale(i, QChar(), form);
         }
-    } else {
-        for(int i=pos; i<anchor; i++){
-            this->client->inserimentoLocale(i, QChar(), form);
-        }
-    }
+
 }
 
 void TextEdit::fontChanged(const QFont &f)
@@ -1465,6 +1529,7 @@ void TextEdit::cancellaAtCursor(int& posX,int& posY,int& anchor,char& car ,QStri
         //Se non ho mai visto questo user creo un nuovo Cursore
         mappaCursori.insert(user,new QTextCursor(textEdit->document()));
         //muovo il cursore
+
         QTextCursor *s= mappaCursori.find(user).value();
         s->movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
         s->movePosition(QTextCursor::Right,QTextCursor::MoveAnchor,posX);
@@ -1505,6 +1570,7 @@ void TextEdit::cancellaAtCursor(int& posX,int& posY,int& anchor,char& car ,QStri
         } else if(car=='\x7'){
             s1->deleteChar();
         }
+
     }
 }
 

@@ -223,6 +223,7 @@ private:
 
     bool inserimento(int posCursor, QChar car, QTextCharFormat format);
     bool cancellamento(int posCursor, int key);
+    QVector <QTextCharFormat> listaFormati;
 
 public slots:
     void goPaste();

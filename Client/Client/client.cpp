@@ -940,8 +940,11 @@ void Client::readyRead(){
     out.reserve(4096);
     tmp.reserve(16);
 
+    while (socket->bytesAvailable() > 0){
+
     if (socket->bytesAvailable() > 0){
         dimRead = socket->read(v, 4096);
+
         if ( dimRead < 0){
             qDebug() << "errore in socket::read()";
         }
@@ -951,6 +954,7 @@ void Client::readyRead(){
     }
 
     while (buffer.contains(INIT)){
+
         // presente token iniziale del messaggio
         int idx = buffer.indexOf(INIT, 0);
         if ( idx >= 0){
@@ -975,7 +979,6 @@ void Client::readyRead(){
 
             while (rimane > 0){
                 qDebug()<<dim<<len<<dim-len;
-                //socket->waitForReadyRead(100);      // finisco di leggere il resto del messaggio
                 if(rimane > 4096)
                 {
                     dimRead = socket->read(v, 4096);
@@ -988,9 +991,14 @@ void Client::readyRead(){
                 if ( dimRead < 0){
                     qDebug() << "errore in socket::read()";
                 }
+
+                if ( dimRead < 0){
+                    qDebug()<<dim<<len<<dim-len<<command<<dimRead;
+                    return;
+                }
+
                 this->command.append( v, static_cast<int>(dimRead) );
                 len = static_cast<uint>(command.size());
-//                rimane = dim - len;
                 rimane-=dimRead;
             }
             command.remove(static_cast<int>(dim), 4096);
@@ -998,9 +1006,17 @@ void Client::readyRead(){
 
             leggiXML(command);
             // finito di leggere i byte del messaggio ritorno al ciclo iniziale
+            //PROVAAAA
+
+//            if (socket->bytesAvailable() > 0){
+//                readyRead();
+//                }
         } else {
             // token nonn trovato
         }
+    }//togliere
+
     }
+
 }
 

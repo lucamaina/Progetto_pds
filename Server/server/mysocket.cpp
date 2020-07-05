@@ -199,13 +199,29 @@ bool MySocket::write(QMap<QString, QString> comando)
                 while (rimane > 0){
                     qDebug()<<dim<<len<<dim-len;
                     //socket->waitForReadyRead(100);      // finisco di leggere il resto del messaggio
-                    dimRead = sock.read(v, rimane);
+
+                    if(rimane > 4096)
+                    {
+                        dimRead = sock.read(v, 4096);
+                    }
+
+                    else
+                    {
+                        dimRead = sock.read(v, rimane);
+                    }
+
                     if ( dimRead < 0){
                         qDebug() << "errore in socket::read()";
                     }
                     this->command.append( v, static_cast<int>(dimRead) );
                     len = static_cast<uint>(command.size());
-                    rimane = dim - len;
+                    rimane-=dimRead;
+
+                    //rimane = dim - len;
+                    //DA PROVARE
+                    //if(rimane > 4096){dimRead = sock.read(v, 4096);}
+                    //e
+                    //rimane -=len
                 }
 
 

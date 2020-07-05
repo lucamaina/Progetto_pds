@@ -976,13 +976,22 @@ void Client::readyRead(){
             while (rimane > 0){
                 qDebug()<<dim<<len<<dim-len;
                 //socket->waitForReadyRead(100);      // finisco di leggere il resto del messaggio
-                dimRead = socket->read(v, rimane);
+                if(rimane > 4096)
+                {
+                    dimRead = socket->read(v, 4096);
+                }
+
+                else
+                {
+                    dimRead = socket->read(v, rimane);
+                }
                 if ( dimRead < 0){
                     qDebug() << "errore in socket::read()";
                 }
                 this->command.append( v, static_cast<int>(dimRead) );
                 len = static_cast<uint>(command.size());
-                rimane = dim - len;
+//                rimane = dim - len;
+                rimane-=dimRead;
             }
             command.remove(static_cast<int>(dim), 4096);
             buffer.remove(0, LEN_NUM + INIT_DIM + static_cast<int>(dim));

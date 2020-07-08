@@ -5,8 +5,7 @@ server::server(QObject *parent) : QTcpServer (parent)
     Logger &lg = Logger::getLog();
     this->log = &lg;
     log->write("Start server con "+ QString::number(MAX_THREAD) + " thread");
-    qDebug() << "Start server con "+ QString::number(MAX_THREAD) + " thread";
-    qDebug() << "Password Hash3-256";
+    qDebug() << "Start server con "+ QString::number(MAX_THREAD) + " thread" << "[Password Hash3-256]";
     mioDB = new db(1);
     if (!mioDB->conn()){
         log->write("Impossibilile aprire db");
@@ -29,7 +28,7 @@ void server::startServer()
     if (!this->listen(QHostAddress::Any, 2000)) {
         qDebug() << "Errore in 'listen'";
     } else {
-        qDebug() << "Listening...";
+        qDebug() << "Listening..." << endl;
     }
 
 }
@@ -82,6 +81,7 @@ void server::incomingConnection(int socketID)
             std::cin >> a;
         }
     } else {
+        m.unlock();
         qDebug() << "connessione rifiutata, max utenti raggiunti";
         return;
     }

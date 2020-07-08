@@ -1,11 +1,12 @@
 #include "client.h"
-#include <RegisterDialog/registerdialog.h>
-#include <LoginDialog/logindialog.h>
-#include "../BrowseWindow/browsewindow.h"
-#include "../NuovoFileRemotoWindoow/nuovofileremoto.h"
+//#include "windows/registerdialog.h"
+#include "windows/logindialog.h"
+#include "windows/browsewindow.h"
+#include "windows/nuovofileremoto.h"
 
-Client::Client(QObject *parent) : QObject(parent)
+Client::Client(TextEdit *parent)
 {
+    editor = parent;
     connectedDB = false;
     logged = false;
     username = "";
@@ -15,27 +16,26 @@ Client::Client(QObject *parent) : QObject(parent)
     tempPass.clear();
     remoteFile = nullptr;
     finestraAddFile = new nuovoFileRemoto();
-    socket = new QTcpSocket(this);
+//    socket = new QTcpSocket(this);
+    mioSocket = new MySocket(1);
 
-    connect(socket, &QTcpSocket::connected, this, &Client::connected);
-    connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()), Qt::ConnectionType::DirectConnection);
-    connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
+    connect(mioSocket, SIGNAL(s_connected()), this, SLOT(connected()));
+    connect(mioSocket, SIGNAL(s_dispatchCmd(QMap<QString, QString> &)), this, SLOT( dispatchCmd(QMap<QString, QString>&) ), Qt::DirectConnection);
+    connect(mioSocket, SIGNAL(s_disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
     connect(this, SIGNAL(cancellaSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(cancellaAtCursor(int&,int&,int&,char&,QString&)));
     connect(this, SIGNAL(addMe()),this->parent(),SLOT(addMeSlot()));
     connect(this, SIGNAL(nuovoStile(QString&,QString&)), this->parent(),SLOT(nuovoStileSlot(QString&,QString&)));
     connect(finestraAddFile, SIGNAL(s_addNewFile(QString&)), this, SLOT(remoteAdd(QString&)));
+
+
 }
 
 
 
 bool Client::sendMsg(QByteArray ba){
-    if (socket->isOpen() && socket->isWritable()){
-        qDebug() << "sto per inviare";
-        if (this->socket->write(ba, ba.size()) == -1){
-            // errore
-            qDebug() << "errore scrittura verso server";
-            return false;
-        }
+    if (!mioSocket->write(ba)){
+        qDebug() << "errore scrittura verso server";
+        return false;
     }
     return true;
 }
@@ -78,7 +78,7 @@ QString Client::getUsername() const
  * slot per inviare al server addNewFile
  */
 bool Client::handleNuovoFile()
-{  
+{
     qDebug() << "sono in " << Q_FUNC_INFO;
     finestraAddFile->exec();
     return false;
@@ -148,10 +148,9 @@ void Client::listUser(QMap<QString, QString> cmd)
 
 void Client::connectToHost()
 {
-    socket->connectToHost(QHostAddress::LocalHost, 2000);
-    if (!socket->waitForConnected(3000)) {
-        qDebug() << "Error: " << socket->errorString();
-        emit this->s_warning("Error: " + socket->errorString());
+    if (!mioSocket->connectToHost()){
+        emit this->s_warning("Errore\nImpossibile connettersi al server");
+    } else {
     }
 }
 
@@ -184,50 +183,51 @@ bool Client::sendMsg(QMap<QString, QString> cmd){
 
 
 }
+/*
+//bool Client::leggiXML(QByteArray qb)
+//{
+//    qDebug().noquote() << endl << " -> Leggo XML from Server: " << qb;
+//    QMap<QString, QString> command;
+//    QXmlStreamReader stream(qb);
 
-bool Client::leggiXML(QByteArray qb)
-{
-    qDebug().noquote() << endl << " -> Leggo XML from Server: " << qb;
-    QMap<QString, QString> command;
-    QXmlStreamReader stream(qb);
+//    while (!stream.atEnd() && !stream.hasError() ){
+//        QXmlStreamReader::TokenType token = stream.readNext();
+//        token = stream.readNext();
+//        // leggo elemento con nome del comando
+//        if (token == QXmlStreamReader::StartElement){
+//            QString cmd = stream.name().toString();
+//            command.insert(CMD, cmd);
+//        }
+//        token = stream.readNext();
+//        // leggo elemnto variabile
+//        while ( token == QXmlStreamReader::StartElement ){
+//            QString name = stream.name().toString(), text = stream.readElementText();
+//            command.insert(name, text);
+//            token = stream.readNext();
+//        }
+//    }
 
-    while (!stream.atEnd() && !stream.hasError() ){
-        QXmlStreamReader::TokenType token = stream.readNext();
-        token = stream.readNext();
-        // leggo elemento con nome del comando
-        if (token == QXmlStreamReader::StartElement){
-            QString cmd = stream.name().toString();
-            command.insert(CMD, cmd);
-        }
-        token = stream.readNext();
-        // leggo elemnto variabile
-        while ( token == QXmlStreamReader::StartElement ){
-            QString name = stream.name().toString(), text = stream.readElementText();
-            command.insert(name, text);
-            token = stream.readNext();
-        }
-    }
-
-    if (stream.hasError()){
-        qDebug() << "finito lettura xml con errore" << stream.errorString();
-    } else {
-        qDebug() << "finito lettura xml no errori " << stream.errorString();
-        if (command.contains(OK) && command.contains(MEX)){
-            return true;
-        } else if (command.contains(ERR) && command.contains(MEX)) {
-            return false;
-        }
-        this->dispatchCmd(command);
-    }
-    return true;
-}
+//    if (stream.hasError()){
+//        qDebug() << "finito lettura xml con errore" << stream.errorString();
+//    } else {
+//        qDebug() << "finito lettura xml no errori " << stream.errorString();
+//        if (command.contains(OK) && command.contains(MEX)){
+//            return true;
+//        } else if (command.contains(ERR) && command.contains(MEX)) {
+//            return false;
+//        }
+//        this->dispatchCmd(command);
+//    }
+//    return true;
+//}
+*/
 
 /**
  * @brief Client::dispatchCmd
  * @param cmd
  * riceve comando e chiama funzione correlata
  */
-void Client::dispatchCmd(QMap<QString, QString> cmd){
+void Client::dispatchCmd(QMap<QString, QString> &cmd){
     if (!cmd.contains(CMD)){
         return;
     }
@@ -262,10 +262,8 @@ void Client::dispatchCmd(QMap<QString, QString> cmd){
     else if (comando.value() == UP_CRS) {
         this->upCursor(cmd);
     }
-    else if (comando.value() == STILE) {
-        this->dispatchStile(cmd);
-    }
 }
+
 
 /**
  * @brief Client::dispatchOK
@@ -435,37 +433,11 @@ void Client::handleBrowse(QMap<QString,QString> cmd){
  */
 void Client::loadFile(QMap<QString,QString> cmd)
 {
-    qint64 dim = cmd.find(BODY).value().toInt();
+    int dim = cmd.find(BODY).value().toInt();
 
     QByteArray qba;
-    char v[4096];
-    disconnect(this->socket,SIGNAL(readyRead()),this,SLOT(readyRead()));
-    qba.clear();
-    qba = this->buffer;
-    qDebug().noquote() <<qba.length() << endl << qba;
-
-    //lettura socket
-    dim = dim - qba.size();
-    while (dim > 0){
-        if (socket->bytesAvailable() > 0){
-            qint64 read = socket->read(v, 4096);
-            if ( read < 0){
-                qDebug() << "errore in socket::read()";
-                return;
-            }
-            qba.append( v );
-            qDebug().noquote() <<qba.length() << endl << qba;
-
-            dim = dim - read;
-        } else {
-            return;
-        }
-    }
-    qDebug().noquote() << "sono in " << Q_FUNC_INFO
-                       << "byte letti: " << qba.length()
-                       << endl << qba;
-
-    connect(this->socket,SIGNAL(readyRead()),this,SLOT(readyRead()));
+    this->mioSocket->leggiMap(qba, dim);
+    qDebug() << qba;
 
     //emit clearEditor();
     try {
@@ -473,6 +445,8 @@ void Client::loadFile(QMap<QString,QString> cmd)
     } catch (...) {
 
     }
+
+    this->editor->cursorEnable(false);
     emit this->s_clearEditor();
 
     int pos = 0;
@@ -484,6 +458,7 @@ void Client::loadFile(QMap<QString,QString> cmd)
         s.textFormat=formatoDecode;
         emit s_setText(s.car, formatoDecode, pos++);
     }
+    this->editor->cursorEnable(true);
 }
 
 /**
@@ -493,10 +468,10 @@ void Client::loadFile(QMap<QString,QString> cmd)
  */
 void Client::inserimentoRemoto(QMap<QString,QString> cmd)
 {
+    qDebug()<<cmd;
     QString user = cmd.find(UNAME).value();
     if (user == this->username)
         return;// ignoro
-    qDebug() << "ricevo";
     QString indici = cmd.find(IDX).value();
     QVector<qint32> index;
     for (QString s : indici.split(";", QString::SkipEmptyParts)){
@@ -544,8 +519,8 @@ bool Client::inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format)
         // update
         this->remoteFile->getLocalIndexDelete(pos, newSym);
         this->remoteFile->symVec.replace(pos, newSym);
-//        emit s_removeText(pos);
-//        emit s_setText(newSym.car, format, pos);
+        emit s_removeText(pos);
+        emit s_setText(newSym.car, format, pos);
         newSym.car = QChar();
         this->remoteInsert(newSym.car, format, newSym.indici);
 
@@ -554,7 +529,7 @@ bool Client::inserimentoLocale(qint32 pos, QChar car, QTextCharFormat format)
         // inserisco in locale
         this->remoteFile->symVec.insert(pos, newSym);
         // scrivo in editor
-        //emit s_setText(newSym.car, format, pos);
+        emit s_setText(newSym.car, format, pos);
             // invio al server
         this->remoteInsert(newSym.car, format, newIndex);
 
@@ -601,18 +576,18 @@ void Client::cancellamentoRemoto(QMap<QString, QString> cmd)
 
 void Client::spostaCursori(QMap <QString,QString>cmd)
 {
-    qDebug()<<cmd;
+    //qDebug()<<cmd;
     QString user=cmd.find(UNAME).value();
     QString indici=cmd.find(IDX).value();
 
     int pos=indici.split(";", QString::SkipEmptyParts)[0].toInt();
-    qDebug()<<pos;
+    //qDebug()<<pos;
     int anchor=indici.split(";", QString::SkipEmptyParts)[1].toInt();
-    qDebug()<<anchor;
+    //qDebug()<<anchor;
 
     char c='\0';
 
-    if(user==this->username){ qDebug()<<"Questo messaggio non doveva arrivare a me!!!"; return; } //non lo considero
+    if(user==this->username){ /*qDebug()<<"Questo messaggio non doveva arrivare a me!!!"*/; return; } //non lo considero
     //user="lalla";
     emit spostaCursSignal(pos,anchor,c,user);
 }
@@ -656,33 +631,18 @@ void Client::dispatchStile(QMap <QString,QString>cmd){
 void Client::connected(){
     qDebug()<<"Connesso al server\n";
     QMap<QString, QString> comando;
-    this->connectedDB=false;
+    this->connectedDB = true;
     comando.insert(CMD, CONN);
     this->sendMsg(comando);
 }
 
 void Client::disconnected(){
     qDebug()<<"Disconnesso dal server" << endl;
-    this->connectedDB=false;
-}
-void Client::handleStile(QString& stile,QString& param){
-    QMap<QString, QString> comando;
-    comando.insert(CMD, STILE);
-    comando.insert(DOCID, this->docID);
-    comando.insert(UNAME, this->username);
-    comando.insert(STILE, stile);
-    comando.insert("param", param);
-    qDebug()<<comando;
-
-    this->sendMsg(comando);
+    this->connectedDB = false;
 }
 
 void Client::connectSlot(){
-    if(socket->state() != QTcpSocket::ConnectedState || socket == nullptr){
-    socket = new QTcpSocket(this);
-    socket->connectToHost(QHostAddress::LocalHost, 2000);
-    }
-    // TODO richiama CONNECT
+    this->connectToHost();
     this->connected();
 }
 
@@ -695,7 +655,7 @@ void Client::handleLogin(QString& username, QString& password)
     emit addMe(); //PROVA
 
     QMap<QString, QString> comando;
-    if(socket->state() != QTcpSocket::ConnectedState || !connectedDB){
+    if(!connectedDB){
         QMessageBox Messaggio;
         Messaggio.critical(nullptr,"Login Error","User not connected to the server");
         Messaggio.setFixedSize(500,200);
@@ -717,12 +677,12 @@ void Client::handleLogin(QString& username, QString& password)
     comando.insert(CMD, LOGIN);
     comando.insert(UNAME, username);
     comando.insert(PASS, password);
-    this->sendMsg(comando);    
+    this->sendMsg(comando);
 }
 
 void Client::handleLogout(){
 
-    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
+    if(!logged || !connectedDB){
         QMessageBox Messaggio;
         Messaggio.critical(nullptr,"Logout Error","User not connected or not logged to the server");
         Messaggio.setFixedSize(500,200);
@@ -739,7 +699,7 @@ void Client::handleLogout(){
 
 void Client::handleRegistration(QString& username, QString& password){
 
-    if(socket->state() != QTcpSocket::ConnectedState || !connectedDB){
+    if(!connectedDB){
         QMessageBox Messaggio;
         Messaggio.critical(nullptr,"Registration Error","User not connected to the server");
         Messaggio.setFixedSize(500,200);
@@ -763,7 +723,7 @@ void Client::handleRegistration(QString& username, QString& password){
 void Client::handleMyCursorChange(int& pos,int& anchor)
 {
     //qDebug() << "sono in " << Q_FUNC_INFO;
-    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
+    if(!logged || !connectedDB){ return; }
 
     QMap<QString, QString> comando;
 
@@ -781,17 +741,17 @@ void Client::handleMyCursorChange(int& pos,int& anchor)
 void Client::pasteSlot(QString& clipboard){
     //if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
 
-    QMap<QString, QString> comando;
+//    QMap<QString, QString> comando;
 
-    comando.insert(CMD,"PASTE");
-    comando.insert("clipboard",clipboard);
-    qDebug()<<comando;
-    this->sendMsg(comando);
+//    comando.insert(CMD,"PASTE");
+//    comando.insert("clipboard",clipboard);
+//    qDebug()<<comando;
+//    this->sendMsg(comando);
 }
 
 void Client::remoteOpen(QString& name, QString& docID){
 
-    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
+    if(!logged || !connectedDB){
 
         QMessageBox Messaggio;
         Messaggio.critical(nullptr,"Network Error","User not connected or not logged to the server");
@@ -822,7 +782,7 @@ void Client::remoteOpen(QString& name, QString& docID){
 
 void Client::remoteAdd(QString& name){
     qDebug() << "sono in Client::remoteAdd";
-    if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){
+    if(!logged || !connectedDB){
         QMessageBox Messaggio;
         Messaggio.critical(nullptr, "Network Error","User not connected or not logged to the server");
         Messaggio.setFixedSize(500,200);
@@ -888,7 +848,6 @@ bool Client::remoteInsert(QChar c, QTextCharFormat format, QVector<qint32> index
         indici.append(QString::number(val) + ";");
     }
     cmd.insert(IDX, indici);
-    qDebug()<<"laaaaaaaa";
 
     qDebug()<<QString(this->serialize(format).toHex());
     cmd.insert(FORMAT, QString(this->serialize(format).toHex()));
@@ -929,67 +888,4 @@ bool Client::remoteDelete(Symbol s)
     return remoteDelete( s.getCar(), s.getIndici());
 }
 
-void Client::readyRead(){
-    QByteArray out;
-    QByteArray tmp;
-    uint dim;
-    char v[4096] = {};
-    qint64 dimRead = 0;
-
-    out.reserve(4096);
-    tmp.reserve(16);
-
-    if (socket->bytesAvailable() > 0){
-        dimRead = socket->read(v, 4096);
-        if ( dimRead < 0){
-            qDebug() << "errore in socket::read()";
-        }
-        this->buffer.append( v, static_cast<int>(dimRead) );
-    } else {
-        return;
-    }
-
-    while (buffer.contains(INIT)){
-        // presente token iniziale del messaggio
-        int idx = buffer.indexOf(INIT, 0);
-        if ( idx >= 0){
-            buffer.remove(0, idx);
-            command.clear();
-            command.append(buffer);       // |command| contiene token <INIT> e quello che viene ricevuto subito dopo
-            command.remove(0, INIT_DIM);       // rimuovo <INIT> da |out|
-
-            if (command.size() < LEN_NUM){
-                return;
-            }
-
-            tmp = command.left(LEN_NUM);                  // in |tmp| copio 8 byte che descrivono la dimensione del messaggio
-            command.remove(0,LEN_NUM);
-            dim = tmp.toUInt(nullptr, 16); // |dim| ha dimensione di tmp in decimale
-
-            uint len = static_cast<uint>(command.size());
-            uint rimane = 0;
-            if (len < dim){
-                rimane = dim - len;
-            }
-
-            while (rimane > 0){
-                //socket->waitForReadyRead(100);      // finisco di leggere il resto del messaggio
-                dimRead = socket->read(v, 4096);
-                if ( dimRead < 0){
-                    qDebug() << "errore in socket::read()";
-                }
-                this->command.append( v, static_cast<int>(dimRead) );
-                len = static_cast<uint>(command.size());
-                rimane = dim - len;
-            }
-            command.remove(static_cast<int>(dim), 4096);
-            buffer.remove(0, LEN_NUM + INIT_DIM + static_cast<int>(dim));
-
-            leggiXML(command);
-            // finito di leggere i byte del messaggio ritorno al ciclo iniziale
-        } else {
-            // token nonn trovato
-        }
-    }
-}
 

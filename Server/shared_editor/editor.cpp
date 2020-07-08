@@ -16,8 +16,8 @@ Editor::Editor(QString Id, QString fName)
     dim = 0;
 
     file = new QFile(this->nomeFile);
-    if ( file->open(QIODevice::ReadWrite | QIODevice::Text) ){
-        this->loadMap();
+    if ( file->open(QIODevice::ReadWrite) && this->loadMap()){
+        // ok
     } else {
         qDebug() << endl
                  << " !!!!!!!!!!!!!!!!!!!!!!!!! Errore apertura file"
@@ -29,68 +29,35 @@ Editor::Editor(QString Id, QString fName)
        throw std::logic_error("Errore apertura file");
     }
     file->close();
-
-
-    qDebug() << file->size();
-
-
 }
 
 bool Editor::loadMap()
 {
-    // TODO verifica eccezioni
     QByteArray ba;
-    ba = file->readAll();
-    qDebug() << "sono in " << Q_FUNC_INFO;
-    qDebug() << ba;
+    qint64 size = file->bytesAvailable();
+    char v[4096] = {};
+    qint64 readBlk, readSize;
+    while(size > 0){
+        if (size > 4096){
+            readBlk = 4096;
+        } else {
+            readBlk = size;
+        }
+        readSize = file->read(v, readBlk);
+        if (readSize < 0){
+            qDebug() << "errore lettura file" << endl;
+            return false;
+        }
+        ba.append(v, static_cast<int>(readSize));
+        size = size - readSize;
+    }
     if (!ba.isEmpty()){
         QDataStream out(&ba, QIODevice::ReadWrite);
         out >> this->symList;
     }
-
     return true;
 }
 
-
-//bool Editor::sendMap(QString nomeUtente)
-//{
-//    QSharedPointer<MySocket> socket = this->sendList_.value(nomeUtente);
-//    // prepara messaggio
-
-//    QByteArray ba;
-//    QXmlStreamWriter wr(&ba);
-//    int bodySize = this->dim;           // dimensione del file da inviare
-
-//    wr.writeStartDocument();
-//    wr.writeStartElement(FBODY);
-
-//    wr.writeTextElement(DIMTOT, QString::number(bodySize));
-
-//    wr.writeEndElement();
-//    wr.writeEndDocument();
-
-//    int dim = ba.size();
-//    QByteArray len;
-//    len = QByteArray::number(dim, 16);
-//    len.prepend(8 - len.size(), '0');
-
-//    ba.prepend(len);
-//    ba.prepend(INIT);
-
-//    if (!this->send(socket, ba)){
-//        qDebug() << "err invio";
-//    }
-//    return sendBody(socket);
-//}
-
-//bool Editor::sendBody(QSharedPointer<MySocket> &sock)
-//{
-//    QByteArray ba;
-//    QDataStream stream(&ba, QIODevice::ReadWrite);
-//    stream << this->symList;
-//    sock.get()->write(ba);
-//    return true;
-//}
 
 /**
  * @brief Editor::getSymMap
@@ -190,6 +157,9 @@ bool Editor::removeUser(const QString &nomeUser)
 {
     if (this->sendList_.contains(nomeUser)){
         this->sendList_.remove(nomeUser);
+        if (sendList_.isEmpty()){
+            this->save();
+        }
         Comando cmd(Comando::Up_Cursor);
         QStringList list = this->sendList_.keys();
         cmd.insertMulti(UNAME, list).insert(DOCID, this->DocId);
@@ -319,8 +289,6 @@ bool Editor::save()
     QByteArray ba;
     QDataStream out (&ba, QIODevice::ReadWrite);
     out << this->symList;
-
-    qDebug() << ba;
 
     file->open(QIODevice::WriteOnly);
 

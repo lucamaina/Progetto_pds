@@ -458,7 +458,6 @@ void s_thread::openFile(QMap<QString, QString> &comando)
     QByteArray ba = net.getEditor(docid).getSymMap();
 
     this->sendBody(ba);
-    qDebug() << ba;
 }
 
 /**

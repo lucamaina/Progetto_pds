@@ -1,11 +1,39 @@
 #ifndef MYSOCKET_H
 #define MYSOCKET_H
 
+#include <QObject>
+#include <QTcpSocket>
+#include <iostream>
+#include <QtNetwork/qhostaddress.h>
+#include "cmdstring.h"
+#include "comando.h"
 
-class MySocket
+class MySocket : public QObject
 {
+    Q_OBJECT
+private:
+    int sockId;
+    QTcpSocket sock;
+    QByteArray buffer, command;
+
 public:
-    MySocket();
+    explicit MySocket(int sockId);
+    void leggiXML(QByteArray data);
+    bool write(QByteArray data);
+    bool write(QMap<QString, QString> comando);
+    bool connectToHost();
+    void leggiMap(QByteArray &qba, int size);
+
+signals:
+    void s_dispatchCmd(Comando &cmd);
+    void s_dispatchCmd(QMap<QString, QString> &cmd);
+    void s_disconnected();
+    void s_connected();
+
+public slots:
+    void readyRead();
+    void disconnected();
+    void connected();
 };
 
 #endif // MYSOCKET_H

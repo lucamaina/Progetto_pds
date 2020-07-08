@@ -93,6 +93,7 @@
 #endif
 
 #include "textedit.h"
+#include "Client/client.h"
 
 #ifdef Q_OS_MAC
 const QString rsrcPath = ":/images/mac";
@@ -129,9 +130,6 @@ TextEdit::TextEdit(QWidget *parent)
     remoteStile=false;
 
     connect(this->list, SIGNAL(itemClicked(QListWidgetItem*)),this,SLOT(userListClicked(QListWidgetItem*)));
-    //this->layout()->addWidget(list);
-
-    //Evidenziatore = new Highlighter(textEdit->document());
 
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
     setupUserActions();
@@ -141,7 +139,6 @@ TextEdit::TextEdit(QWidget *parent)
 
     setVisibleFileActions(false);
     setVisibleEditorActions(false);
-    // this->textEdit->setEnabled(false);   Disabilita editor
 
     {
         QMenu *helpMenu = menuBar()->addMenu(tr("Help"));
@@ -154,26 +151,14 @@ TextEdit::TextEdit(QWidget *parent)
     textEdit->setFont(textFont);
     fontChanged(textEdit->font());
     colorChanged(textEdit->textColor());
-    //alignmentChanged(textEdit->alignment());
 
     connect(textEdit->document(), &QTextDocument::modificationChanged,
             actionSave, &QAction::setEnabled);
     connect(textEdit->document(), &QTextDocument::modificationChanged,
             this, &QWidget::setWindowModified);
-/*
-    connect(textEdit->document(), &QTextDocument::undoAvailable,
-            actionUndo, &QAction::setEnabled);
-    connect(textEdit->document(), &QTextDocument::redoAvailable,
-            actionRedo, &QAction::setEnabled);
-*/
 
     setWindowModified(textEdit->document()->isModified());
     actionSave->setEnabled(textEdit->document()->isModified());
-
-/*
-    actionUndo->setEnabled(textEdit->document()->isUndoAvailable());
-    actionRedo->setEnabled(textEdit->document()->isRedoAvailable());
-*/
 
 
 #ifndef QT_NO_CLIPBOARD
@@ -207,22 +192,19 @@ TextEdit::TextEdit(QWidget *parent)
     connect(this, SIGNAL(cursorChanged(int&,int&)), this->client, SLOT(handleMyCursorChange(int&,int&)));
     connect(this->client, SIGNAL(spostaCursSignal(int&,int&,char&,QString&)), this, SLOT(spostaCursor(int&,int&,char&,QString&)));
     connect(this, SIGNAL(pasteSig(QString&)),this->client, SLOT(pasteSlot(QString&)));
-    connect(this->client, &Client::s_setText, this, &TextEdit::setText, Qt::ConnectionType::DirectConnection);
-    connect(this->client, &Client::s_removeText, this, &TextEdit::removeText, Qt::ConnectionType::DirectConnection);
+    connect(this->client, &Client::s_setText, this, &TextEdit::setText, Qt::ConnectionType::DirectConnection);          /* aggiunge testo all'editor */
+    connect(this->client, &Client::s_removeText, this, &TextEdit::removeText, Qt::ConnectionType::DirectConnection);    /* rimuove testo dall'editor */
     connect(this->client, &Client::s_loadEditor, this, &TextEdit::loadEditor, Qt::ConnectionType::DirectConnection);
-    connect(this->client, &Client::s_clearEditor, this, &TextEdit::clear, Qt::ConnectionType::DirectConnection);
-    connect(this->client, &Client::s_upCursor, this, &TextEdit::upCursor);
+    connect(this->client, &Client::s_clearEditor, this, &TextEdit::clear, Qt::ConnectionType::DirectConnection);        /* pulisce l'editor */
+    connect(this->client, &Client::s_upCursor, this, &TextEdit::upCursor, Qt::DirectConnection);                        /* modifica lista cursori */
     connect(this->client, &Client::s_changeCursor, this, &TextEdit::changeCursor, Qt::DirectConnection);
     connect(this->client, &Client::s_changeTitle, this, &TextEdit::windowTitle, Qt::DirectConnection);
     connect(this->client, &Client::s_brows, this, &TextEdit::remoteBrows, Qt::DirectConnection);
-    connect(this, SIGNAL(stileTesto(QString&, QString&)), this->client, SLOT(handleStile(QString&, QString&)));
 
     connect(this->client, &Client::s_setVisbleFileActions, this, &TextEdit::setVisibleFileActions, Qt::DirectConnection);
     connect(this->client, &Client::s_setVisbleEditorActions, this, &TextEdit::setVisibleEditorActions, Qt::DirectConnection);
 
     connect(this->client, &Client::s_logOut, this, &TextEdit::acceptLogout, Qt::DirectConnection);
-
-
 
     setupStatusBar();
 }
@@ -247,55 +229,7 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
             QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
             if (keyEvent->modifiers().testFlag(Qt::ControlModifier) == true)
             {
-                // allow override of all Ctrl+ shortcuts
-                if (keyEvent->key() == Qt::Key_V) {
-                    goPaste();
-                }
-                if (keyEvent->key() == Qt::Key_X) {
-                    this->setVisibleFileActions(true);
-                }
-                if (keyEvent->key() == Qt::Key_C) {
-                    listaFormati.clear();
-                    QTextCursor cur = textEdit->textCursor();
-                    QApplication::clipboard()->mimeData()->text() = textEdit->textCursor().selectedText();
-
-                    qDebug()<<cur.position()<<cur.anchor();
-                    int anch, cu;
-                    anch=cur.anchor();
-                    cu=cur.position();
-
-                    if(cur.position()<cur.anchor()){
-                        cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
-
-                        while(cur.position()<anch){
-                            listaFormati.push_back(cur.charFormat());
-                            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
-                        }
-                            listaFormati.push_back(cur.charFormat());
-
-                    }
-
-                    else if(cur.position()>cur.anchor()){
-
-                        cur.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveMode::KeepAnchor,cu-anch-1);
-
-                        qDebug()<<cur.position()<<cur.anchor()<<anch<<cu;
-                        while(cur.position()<cu){
-                            listaFormati.push_back(cur.charFormat());
-                            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
-                        }
-                        listaFormati.push_back(cur.charFormat());
-
-                    }
-
-
-                    //cur.movePosition(QTextCursor::PreviousCharacter, QTextCursor::MoveMode::KeepAnchor);
-
-
-                    qDebug()<<listaFormati;
-                }
-                return false;
-
+                return true;
             }
 
         }
@@ -324,9 +258,6 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
 
             if (e->key() == Qt::Key_Backspace || e->key() == Qt::Key_Delete) {    // 16777219 , 16777223
                 // PULSANTI DI CANCELLAZIONE
-
-
-
                 if (s.anchor() > s.position())
                 {
                     while (s.anchor() > s.position())
@@ -356,47 +287,32 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
             }
             else {
                 // PULSANTI DI INSERIMENTO
-
                 if (!e->text().front().isPrint() && e->text().front() != '\xd') { return false; }
 
                 QChar c = e->text().front();        // carattere da inserire
                 QTextCharFormat format = textEdit->textCursor().charFormat();   // formato del carattere
 
-                if (s.hasSelection())
-                {
-                    if (s.anchor() > s.position())
-                    {
-                        while (s.anchor() > s.position())
-                        {
+                if (s.hasSelection()){
+                    if (s.anchor() > s.position()){
+                        while (s.anchor() > s.position()){
                             this->cancellamento(anchor, Qt::Key_Backspace);
                             anchor--;
                         }
-                    }
-
-                    else if (s.anchor() < s.position())
-                    {
-                        while (s.anchor() < s.position())
-                        {
+                    } else if (s.anchor() < s.position()) {
+                        while (s.anchor() < s.position()){
                             this->cancellamento(poss, Qt::Key_Backspace);
                             poss--;
                         }
                     }
                 }
-                qDebug()<<format.fontItalic();
-                qDebug()<<this->client->serialize(format);
-                QByteArray q=this->client->serialize(format);
-                QTextCharFormat k=this->client->deserialize(q);
-                qDebug()<<q;
-                qDebug()<<k;
-                this->inserimento(poss, c, format);
 
-                return false;
+                if(!this->inserimento(poss, c, format)){
+                    return false;
+                }
+
+                return true;
             }
-
-
         }
-
-
         return false;
     }
 
@@ -406,29 +322,13 @@ bool TextEdit::eventFilter(QObject* obj, QEvent* event) {
 bool TextEdit::inserimento(int posCursor, QChar car, QTextCharFormat format)
 {
     QTextCursor s = this->textEdit->textCursor();
-    this->client->inserimentoLocale(posCursor, car, format);
 
-     /*else if (this->client->remoteInsert(car,format,index)) {// INSERIMENTO REMOTO, manda comando a server
-        // true se server risp OK
-        this->client->inserimento(index, car, format);
-       // this->setText(car, format, s.position());
-
-        if(s.hasSelection()){
-            int poscurs=s.position();
-            int posanch=s.anchor();
-            for( int i=poscurs+1; i<=posanch; i++){
-                //TODO remote delete per ogni carattere
-                this->client->remoteDelete(car, index, anchor);
-            }
-        }
-
-        this->statusBar()->showMessage("At position: " + QString::number(posCursor) + " Text insert: " + car, 1000);
-
-    } else {
-        this->statusBar()->showMessage("impossibile inserire da remoto", 1000);
+    if(this->client->inserimentoLocale(posCursor, car, format)){
+        qDebug()<<"ERRORE DI INSERIMENTO LOCALE (TEXTEDIT LINE 375)\n";
+        return true;
     }
-*/
-    return false; // true per evitare inserimento
+
+    return false;
 }
 
 bool TextEdit::cancellamento(int posCursor, int key)
@@ -542,40 +442,15 @@ void TextEdit::setupFileActions()
     menu->addSeparator();
 #endif
 
-
-
     const QIcon exitFileIcon = QIcon::fromTheme("document-new", QIcon(rsrcPath + "/fileexit.png"));
     actionExitFile = menu->addAction(exitFileIcon,  tr("&Exit from this file"), this, &TextEdit::fileExit); // slot di connessione
     tb->addAction(actionExitFile);
 
-    /*
-    const QIcon openIcon = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/fileopen.png"));
-    a = menu->addAction(openIcon, tr("&Open..."), this, &TextEdit::fileOpen);
-    a->setShortcut(QKeySequence::Open);
-    tb->addAction(a);
-    */
-
     menu->addSeparator();
-
-
-
 
     a = menu->addAction(tr("Save &As..."), this, &TextEdit::fileSaveAs);
     a->setPriority(QAction::LowPriority);
     menu->addSeparator();
-
-    /*
-    const QIcon remoteAddFile = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/newOnServer.png"));
-    a = menu->addAction(remoteAddFile, tr("&Remote Add..."), this, &TextEdit::remoteAddFile);
-    a->setShortcut(QKeySequence::Open);
-    tb->addAction(a);
-
-    const QIcon remoteRemoveFile = QIcon::fromTheme("document-open", QIcon(rsrcPath + "/remoteDelete.png"));
-    a = menu->addAction(remoteRemoveFile, tr("&Remote Remove..."), this, &TextEdit::remoteRemoveFile);
-    a->setShortcut(QKeySequence::Open);
-    tb->addAction(a);
-    */
-
 
     a = menu->addAction(tr("&Quit"), this, &QWidget::close);
     a->setShortcut(Qt::CTRL + Qt::Key_Q);
@@ -583,92 +458,66 @@ void TextEdit::setupFileActions()
 
 void TextEdit::setupEditActions()
 {
-//    QToolBar *tb = addToolBar("");
-    QMenu *menu = menuBar()->addMenu(tr(""));
+    QToolBar *tb = addToolBar("Edit");
+    QMenu *menu = menuBar()->addMenu(tr("Edit"));
 
     //menu->addSeparator();
 
 #ifndef QT_NO_CLIPBOARD
     const QIcon cutIcon = QIcon::fromTheme("edit-cut", QIcon(rsrcPath + "/editcut.png"));
-    actionCut = menu->addAction(cutIcon, tr("Cu&t"), textEdit, &QTextEdit::cut);
-    actionCut->setPriority(QAction::LowPriority);
-    actionCut->setShortcut(QKeySequence::Cut);
-//    tb->addAction(actionCut);
-    connect(actionCut,SIGNAL(triggered()),this,SLOT(goCut()));
+    actionCut = menu->addAction(cutIcon, tr("Cu&t"), this, &TextEdit::goCut, QKeySequence::Cut);
+    tb->addAction(actionCut);
 
     const QIcon copyIcon = QIcon::fromTheme("edit-copy", QIcon(rsrcPath + "/editcopy.png"));
-    actionCopy = menu->addAction(copyIcon, tr("&Copy"), textEdit, &QTextEdit::copy);
-    actionCopy->setPriority(QAction::LowPriority);
-    actionCopy->setShortcut(QKeySequence::Copy);
-//    tb->addAction(actionCopy);
+    actionCopy = menu->addAction(copyIcon, tr("&Copy"), this, &TextEdit::goCopy, QKeySequence::Copy);
+    tb->addAction(actionCopy);
 
     const QIcon pasteIcon = QIcon::fromTheme("edit-paste", QIcon(rsrcPath + "/editpaste.png"));
-    actionPaste = menu->addAction(pasteIcon, tr("&Paste"), textEdit, &QTextEdit::paste);
-
-    //actionPaste->setPriority(QAction::LowPriority);
-    actionPaste->setShortcut(QKeySequence::Paste);
-//    tb->addAction(actionPaste);
+    actionPaste = menu->addAction(pasteIcon, tr("&Paste"), this, &TextEdit::goPaste, QKeySequence::Paste);
+    tb->addAction(actionPaste);
 
     if (const QMimeData *md = QApplication::clipboard()->mimeData())
         actionPaste->setEnabled(md->hasText());
-    connect(actionPaste,SIGNAL(triggered()),this,SLOT(goPasteBtn()));
 
 #endif
 }
 
 void TextEdit::goPaste(){
     QString s(QApplication::clipboard()->mimeData()->text());
-    int pos=textEdit->textCursor().position();
     QTextCursor cur = textEdit->textCursor();
+    int pos = cur.position(), anc = cur.anchor();
+    cur.setPosition(pos, QTextCursor::MoveAnchor);
+    QTextCharFormat currentFormat = cur.charFormat();
+
+    this->cursorEnable(false);
     int i=0;
     if(client->isLogged()){
         for(QChar c : s){
-            QVector<qint32> newIndex=this->client->remoteFile->getLocalIndexInsert(pos+i);
-
-            this->client->remoteInsert(c, listaFormati[i]/*textEdit->textCursor().charFormat()*/, newIndex);
-
-            //creo simbolo
-            Symbol newSym = Symbol(this->client->getUsername(), c, newIndex, listaFormati[i]/*textEdit->textCursor().charFormat()*/);
-
-            // inserisco in locale
-            this->client->remoteFile->symVec.insert(pos+i, newSym);
-            cur.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor,1);
+            client->inserimentoLocale(pos+i, c, currentFormat);
             i++;
         }
     }
-}
-
-void TextEdit::goPasteBtn()
-{
-    QString s(QApplication::clipboard()->mimeData()->text());
-    int size = s.size();
-    QTextCursor c = textEdit->textCursor();
-    int pos = c.position();
-    c.setPosition(pos - size, QTextCursor::MoveAnchor);
-    c.removeSelectedText();
-
-    pos = c.position();
-    textEdit->setTextCursor(c);
-    goPaste();
+    this->cursorEnable(true);
 }
 
 void TextEdit::goCut()
 {
+    this->textEdit->copy();
     QString s(QApplication::clipboard()->mimeData()->text());
     int size = s.size();
     QTextCursor c = textEdit->textCursor();
     int pos = c.position();
-    for (int i =0; i<size; i++) {
-//        this->client->cancellamentoLocale(pos);
-        Symbol oldSym;
-        if ( this->client->remoteFile->getLocalIndexDelete(pos, oldSym)){
-            // cancello in locale
-            this->client->remoteFile->symVec.remove(pos);
-        }
-        // invio al server
-        this->client->remoteDelete(oldSym);
+    int anc = c.anchor();
+    pos = std::min(pos, anc);
+    for (int i = 0; i<size; i++) {
+        this->client->cancellamentoLocale(pos);
     }
 
+}
+
+void TextEdit::goCopy()
+{
+    this->textEdit->copy();
 }
 
 void TextEdit::clear()
@@ -1238,9 +1087,9 @@ void TextEdit::setVisibleEditorActions(bool set)
     actionTextUnderline->setEnabled(set);
     actionTextColor->setEnabled(set);
     // vale anche per copia incolla
-    actionCut->setVisible(false);
-    actionCopy->setVisible(false);
-    actionPaste->setVisible(false);
+    actionCut->setEnabled(set);
+    actionCopy->setEnabled(set);
+    actionPaste->setEnabled(set);
 }
 
 void TextEdit::acceptLogout()
@@ -1329,6 +1178,8 @@ void TextEdit::mergeFormatOnWordOrSelection(const QTextCharFormat &format)
     cursor.mergeCharFormat(format);
     textEdit->mergeCurrentCharFormat(format);
 
+    this->cursorEnable(false);
+
     QTextCharFormat form = cursor.charFormat();
     if(pos>anchor){
         for(int i=anchor; i<pos; i++){
@@ -1339,6 +1190,8 @@ void TextEdit::mergeFormatOnWordOrSelection(const QTextCharFormat &format)
             this->client->inserimentoLocale(i, QChar(), form);
         }
     }
+
+    this->cursorEnable(true);
 }
 
 void TextEdit::fontChanged(const QFont &f)
@@ -1623,6 +1476,17 @@ void TextEdit::upCursor(QStringList &list)
                 find = true;
             }
         }
+    }
+}
+
+void TextEdit::cursorEnable(bool set)
+{
+    if (set){
+        connect(textEdit, &QTextEdit::cursorPositionChanged,
+                this, &TextEdit::cursorPositionChanged);
+    } else {
+        disconnect(textEdit, &QTextEdit::cursorPositionChanged,
+                this, &TextEdit::cursorPositionChanged);
     }
 }
 

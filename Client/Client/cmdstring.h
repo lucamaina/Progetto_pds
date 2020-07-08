@@ -3,6 +3,8 @@
 
 #define bond 10
 
+/****************************************************************************
+ * nomi dei comandi definiti ************************************************/
 #define INIT "<INIT>"               // token di inizio messaggio
 #define CONN "CONNECT"
 #define LOGIN "LOG-IN"
@@ -25,12 +27,11 @@
 #define REM_USER "REM-USER"
 #define UP_CRS "UP-CRS"
 #define EXFILE "EXIT-FILE"
-#define STILE "Stile"
 
 #define OK "OK"
 #define ERR "ERR"
 
-#define MAX_THREAD 8
+#define MAX_THREAD 4
 
 #define PATH "files/"
 
@@ -56,6 +57,7 @@
 #define FORMAT "format"
 
 
+
 /****************************************************************************
  * messaggi standard ********************************************************/
 #define CONN_ERR "error - connection to db not working"
@@ -76,6 +78,12 @@
 #define ADD_FILE_OK "ok - file inserito"
 #define ADD_FILE_ERR1 "error - code 1: file già presente"
 #define ADD_FILE_ERR2 "error - code 2: errore inserimento"
+
+#define INS_ERR "error - insert not possible"
+#define INS_OK "ok - insert done"
+
+#define REM_ERR "error - remove not possible"
+#define REM_OK "ok - remove done"
 
 #define ADD_USER_ERR "error - Utenti non aggiunti"
 #define REM_USER_ERR "error - Utenti non rimossi"

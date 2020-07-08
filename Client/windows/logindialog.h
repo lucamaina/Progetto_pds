@@ -1,3 +1,6 @@
+#ifndef LOGINDIALOG_H
+#define LOGINDIALOG_H
+
 #include <QDialog>
 #include <QLabel>
 #include <QPushButton>
@@ -34,3 +37,5 @@ signals:
 public slots:
  void slotAcceptLogin();
 };
+
+#endif // LOGINDIALOG_H

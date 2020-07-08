@@ -1,4 +1,4 @@
-#include <RegisterDialog/registerdialog.h>
+#include "registerdialog.h"
 
 RegisterDialog::RegisterDialog(QWidget *parent) : QDialog(parent)
 {

@@ -53,19 +53,18 @@
 #define TEXTEDIT_H
 #include "Utils/utils.h"
 #include <QShortcut>
-#include <BrowseWindow/browsewindow.h>
+#include <windows/browsewindow.h>
 #include <QMainWindow>
 #include <QMap>
 #include <QPointer>
-#include <Client/client.h>
-#include <Highlighter/highlighter.h>
-#include <LoginDialog/logindialog.h>
-#include <RegisterDialog/registerdialog.h>
+//#include <Client/client.h>
+#include <windows/logindialog.h>
+#include <windows/registerdialog.h>
 #include <QListWidgetItem>
 #include <shared_editor/editor.h>
 #include <QPainter>
 #include <QAbstractTextDocumentLayout>
-#include"NuovoFileRemotoWindoow/nuovofileremoto.h"
+#include "windows/nuovofileremoto.h"
 
 class QAction;
 class QComboBox;
@@ -74,6 +73,7 @@ class QTextEdit;
 class QTextCharFormat;
 class QMenu;
 class QPrinter;
+class Client;
 
 class TextEdit : public QMainWindow
 {
@@ -83,7 +83,6 @@ public:
     TextEdit(QWidget *parent = nullptr);
 
     bool load(const QString &f);
-
 
 public slots:
     void fileNew();
@@ -109,7 +108,6 @@ private slots:
     void userListClicked(QListWidgetItem* item);
     void addMeSlot();
     void upCursor(QStringList &list);
-
     void nuovoStileSlot(QString& stile,QString& param);
 
     /*************** Comandi per gestione file remoti **************/
@@ -157,6 +155,8 @@ private:
     // void alignmentChanged(Qt::Alignment a);
     void myTextAlign(QString& a);
 
+
+
     //Editor* editor;
     QTextCursor textCursor;
     QShortcut* sh;
@@ -164,7 +164,6 @@ private:
     QMap<QString,QTextCursor*> mappaCursori; //mappa con nome utente e relativo cursore;
     QMap<QString,QLabel*> mappaEtichette; //mappa con nome utente e relativo cursore;
 
-    Highlighter* Evidenziatore;
     Client *client;
     QVector<QTextCharFormat> listaFormati;
 
@@ -208,12 +207,11 @@ private:
     bool remoteStile;
     QToolBar *tb;
     QString fileName;
-    QTextEdit *textEdit;
     QList<QTextCharFormat> listFormat;
 
  // prove
 public:
-
+    QTextEdit *textEdit;
     int cursorPos;
 
 
@@ -227,8 +225,8 @@ private:
 
 public slots:
     void goPaste();
-    void goPasteBtn();
     void goCut();
+    void goCopy();
     void clear();
     void refresh();
     void statusBarOutput(QString s);
@@ -239,6 +237,7 @@ public slots:
     void setVisibleFileActions(bool set);
     void setVisibleEditorActions(bool set);
     void acceptLogout();
+    void cursorEnable(bool set);
 
 signals:
     void cursorChanged (int& pos, int& anchor);

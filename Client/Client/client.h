@@ -9,19 +9,24 @@
 #include <QTextEdit>
 #include <QTextCharFormat>
 
-#include "BrowseWindow/browsewindow.h"
-#include "../NuovoFileRemotoWindoow/nuovofileremoto.h"
-#include "../NuovoFileRemotoWindoow/usermanager.h"
-#include "cmdstring.h"
-#include "shared_editor/editor.h"
 
+#include "windows/browsewindow.h"
+#include "windows/nuovofileremoto.h"
+#include "windows/logindialog.h"
+#include "windows/usermanager.h"
+#include "cmdstring.h"
+#include "comando.h"
+#include "mysocket.h"
+#include "shared_editor/editor.h"
+#include "../textedit.h"
+
+//class TextEdit;
 class Client : public QObject
 {
     Q_OBJECT
 
-
 public:
-    explicit Client(QObject *parent = nullptr);
+    explicit Client(TextEdit *parent = nullptr);
 
     // gestori chiamate da icone di texteditor
     void handleBrowse(QMap<QString,QString> cmd);
@@ -59,6 +64,7 @@ public:
     // puntatore all'editor remoto
     Editor* remoteFile;
     QString getUsername() const;
+    TextEdit* editor;
 
 signals:
     void s_changeTitle(QString utente, QString nomeFile, QString docid);
@@ -84,16 +90,20 @@ signals:
     void s_userList(QList<QString> &list);
     void s_warning(QString str);
 
+    void s_cursorEnable(bool set);
+
 public slots:
     void connected();
     void disconnected();
+    void dispatchCmd(QMap<QString, QString> &cmd);
+    void dispatchOK(QMap <QString, QString> cmd);
+    void dispatchERR(QMap <QString,QString> cmd);
     void connectSlot();
     void handleLogin(QString& username, QString& password);
     void handleLogout();
     void dispatchStile(QMap <QString,QString>cmd);
     void handleRegistration(QString& username, QString& password);
-    void handleStile(QString& stile,QString& param);
-    void readyRead();
+//    void handleStile(QString& stile,QString& param);
     void pasteSlot(QString& clipboard);
     void handleMyCursorChange(int& pos, int& anchor);
     void remoteOpen(QString& name, QString &docID);
@@ -113,7 +123,8 @@ private:
     QString docID;
     QString filename;
     bool logged,connectedDB;
-    QTcpSocket* socket;
+//    QTcpSocket* socket;
+    MySocket* mioSocket;
     QByteArray buffer;
     QString tempUser;
     QString tempPass;
@@ -124,10 +135,9 @@ private:
     /****************************************************************************
      ***************** metodi controllo dei comandi ricevuti ********************/
 
-    bool leggiXML(QByteArray data);
-    void dispatchCmd(QMap<QString, QString> cmd);
-    void dispatchOK(QMap <QString, QString> cmd);
-    void dispatchERR(QMap <QString,QString> cmd);
+//    bool leggiXML(QByteArray data);
+
+
     void spostaCursori(QMap <QString,QString> cmd);
 
     /****************************************************************************

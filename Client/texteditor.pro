@@ -13,26 +13,28 @@ TEMPLATE        = app
 TARGET          = textedit
 
 HEADERS         = textedit.h \
-    BrowseWindow/browsewindow.h \
+    windows/browsewindow.h \
                   Client/client.h \ \
     Client/cmdstring.h \
-    Highlighter/highlighter.h \
-    LoginDialog/logindialog.h \
-    NuovoFileRemotoWindoow/nuovofileremoto.h \
-    NuovoFileRemotoWindoow/usermanager.h \
-    RegisterDialog/registerdialog.h \
+    Client/comando.h \
+    Client/mysocket.h \
+    windows/logindialog.h \
+    windows/nuovofileremoto.h \
+    windows/usermanager.h \
+    windows/registerdialog.h \
     Utils/utils.h \
     shared_editor/editor.h \
     shared_editor/message.h \
     shared_editor/symbol.h
 
 SOURCES         = textedit.cpp \
-                  BrowseWindow/browsewindow.cpp \
-                  Highlighter/highlighter.cpp \
-                  LoginDialog/logindialog.cpp \
-                  NuovoFileRemotoWindoow/nuovofileremoto.cpp \
-                  NuovoFileRemotoWindoow/usermanager.cpp \
-                  RegisterDialog/registerdialog.cpp \
+                  windows/browsewindow.cpp \
+                  Client/comando.cpp \
+                  Client/mysocket.cpp \
+                  windows/logindialog.cpp \
+                  windows/nuovofileremoto.cpp \
+                  windows/usermanager.cpp \
+                  windows/registerdialog.cpp \
                   Utils/utils.cpp \
                   main.cpp \
                   Client/client.cpp \

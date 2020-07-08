@@ -88,17 +88,20 @@ void MySocket::leggiMap(QByteArray &qba, int qbaSize)
     disconnect(&sock, &QTcpSocket::readyRead, this, &MySocket::readyRead);
     qba.clear();
     char v[4096];
-    qint64 dataBlk, size;
+    qint64 dataBlk, size, byteRead;
     size = static_cast<qint64>(qbaSize);
-    if (sock.bytesAvailable() < 1)
-        qDebug() << "errore";
+    if (sock.bytesAvailable() < 0)
+        qDebug() << endl << "errore byte available";
+    this->sock.waitForReadyRead(3000);
     while (size > 0){
-        if (size > 4095){
-            dataBlk = 4095;
+        qDebug() << "loppo qui";
+        if (size > 4096){
+            dataBlk = 4096;
         } else {
             dataBlk = size;
         }
-        qint64 byteRead = this->sock.read(v, dataBlk);
+        sock.waitForReadyRead(100);
+        byteRead = this->sock.read(v, dataBlk);
         if (byteRead < 0){
             qDebug() << "errore in socket::read() at COMAND";
             return;
@@ -127,7 +130,6 @@ void MySocket::readyRead()
                 qDebug() << "errore in socket::read() at INIT";
                 return;
             }
-            this->buffer.append(v, INIT_DIM);
         } else {
             return;
         }
@@ -144,7 +146,9 @@ void MySocket::readyRead()
         } else {
             return;
         }
-
+        if (dim ==0 || dim > 200 ) {
+            qDebug() <<"errore qui";
+        }
         // LEGGO COMANDO
         command.clear();
         while (dim > 0 && error == 0){

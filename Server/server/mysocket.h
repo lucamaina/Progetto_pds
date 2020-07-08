@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <iostream>
+#include <QBuffer>
 
 #include "cmdstring.h"
 #include "comando.h"

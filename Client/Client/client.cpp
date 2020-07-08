@@ -436,6 +436,7 @@ void Client::loadFile(QMap<QString,QString> cmd)
     int dim = cmd.find(BODY).value().toInt();
 
     QByteArray qba;
+//    this->editor->setProgress(true);
     this->mioSocket->leggiMap(qba, dim);
     qDebug() << qba;
 

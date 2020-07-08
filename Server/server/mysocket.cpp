@@ -46,10 +46,15 @@ bool MySocket::write(QByteArray data)
 {
     // TODO modifica per invio grandi file
     qint64 ret;
+    QBuffer qbuf;
+    qbuf.setData(data);
+    qbuf.open(QIODevice::ReadWrite);
+
     if (sock.isOpen()){
         if ( sock.isWritable() ){
-            ret = this->sock.write(data, data.size());
-            this->sock.waitForBytesWritten();
+            ret = this->sock.write(qbuf.data(), data.size());
+            bool b = this->sock.waitForBytesWritten();
+            auto err = sock.error();
             if ( ret == data.size()){
                 qDebug() << " <- To Client: "<< sockId << endl
                          << "write byte: " << ret << " - "

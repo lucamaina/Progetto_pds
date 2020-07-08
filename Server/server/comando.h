@@ -29,6 +29,7 @@ public:
     Comando &insertMulti(QString tipo, QStringList & elenco);
     QList<QString> keys();
     QList<QString> values();
+    QString value(QString key);
     QString toString();
 };
 

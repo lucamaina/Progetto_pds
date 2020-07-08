@@ -64,6 +64,7 @@
 #include <shared_editor/editor.h>
 #include <QPainter>
 #include <QAbstractTextDocumentLayout>
+#include <QProgressBar>
 #include "windows/nuovofileremoto.h"
 
 class QAction;
@@ -213,7 +214,7 @@ private:
 public:
     QTextEdit *textEdit;
     int cursorPos;
-
+    QProgressBar progress;
 
 
 private:
@@ -238,6 +239,7 @@ public slots:
     void setVisibleEditorActions(bool set);
     void acceptLogout();
     void cursorEnable(bool set);
+    void setProgress(bool set); /* true parte, false ferma */
 
 signals:
     void cursorChanged (int& pos, int& anchor);

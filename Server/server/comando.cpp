@@ -101,6 +101,11 @@ QList<QString> Comando::values()
     return this->cmdMap.values();
 }
 
+QString Comando::value(QString key)
+{
+    return this->cmdMap.value(key);
+}
+
 QString Comando::toString()
 {
     QString str;

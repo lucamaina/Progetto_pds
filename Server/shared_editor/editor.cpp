@@ -119,8 +119,15 @@ bool Editor::sendToAll(Comando &cmd)
     if (this->sendList_.isEmpty())
         return true;
     qDebug() << "--------------------------------------{";
-    for(QSharedPointer<MySocket> sock : this->sendList_.values()){
-        this->send(sock, cmd.toByteArray());
+//    for(QSharedPointer<MySocket> sock : this->sendList_.values()){
+//        this->send(sock, cmd.toByteArray());
+//    }
+    QSharedPointer<MySocket> sock;
+    for(QString nomeUser : this->sendList_.keys()){
+        if (nomeUser != cmd.value(UNAME)){
+            sock = this->sendList_.value(nomeUser);
+            this->send(sock, cmd.toByteArray());
+        }
     }
     qDebug() << "--------------------------------------}";
     return true;

@@ -110,7 +110,7 @@ bool Editor::process(Message &msg)
 
 bool Editor::send(QSharedPointer<MySocket> &sock, QByteArray ba)
 {
-    sock.get()->write(ba);
+    sock->write(ba);
     return true;
 }
 

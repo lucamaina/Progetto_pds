@@ -56,26 +56,12 @@ QSqlQuery db::query(QString querySrc, QVector<QString> values)
  */
 bool db::conn()
 {
-    myDb.setUserName("root");
-    myDb.setPassword("");
-    bool ok = myDb.open();
+    bool ok = myDb.open("root", "");
 
-    qDebug() << "database opened:" << ok << " connectionName: " << QString(myDb.connectionName());
-    Logger::getLog().write("Nuova connessione con connectionName: " + QString(myDb.connectionName()));
+    qDebug() << "database opened:" << ok << " connectionName: " << QString(myDb.connectionName()) << " username: 'root'";
+    Logger::getLog().write("Nuova connessione con connectionName: " + QString(myDb.connectionName())+ " username: 'root'");
     return ok;
 }
-
-
-bool db::conn(utente & user){
-    myDb.setUserName(user.getUsername());
-    myDb.setPassword(user.getPass());
-    bool ok = myDb.open();
-    qDebug() << "database opened:" << ok << " connectionName: " << QString(myDb.connectionName());
-    Logger::getLog().write("Nuova connessione da utente" + QString(myDb.userName()));
-    user.setConn(ok);
-    return ok;
-}
-
 
 bool db::userLogin(utente &user)
 {
@@ -133,6 +119,15 @@ bool db::userReg(utente &user)
     return true;
 }
 
+bool db::isOpen()
+{
+    if (!myDb.isOpen()){
+        qDebug() << endl << "Errore connessione DB non aperta" << endl;
+        return false;
+    }
+    return true;
+}
+
 bool db::userLogOut(utente &user)
 {
     QVector<QString> values;
@@ -150,7 +145,7 @@ bool db::userLogOut(utente &user)
 bool db::disconn(utente &user){
     this->userLogOut(user);
     if ( !this->myDb.isOpen() ){    return false;   }
-    this->myDb.close();
+//    this->myDb.close();
     return true;
 }
 

@@ -30,6 +30,9 @@ public:
     void exitThread();
     void save();
     void run();
+    void connectDB(std::shared_ptr<db> sourceSharedDB);
+    void disconnectDB();
+    int getSockID() const;
 
 public slots:
     void disconnected();
@@ -37,31 +40,32 @@ public slots:
     void dispatchCmd(Comando &cmd);
 
 signals:
-    void deleteThreadSig(s_thread &t);
+    void sigDeleteThread(s_thread &t);
 
 private:
     int sockID;
     QString docID;
 
-    QSharedPointer<MySocket> sp_socket;    // socket con shared pointer per QObject
-    std::unique_ptr<utente> up_user;
-    std::unique_ptr<db> up_conn;
+    QSharedPointer<MySocket> sharedSocket;    // socket con shared pointer per QObject
+    std::unique_ptr<utente> uniqueUser;
+    std::shared_ptr<db> sharedDB;
 
     QStringList toQStringList(QMap<QString, QString> cmd);
 
+
     bool sendBody(QByteArray &ba);
     bool verifyCMD(QMap<QString, QString> &cmd, const QList<QString> &list);
+    void clientNotifyDB();
+    bool comandCanStart(QMap<QString, QString> &cmd, const QList<QString> &list);
 
     /****************************************************************************
      * metodi controllo dei messaggi inviati ************************************/
     bool clientMsg(QByteArray data);
-    bool clientMsg_(QMap<QString, QString> comando);
     bool clientMsg(QMap<QString, QString> comando);
 
     /****************************************************************************
      * metodi accesso a database *************************************************/
-    void connectDB();
-    void disconnectDB();
+
     void loginDB(QMap<QString, QString> &comando);
     void logoffDB(QMap<QString, QString> &comando);
     void logOffDB();
@@ -76,7 +80,7 @@ private:
 
     /****************************************************************************
      * metodi accesso a netowrk *************************************************/
-    void sendMsg(QMap<QString, QString> comando);
+    void sendMsgToNetwork(QMap<QString, QString> comando);
 };
 
 #endif // S_THREAD_H

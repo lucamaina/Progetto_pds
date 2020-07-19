@@ -436,7 +436,7 @@ void Client::loadFile(QMap<QString,QString> cmd)
     int dim = cmd.find(BODY).value().toInt();
 
     QByteArray qba;
-//    this->editor->setProgress(true);
+
     this->mioSocket->leggiMap(qba, dim);
     qDebug() << qba;
 
@@ -470,6 +470,7 @@ void Client::loadFile(QMap<QString,QString> cmd)
 void Client::inserimentoRemoto(QMap<QString,QString> cmd)
 {
     qDebug()<<cmd;
+    this->editor->cursorEnable(false);
     QString user = cmd.find(UNAME).value();
     if (user == this->username)
         return;// ignoro
@@ -503,6 +504,8 @@ void Client::inserimentoRemoto(QMap<QString,QString> cmd)
             emit s_setText(c, charform, posCursor);
         }
     }
+
+    this->editor->cursorEnable(true);
 
 }
 

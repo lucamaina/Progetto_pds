@@ -2,25 +2,19 @@
 
 server::server(QObject *parent) : QTcpServer (parent)
 {
-    Logger &lg = Logger::getLog();
-    this->log = &lg;
+    this->log = &Logger::getLog();
     log->write("Start server con "+ QString::number(MAX_THREAD) + " thread");
     qDebug() << "Start server con "+ QString::number(MAX_THREAD) + " thread" << "[Password Hash3-256]";
-    mioDB = new db(1);
+    mioDB = std::make_shared<db>(db(1));
     if (!mioDB->conn()){
         log->write("Impossibilile aprire db");
         qDebug() << "Impossibilile aprire db";
         return;
     }
     mioDB->setUpUtenti();
-    tVec.reserve(MAX_THREAD);
-    tVec.clear();
-
-    //creazione cartella per i documenti
-    QDir dir = QDir::current();
-
-    if (!dir.exists("files"))
-        dir.mkdir("files");
+    threadPool.reserve(MAX_THREAD);
+    threadPool.clear();
+    this->manageFilesDirectory();
 }
 
 void server::startServer()
@@ -39,50 +33,69 @@ void server::startServer()
  */
 void server::saveAll()
 {
-    this->m.lock();
+    this->mutexLockThreadPool.lock();
 
     Network::getNetwork().salvaTutto();
 
-    this->m.unlock();
+    this->mutexLockThreadPool.unlock();
 }
 
-void server::deleteThread(s_thread &t)
+void server::deleteThread(s_thread &oldThread)
 {
-    m.lock();
+    mutexLockThreadPool.lock();
     numThread--;
-    tVec.removeOne(&t);
-    t.exitThread();
-    m.unlock();
-    qDebug() << "sono in " << Q_FUNC_INFO;
+    threadPool.removeOne(&oldThread);
+    oldThread.exitThread();
+    mutexLockThreadPool.unlock();
+    this->log->write("Client distrutto: " + QString::number(oldThread.getSockID()) );
+    qDebug() << "sono in " << Q_FUNC_INFO << " Client distrutto: " << oldThread.getSockID();
 }
 
 void server::incomingConnection(int socketID)
 {
-    char a;
-    int n;
-    m.lock();
+    int actualThreadNumber;
+    mutexLockThreadPool.lock();
     if (numThread < maxThread){
         numThread++;
-        n = numThread;
+        actualThreadNumber = numThread;
 
-        qDebug() << "Connecting from " << socketID << " thread num: " << n;
+        qDebug() << "Connecting from " << socketID << " thread num: " << actualThreadNumber;
 
-        tVec.push_back( new s_thread(socketID) );
-        s_thread *newThread = tVec.last();
-        m.unlock();
+        threadPool.push_back( new s_thread(socketID) );
+        s_thread *newThread = threadPool.last();
+        mutexLockThreadPool.unlock();
 
-        connect(newThread, &s_thread::deleteThreadSig, this, &server::deleteThread, Qt::ConnectionType::DirectConnection);
-        try {
-            newThread->run();
-        } catch (std::exception &e) {
-            this->saveAll();
-            log->write(e.what());
-            qDebug() << "sono in server: " << e.what();
-            std::cin >> a;
-        }
+        connect(newThread, &s_thread::sigDeleteThread, this, &server::deleteThread, Qt::ConnectionType::DirectConnection);
+        startNewThread(newThread);
     } else {
-        m.unlock();
+        mutexLockThreadPool.unlock();
         qDebug() << "connessione rifiutata, max utenti raggiunti";
         return;
+    }
+}
+
+void server::manageFilesDirectory()
+{
+    QDir dir = QDir::current();
+    if (!dir.exists("files"))
+        dir.mkdir("files");
+}
+
+void server::startNewThread(s_thread *newThread)
+{
+    if (newThread == nullptr){
+        return;
+    }
+
+    try {
+        newThread->connectDB(this->mioDB);
+        newThread->run();
+    } catch (std::exception &e) {
+        this->saveAll();
+        log->write(e.what());
+        qDebug() << "sono in server: " << e.what();
+    } catch (...) {
+        qDebug() << "qualsiasi eccezione da " << newThread->getSockID();
+        log->write("qualsiasi eccezione"+ QString::number(newThread->getSockID()));
     }
 }

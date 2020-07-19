@@ -11,16 +11,16 @@ void s_thread::run()
     Logger::getLog().write("Nuovo thread in esecuzione, ID = "+ QString::number(this->sockID) );
     qDebug() << "Thread running, ID: " << QString::number(this->sockID);
 
-    sp_socket = QSharedPointer<MySocket>( new MySocket(sockID));
+    sharedSocket = QSharedPointer<MySocket>( new MySocket(sockID));
 
-    connect(sp_socket.get(), &MySocket::s_disconnected, this, &s_thread::disconnected, Qt::DirectConnection);
-    connect(sp_socket.get(), SIGNAL( s_dispatchCmd(QMap<QString, QString>&) ), this, SLOT( dispatchCmd(QMap<QString, QString>&) ), Qt::DirectConnection);
-    connect(sp_socket.get(), SIGNAL( s_dispatchCmd(Comando&) ), this, SLOT( dispatchCmd(Comando&) ), Qt::DirectConnection);
+    connect(sharedSocket.get(), &MySocket::s_disconnected, this, &s_thread::disconnected, Qt::DirectConnection);
+    connect(sharedSocket.get(), SIGNAL( s_dispatchCmd(QMap<QString, QString>&) ), this, SLOT( dispatchCmd(QMap<QString, QString>&) ), Qt::DirectConnection);
+    connect(sharedSocket.get(), SIGNAL( s_dispatchCmd(Comando&) ), this, SLOT( dispatchCmd(Comando&) ), Qt::DirectConnection);
     qDebug() << "Client connesso nuovo socket";
 
-    this->up_user = std::make_unique<utente>( utente() );
+    this->uniqueUser = std::make_unique<utente>( utente() );
 
-    this->connectDB();
+    this->clientNotifyDB();
 
     this->exec();
 }
@@ -32,25 +32,23 @@ void s_thread::run()
 void s_thread::disconnected()
 {
     qDebug() << endl
-             << "(disconnected) client disconnesso "
-             << QString::number(this->sockID);
-    this->sp_socket->deleteLater();
-    emit deleteThreadSig(*this);
+             << "(" << Q_FUNC_INFO << ") Client disconnesso: "
+             << QString::number(this->sockID)
+             << endl;
+    this->sharedSocket->deleteLater();
+    emit sigDeleteThread(*this);
 }
 
 void s_thread::exitThread()
 {
-    qDebug() << "sono in " << Q_FUNC_INFO;
-
-    // tolgo utente da editor
     Network::getNetwork().remRefToEditor( this->docID,
-                                          this->up_user->getUsername() );
-    if (this->up_user.get()->isConnected()){
+                                          this->uniqueUser->getUsername() );
+    if (this->uniqueUser.get()->isConnected()){
         this->logOffDB();
         this->disconnectDB();
     }
 
-    qDebug() << "s_thread disconnesso : " << this->sockID;
+    qDebug() << Q_FUNC_INFO << "s_thread disconnesso : " << this->sockID;
     this->quit();
     this->wait();
 }
@@ -63,7 +61,7 @@ void s_thread::exitThread()
 void s_thread::dispatchCmd(QMap<QString, QString> &cmd){
     auto comando = cmd.find(CMD);
     if (comando.value() == CONN) {
-        this->connectDB();
+        this->clientNotifyDB();
     } else if (comando.value() == LOGIN) {
         this->loginDB(cmd);
     } else if (comando.value() == LOGOUT) {
@@ -79,7 +77,7 @@ void s_thread::dispatchCmd(QMap<QString, QString> &cmd){
     } else if (comando.value() == OPEN_FILE) {
         this->openFile(cmd);
     } else if (comando.value() == REM_IN || comando.value() == REM_DEL || comando.value() == CRS) {
-        this->sendMsg(cmd);
+        this->sendMsgToNetwork(cmd);
     } else if (comando.value() == ULIST){
         this->getUsers(cmd);
     } else if (comando.value() == ADD_USER) {
@@ -97,52 +95,22 @@ void s_thread::dispatchCmd(Comando &cmd)
     (void) cmd;
 }
 
+int s_thread::getSockID() const
+{
+    return sockID;
+}
+
 
 /**
- * @brief s_thread::clientMEX
- * @param data
- * @return
  * manda messaggio al client
  */
 bool s_thread::clientMsg(QByteArray data){
-    this->sp_socket.get()->write(data);
+    this->sharedSocket->write(data);
     return false;
 }
 
-/**
- * @brief s_thread::clientMEX
- * @param comando
- * @return
- * override per mandare messaggi al client
- */
-bool s_thread::clientMsg_(QMap<QString, QString> comando){ // vecchia versione
-    QList<QString> list = {CMD};
-    if (!verifyCMD(comando, list)){ return false;   }
-    QByteArray ba;
-    QXmlStreamWriter wr(&ba);
-    wr.writeStartDocument();
-    wr.writeStartElement(comando.value(CMD));
-    comando.remove(CMD);
-    foreach (QString key, comando.keys()) {
-        wr.writeTextElement(key, comando.value(key));
-    }
-    wr.writeEndElement();
-    wr.writeEndDocument();
-
-    int dim = ba.size();
-    QByteArray len;
-    len = QByteArray::number(dim, 16);
-    len.prepend(8 - len.size(), '0');
-
-    ba.prepend(len);
-    ba.prepend(INIT);
-    qDebug().noquote() << endl << "<- To client: " << this->sockID << endl << QString(ba);
-
-    return clientMsg(ba);
-}
-
 bool s_thread::clientMsg(QMap<QString, QString> comando){
-    this->sp_socket->write(comando);
+    this->sharedSocket->write(comando);
     return true;
 }
 
@@ -167,27 +135,11 @@ bool s_thread::sendBody(QByteArray &ba)
  ************************ metodi di accesso al db ********************************************************
  *********************************************************************************************************/
 
-void s_thread::connectDB()
+void s_thread::connectDB(std::shared_ptr<db> sourceSharedDB)
 {
-    this->up_conn = std::make_unique<db>( db(this->sockID) );
-    if (!this->up_conn->isOpen()){
-        QString logStr;
-        QMap<QString,QString> risp;
-        if (up_conn->conn() == false){
-            // ritorna messaggio al client di fallimento
-            risp.insert(CMD, ERR);
-            risp.insert(MEX,CONN_ERR);
-            logStr = QString::number(this->sockID) + "non connesso a db con utente: ";
-        } else {
-            // messaggio di successo al client
-            risp.insert(CMD, OK);
-            risp.insert(MEX,CONN_OK);
-
-            logStr = QString::number(this->sockID) + " connesso a db con utente: ";
-        }
-        Logger::getLog().write(logStr);
-        clientMsg(risp);
-    }
+    QString logStr;
+    QMap<QString,QString> risp;
+    this->sharedDB = sourceSharedDB;
 }
 
 /**
@@ -197,10 +149,8 @@ void s_thread::connectDB()
  */
 void s_thread::loginDB(QMap<QString, QString> &comando){
     QList<QString> list = {CMD};
-    if (!verifyCMD(comando, list)){ return;   }
-    if (!this->up_conn->isOpen()){
-        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
-        this->connectDB();
+    if (!this->comandCanStart(comando, list)){
+        return;
     }
     // preparo utente temporaneo per verificare le informazioni
     utente tmp;
@@ -208,13 +158,13 @@ void s_thread::loginDB(QMap<QString, QString> &comando){
 
     QMap<QString,QString> risp;
     QString logStr;
-    if (this->up_conn->userLogin(tmp) ){
+    if (this->sharedDB->userLogin(tmp) ){
         // utente presente nel db e segnato come connesso
-        logStr = QString::number(this->sockID) + " loggato a db con utente: " + up_user->getUsername();
-        this->up_user.get()->prepareUtente(comando, true);
+        logStr = QString::number(this->sockID) + " loggato a db con utente: " + uniqueUser->getUsername();
+        this->uniqueUser.get()->prepareUtente(comando, true);
         risp.insert(CMD, OK);
         risp.insert(MEX,LOGIN_OK);
-        risp.insert(NICK, up_user->getNick());
+        risp.insert(NICK, uniqueUser->getNick());
     } else {
         risp.insert(CMD, ERR);
         risp.insert(MEX,LOGIN_ERR);
@@ -227,27 +177,25 @@ void s_thread::loginDB(QMap<QString, QString> &comando){
 void s_thread::logoffDB(QMap<QString, QString> &comando)
 {
     QList<QString> list = {CMD};
-    if (!verifyCMD(comando, list)){ return;   }
-    if (!this->up_conn->isOpen()){
-        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
-        this->connectDB();
+    if (!this->comandCanStart(comando, list)){
+        return;
     }
-    if (this->up_user->getUsername().isEmpty())
+    if (this->uniqueUser->getUsername().isEmpty())
         return;
     QMap<QString,QString> risp;
 
     QString logStr;
-    if (this->up_conn->userLogOut(*up_user) ){
+    if (this->sharedDB->userLogOut(*uniqueUser) ){
         risp.insert(CMD, OK);
         risp.insert(MEX, LOGOUT_OK);
-        logStr = QString::number(this->sockID) + " log out a db con utente: " + up_user->getUsername();
+        logStr = QString::number(this->sockID) + " log out a db con utente: " + uniqueUser->getUsername();
 
-        Network::getNetwork().remRefToEditor(this->docID, this->up_user->getUsername());
+        Network::getNetwork().remRefToEditor(this->docID, this->uniqueUser->getUsername());
 
     } else {
         risp.insert(CMD, ERR);
         risp.insert(MEX, LOGOUT_ERR);
-        logStr = QString::number(this->sockID) + " non log out a db con utente: " + up_user->getUsername();
+        logStr = QString::number(this->sockID) + " non log out a db con utente: " + uniqueUser->getUsername();
     }
     Logger::getLog().write(logStr);
     clientMsg(risp);
@@ -256,11 +204,11 @@ void s_thread::logoffDB(QMap<QString, QString> &comando)
 void s_thread::logOffDB()
 {
     QString logStr;
-    if (up_user->isConnected()){
-        if (this->up_conn->userLogOut(*up_user) ){
-            logStr = QString::number(this->sockID) + " log out a db con utente: " + up_user->getUsername();
+    if (uniqueUser->isConnected()){
+        if (this->sharedDB->userLogOut(*uniqueUser) ){
+            logStr = QString::number(this->sockID) + " log out a db con utente: " + uniqueUser->getUsername();
         } else {
-            logStr = QString::number(this->sockID) + " non log out a db con utente: " + up_user->getUsername();
+            logStr = QString::number(this->sockID) + " non log out a db con utente: " + uniqueUser->getUsername();
         }
         Logger::getLog().write(logStr);
     }
@@ -275,17 +223,15 @@ void s_thread::registerDB(QMap<QString, QString> &comando){
     QList<QString> list = {CMD};
     QMap<QString,QString> risp;
 
-    if (!verifyCMD(comando, list)){ return;   }
-    if (!this->up_conn->isOpen()){
-        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
-        this->connectDB();
+    if (!this->comandCanStart(comando, list)){
+        return;
     }
 
-    if (this->up_user->isConnected()){
+    if (this->uniqueUser->isConnected()){
         QMap<QString, QString> tmpCmd;
         tmpCmd.insert(CMD, LOGOUT);
-        tmpCmd.insert(UNAME, up_user->getUsername());
-        tmpCmd.insert(PASS, up_user->getPass());
+        tmpCmd.insert(UNAME, uniqueUser->getUsername());
+        tmpCmd.insert(PASS, uniqueUser->getPass());
         logoffDB(tmpCmd);
     }
     // preparo utente temporaneo per verificare le informazioni
@@ -293,17 +239,17 @@ void s_thread::registerDB(QMap<QString, QString> &comando){
     tmp.prepareUtente(comando);
 
     QString logStr;
-    if (this->up_conn->userReg(tmp) ){
+    if (this->sharedDB->userReg(tmp) ){
         // nuovo utente registrato
-        this->up_user.get()->prepareUtente(comando);
+        this->uniqueUser.get()->prepareUtente(comando);
         risp.insert(CMD, OK);
         risp.insert(MEX, REG_OK);
-        risp.insert(NICK, up_user->getNick());
-        logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + up_user->getUsername();
+        risp.insert(NICK, uniqueUser->getNick());
+        logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + uniqueUser->getUsername();
     } else {
         risp.insert(CMD, ERR);
         risp.insert(MEX, REG_ERR);
-        logStr = QString::number(this->sockID) + " non viene registrato a db con utente: " + up_user->getUsername();
+        logStr = QString::number(this->sockID) + " non viene registrato a db con utente: " + uniqueUser->getUsername();
     }
     Logger::getLog().write(logStr);
     clientMsg(risp);
@@ -320,18 +266,16 @@ void s_thread::addFileDB(QMap<QString, QString> &comando)
     QList<QString> list = {CMD, FNAME};
     QMap<QString,QString> risp;
 
-    if (!verifyCMD(comando, list)){ return;   }
-    if (!this->up_conn->isOpen()){
-        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
-        this->connectDB();
+    if (!this->comandCanStart(comando, list)){
+        return;
     }
 
-    if (!this->up_user->isConnected())
+    if (!this->uniqueUser->isConnected())
         return;
 
     QString nomeFile = comando.take(FNAME);
     int errorCode;
-    if (this->up_conn->addFile(*this->up_user, nomeFile, errorCode)){
+    if (this->sharedDB->addFile(*this->uniqueUser, nomeFile, errorCode)){
         // file inserito
         risp.insert(CMD, OK);
         risp.insert(MEX, ADD_FILE_OK);
@@ -354,12 +298,12 @@ void s_thread::addFileDB(QMap<QString, QString> &comando)
  */
 void s_thread::disconnectDB()
 {
-    if (this->up_conn->isOpen()){
+    if (this->sharedDB->isOpen()){
         QString logStr;
-        if (this->up_conn->disconn(*up_user) ){
-            logStr = QString::number(this->sockID) + " disconnesso a db con utente: " + up_user->getUsername();
+        if (this->sharedDB->disconn(*uniqueUser) ){
+            logStr = QString::number(this->sockID) + " disconnesso a db con utente: " + uniqueUser->getUsername();
         } else {
-            logStr = QString::number(this->sockID) + " errore nella disconessione a db con utente: " + up_user->getUsername();
+            logStr = QString::number(this->sockID) + " errore nella disconessione a db con utente: " + uniqueUser->getUsername();
         }
         Logger::getLog().write(logStr);
     }
@@ -373,15 +317,16 @@ void s_thread::disconnectDB()
 void s_thread::browsFile(QMap<QString, QString> &comando)
 {
     QList<QString> list = {CMD};
-    if (!verifyCMD(comando, list)){ return;   }
-    if (up_user->isConnected() == false) return;
-    if (!this->up_conn->isOpen()){
-        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
-        this->connectDB();
+    if (!this->comandCanStart(comando, list)){
+        return;
     }
+    if (!uniqueUser->isConnected()){
+        return;
+    }
+
     QString logStr;
-    QMap<QString, QString> map = this->up_conn->browsFile(*up_user);
-    logStr = QString::number(this->sockID) + "Browsing con utente: " + up_user->getUsername();
+    QMap<QString, QString> map = this->sharedDB->browsFile(*uniqueUser);
+    logStr = QString::number(this->sockID) + "Browsing con utente: " + uniqueUser->getUsername();
 
     Logger::getLog().write(logStr);
     qDebug() << map.toStdMap();
@@ -396,15 +341,14 @@ void s_thread::browsFile(QMap<QString, QString> &comando)
 void s_thread::openFile(QMap<QString, QString> &comando)
 {
     QList<QString> list = {CMD, DOCID};
-    if (!verifyCMD(comando, list)){ return;   }
-    if (up_user == nullptr) return;
-    if (!this->up_conn->isOpen()){
-        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
-        this->connectDB();
+    if (!this->comandCanStart(comando, list)){
+        return;
     }
-
+    if (!uniqueUser->isConnected()){
+        return;
+    }
     if(!docID.isEmpty())
-        Network::getNetwork().remRefToEditor(this->docID, this->up_user->getUsername());
+        Network::getNetwork().remRefToEditor(this->docID, this->uniqueUser->getUsername());
     this->docID = comando.value(DOCID);
 
     QMap<QString,QString> risp;
@@ -412,15 +356,15 @@ void s_thread::openFile(QMap<QString, QString> &comando)
 
     // accedo a db e verifico file apribile dall'utente
     QString logStr;
-    if (this->up_conn->canUserOpenFile(*up_user, comando.value(DOCID)) ){
+    if (this->sharedDB->canUserOpenFile(*uniqueUser, comando.value(DOCID)) ){
         //clientMEX("File apribile dallì'utente");
         risp.insert(CMD, OK);
         risp.insert(MEX, FILE_OK);
-        logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + up_user->getUsername();
+        logStr = QString::number(this->sockID) + " viene registrato a db con utente: " + uniqueUser->getUsername();
     } else {
         risp.insert(CMD, ERR);
         risp.insert(MEX, FILE_ERR);
-        logStr = QString::number(this->sockID) + " File non apribile dall'utente: " + up_user->getUsername();
+        logStr = QString::number(this->sockID) + " File non apribile dall'utente: " + uniqueUser->getUsername();
         Logger::getLog().write(logStr);
         clientMsg(risp);
         return;
@@ -435,8 +379,8 @@ void s_thread::openFile(QMap<QString, QString> &comando)
         try {
             net.createEditor( comando.value(DOCID),
                               comando.value(FNAME),
-                              *up_user,
-                              this->sp_socket );
+                              *uniqueUser,
+                              this->sharedSocket );
         } catch (std::logic_error le) {
             QString s = "Eccezione in apertura di editor" + QString(le.what());
             Logger::getLog().write(s);
@@ -450,8 +394,8 @@ void s_thread::openFile(QMap<QString, QString> &comando)
     } else {
         // aumenta contatore user attivi
         net.addRefToEditor( comando.value(DOCID),
-                            *this->up_user,
-                            this->sp_socket );
+                            *this->uniqueUser,
+                            this->sharedSocket );
     }
     QString docid = comando.value(DOCID);
     // send Map
@@ -467,35 +411,33 @@ void s_thread::openFile(QMap<QString, QString> &comando)
  */
 void s_thread::exitClientFromFile(QMap<QString, QString> &comando)
 {
-    if (!verifyCMD( comando,
-                    QList<QString>({CMD, DOCID})) )
-    {   return;   }
-    if (up_user->isConnected() == false) return;
-
+    if (!this->comandCanStart(comando, QList<QString>({CMD, DOCID}))){
+        return;
+    }
+    if (!uniqueUser->isConnected()){
+        return;
+    }
     QString docid = comando.value(DOCID);
     Network::getNetwork()
             .getEditor(docid)
-            .removeUser( up_user->getUsername() );
+            .removeUser( uniqueUser->getUsername() );
     this->docID.clear();
 }
 
 
 void s_thread::getUsers(QMap<QString, QString> &comando)
 {
-    if (!this->up_user->isConnected()){ return; }
+    if (!this->uniqueUser->isConnected()){ return; }
     QList<QString> list = {CMD, DOCID }; // DOCID
-    if (!verifyCMD(comando, list)){ return;   }
-    if (up_user->isConnected() == false) return;
-    if (!this->up_conn->isOpen()){
-        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
-        this->connectDB();
+    if (!this->comandCanStart(comando, list)){
+        return;
     }
     QString docId = comando.value(DOCID);
     QString logStr;
-    QList<QString> lista = this->up_conn->getUsers(docId);
+    QList<QString> lista = this->sharedDB->getUsers(docId);
 
 //    clientMsg("getUsers effettuato");
-    logStr = QString::number(this->sockID) + "getUsers con utente: " + up_user->getUsername();
+    logStr = QString::number(this->sockID) + "getUsers con utente: " + uniqueUser->getUsername();
     Logger::getLog().write(logStr);
 
     QMap<QString, QString> map;
@@ -514,13 +456,10 @@ void s_thread::getUsers(QMap<QString, QString> &comando)
 void s_thread::addUsersDB(QMap<QString, QString> &comando)
 {
     qDebug() << "sono in s_thread::addUsersDB";
-    if (!this->up_user->isConnected()){ return; }
+    if (!this->uniqueUser->isConnected()){ return; }
     QList<QString> list = {CMD, DOCID }; // DOCID
-    if (!verifyCMD(comando, list)){ return;   }
-    if (up_user->isConnected() == false) return;
-    if (!this->up_conn->isOpen()){
-        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
-        this->connectDB();
+    if (!this->comandCanStart(comando, list)){
+        return;
     }
     QString docId = comando.value(DOCID);
     QString logStr;
@@ -531,7 +470,7 @@ void s_thread::addUsersDB(QMap<QString, QString> &comando)
 
     int i = 1;
     for (QString utente : lista){
-        if ( this->up_conn->addUser(*this->up_user, docId, utente) == false ){
+        if ( this->sharedDB->addUser(*this->uniqueUser, docId, utente) == false ){
             risp.insert(UNAME+QString::number(i++), utente);
         }
     }
@@ -555,13 +494,10 @@ void s_thread::addUsersDB(QMap<QString, QString> &comando)
 void s_thread::remUsersDB(QMap<QString, QString> &comando)
 {
     qDebug() << "sono in s_thread::remUsersDB = " << Q_FUNC_INFO;
-    if (!this->up_user->isConnected()){ return; }
+    if (!this->uniqueUser->isConnected()){ return; }
     QList<QString> list = {CMD, DOCID }; // DOCID
-    if (!verifyCMD(comando, list)){ return;   }
-    if (up_user->isConnected() == false) return;
-    if (!this->up_conn->isOpen()){
-        qDebug() <<"connessione non aperta: " << up_conn->isOpen();
-        this->connectDB();
+    if (!this->comandCanStart(comando, list)){
+        return;
     }
     QString docId = comando.value(DOCID);
     QString logStr;
@@ -570,7 +506,7 @@ void s_thread::remUsersDB(QMap<QString, QString> &comando)
     QMap<QString, QString> risp;
 
     for (QString utente : lista){
-        if ( this->up_conn->remUser(*this->up_user, docId, utente) == true ){
+        if ( this->sharedDB->remUser(*this->uniqueUser, docId, utente) == true ){
             rispOk.append(utente+" ; ");
             Network::getNetwork().getEditor(docId).removeUser(utente);
             // mostra agli utenti
@@ -611,15 +547,14 @@ QStringList s_thread::toQStringList(QMap<QString, QString> cmd)
  *********************************************************************************************************/
 
 /**
- * @brief s_thread::sendMEX
- * @param comando
  * invia il messaggio alla coda del network
  */
-void s_thread::sendMsg(QMap<QString, QString> comando)
+void s_thread::sendMsgToNetwork(QMap<QString, QString> comando)
 {
     Message Msg = Message();
-    if (!Msg.prepareMsg(comando, this->up_user->getUsername())){
-        return; }
+    if (!Msg.prepareMsg(comando, this->uniqueUser->getUsername())){
+        return;
+    }
     Network &net = Network::getNetwork();
     net.push(Msg);
 }
@@ -639,4 +574,19 @@ bool s_thread::verifyCMD(QMap<QString, QString> &cmd, const QList<QString> &list
         if (!cmd.contains(val)){    return false;   }
     }
     return true;
+}
+
+void s_thread::clientNotifyDB()
+{
+    QString logStr;
+    QMap<QString,QString> risp;
+
+    risp.insert(CMD, OK);
+    risp.insert(MEX,CONN_OK);
+    clientMsg(risp);
+}
+
+bool s_thread::comandCanStart(QMap<QString, QString> &cmd, const QList<QString> &list)
+{
+    return (this->sharedDB->isOpen() && this->verifyCMD(cmd, list));
 }

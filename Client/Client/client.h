@@ -8,6 +8,9 @@
 #include <QMessageBox>
 #include <QTextEdit>
 #include <QTextCharFormat>
+#include <QProgressDialog>
+#include <QFuture>
+#include <QtConcurrent/QtConcurrentRun>
 
 
 #include "windows/browsewindow.h"

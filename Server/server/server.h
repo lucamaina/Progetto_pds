@@ -23,18 +23,20 @@ public:
     void saveAll();
 
 public slots:
-    void deleteThread(s_thread &t);
+    void deleteThread(s_thread &oldThread);
 
 private:
     Logger *log;
     s_thread *newThread;
-    std::mutex m;
+    std::mutex mutexLockThreadPool;
     int numThread = 0;
     int maxThread = MAX_THREAD;
-    db *mioDB;
-    QVector<s_thread*> tVec;
+    std::shared_ptr<db> mioDB;
+    QVector<s_thread*> threadPool;
 
     void incomingConnection(int socketID);
+    void manageFilesDirectory();
+    void startNewThread(s_thread *newThread);
 };
 
 #endif // SERVER_H

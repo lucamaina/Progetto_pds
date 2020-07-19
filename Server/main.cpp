@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     qDebug() << "Server texteditor distribuito";
     try {
         server_main server = server_main();
-        (void) server; // suppress warning of non used variable
+        (void) server;          // suppress warning of non used variable
     } catch (std::exception e) {
         qDebug() << e.what();
     }

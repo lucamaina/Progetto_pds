@@ -128,7 +128,7 @@ TextEdit::TextEdit(QWidget *parent)
     //    miolayout->addWidget(list);
 
     miolayoutVert->addWidget(list);
-    miolayoutVert->addWidget(&progress);
+//    miolayoutVert->addWidget(&progress);
     miolayout->addLayout(miolayoutVert);
 
     remoteStile=false;
@@ -493,7 +493,6 @@ void TextEdit::goPaste(){
     cur.setPosition(pos, QTextCursor::MoveAnchor);
     QTextCharFormat currentFormat = cur.charFormat();
 
-    this->setProgress(true);
     this->cursorEnable(false);
     int i=0;
     if(client->isLogged()){
@@ -503,7 +502,6 @@ void TextEdit::goPaste(){
         }
     }
     this->cursorEnable(true);
-    this->setProgress(false);
 }
 
 void TextEdit::goCut()
@@ -1493,17 +1491,6 @@ void TextEdit::cursorEnable(bool set)
     } else {
         disconnect(textEdit, &QTextEdit::cursorPositionChanged,
                 this, &TextEdit::cursorPositionChanged);
-    }
-}
-
-void TextEdit::setProgress(bool set)
-{
-    this->progress.setMaximum(0);
-    this->progress.setMinimum(0);
-    if (set == true){
-        this->progress.setVisible(true);
-    } else {
-        this->progress.setVisible(false);
     }
 }
 

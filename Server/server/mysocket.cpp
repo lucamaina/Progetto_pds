@@ -53,8 +53,7 @@ bool MySocket::write(QByteArray data)
     if (sock.isOpen()){
         if ( sock.isWritable() ){
             ret = this->sock.write(qbuf.data(), data.size());
-            bool b = this->sock.waitForBytesWritten();
-            auto err = sock.error();
+            sock.waitForBytesWritten(100);
             if ( ret == data.size()){
                 qDebug() << " <- To Client: "<< sockId << endl
                          << "write byte: " << ret << " - "

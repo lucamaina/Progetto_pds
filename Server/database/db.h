@@ -44,7 +44,6 @@ private:
 public:
     explicit db(int connName);
     bool conn();
-    bool conn(utente & user);
     void setUpUtenti();
     QSqlQuery query(QString querySrc);
     QSqlQuery query(QString querySrc, QVector<QString> values);
@@ -52,7 +51,7 @@ public:
     bool userLogin(utente & user);
     bool userLogOut(utente & user);
     bool userReg(utente & user);
-    bool isOpen(){  return this->myDb.isOpen(); }
+    bool isOpen();
     bool disconn(utente& user);
     bool addFile(utente & user, QString nomefile, int &errorCode);
     bool canUserOpenFile(utente & user, QString nomefile);

@@ -1,5 +1,8 @@
 #include "mysocket.h"
 
+#include <QCoreApplication>
+#include <QProgressDialog>
+
 MySocket::MySocket(int sockId)
 {
     this->sockId = sockId;
@@ -83,16 +86,53 @@ bool MySocket::connectToHost()
     return true;
 }
 
-void MySocket::leggiMap(QByteArray &qba, int qbaSize)
+void MySocket::connectReadyRead(bool set)
 {
-    disconnect(&sock, &QTcpSocket::readyRead, this, &MySocket::readyRead);
-    qba.clear();
+    if (set) {
+        connect(&this->sock, &QTcpSocket::readyRead, this, &MySocket::readyRead, Qt::DirectConnection);
+    } else {
+        disconnect(&sock, &QTcpSocket::readyRead, this, &MySocket::readyRead);
+    }
+}
+
+void MySocket::connectFileReadyRead(bool set)
+{
+    if (set) {
+        connect(&this->sock, &QTcpSocket::readyRead, this, &MySocket::fileReadyRead, Qt::DirectConnection);
+    } else {
+        disconnect(&sock, &QTcpSocket::readyRead, this, &MySocket::fileReadyRead);
+    }
+}
+
+void MySocket::startLoadFromRemote(int size)
+{
+    this->connectReadyRead(false);
+    this->connectFileReadyRead(true);
+    this->fileBuffer.clear();
+    this->fileBuffer.reserve(size);
+    this->dimFile = size;
+}
+
+void MySocket::stopLoadFromRemote(QByteArray& qba)
+{
+    this->connectFileReadyRead(false);
+    this->connectReadyRead(true);
+    emit s_loadFile(qba);
+}
+
+/**
+ * viene eseguita in un altro thread con QtConcurrent::run
+ */
+QByteArray MySocket::leggiMap(int dataSize)
+{
+    QByteArray qba;
+    qba.reserve(dataSize);
     char v[4096];
     qint64 dataBlk, size, byteRead;
-    size = static_cast<qint64>(qbaSize);
+    size = static_cast<qint64>(dataSize);
     if (sock.bytesAvailable() < 0)
         qDebug() << endl << "errore byte available";
-    this->sock.waitForReadyRead(3000);
+    this->sock.waitForReadyRead(1000);
     while (size > 0){
         qDebug() << "loppo qui";
         if (size > 4096){
@@ -104,19 +144,18 @@ void MySocket::leggiMap(QByteArray &qba, int qbaSize)
         byteRead = this->sock.read(v, dataBlk);
         if (byteRead < 0){
             qDebug() << "errore in socket::read() at COMAND";
-            return;
+            return qba;
         }
         qba.append(v, static_cast<int>(byteRead));
         size = size - byteRead;
     }
-
-    connect(&this->sock, &QTcpSocket::readyRead, this, &MySocket::readyRead, Qt::DirectConnection);
+    return qba;
 }
 
 void MySocket::readyRead()
 {
     QByteArray tmp;
-    qint64 dim, dataBlk;
+    qint64 dim, dataBlk, byteRead;
     char v[4096] = {};
     int error = 0;
 
@@ -146,9 +185,9 @@ void MySocket::readyRead()
         } else {
             return;
         }
-        if (dim ==0 || dim > 200 ) {
-            qDebug() <<"errore qui";
-        }
+//        if (dim ==0 || dim > 200 ) {
+//            qDebug() <<"errore qui";
+//        }
         // LEGGO COMANDO
         command.clear();
         while (dim > 0 && error == 0){
@@ -157,7 +196,7 @@ void MySocket::readyRead()
             } else {
                 dataBlk = dim;
             }
-            qint64 byteRead = this->sock.read(v, dataBlk);
+            byteRead = this->sock.read(v, dataBlk);
             if (byteRead < 0){
                 qDebug() << "errore in socket::read() at COMAND";
                 return;
@@ -165,9 +204,30 @@ void MySocket::readyRead()
             command.append(v, static_cast<int>(byteRead));
             dim = dim - byteRead;
         }
-
-        leggiXML(command);
+        if (dim ==0 ){
+            leggiXML(command);
+        }
     }
+}
+
+void MySocket::fileReadyRead()
+{
+    char v[4096];
+    qint64 dataBlk, byteRead;
+    while (sock.bytesAvailable() && dimFile > 0){
+        dimFile > 4096 ? dataBlk = 4096 : dataBlk = dimFile;
+        byteRead = this->sock.read(v, dataBlk);
+        if (byteRead < 0){
+            qDebug() << "errore in socket::read() at INIT";
+            return;
+        }
+        this->fileBuffer.append(v, static_cast<int>(byteRead));
+        dimFile = dimFile - static_cast<int>(byteRead);
+    }
+    if (dimFile == 0){
+        stopLoadFromRemote(fileBuffer);
+    }
+
 }
 
 void MySocket::disconnected()

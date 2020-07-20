@@ -4,6 +4,8 @@
 #include "windows/browsewindow.h"
 #include "windows/nuovofileremoto.h"
 
+#include <QCoreApplication>
+
 Client::Client(TextEdit *parent)
 {
     editor = parent;
@@ -16,12 +18,13 @@ Client::Client(TextEdit *parent)
     tempPass.clear();
     remoteFile = nullptr;
     finestraAddFile = new nuovoFileRemoto();
-//    socket = new QTcpSocket(this);
     mioSocket = new MySocket(1);
 
     connect(mioSocket, SIGNAL(s_connected()), this, SLOT(connected()));
     connect(mioSocket, SIGNAL(s_dispatchCmd(QMap<QString, QString> &)), this, SLOT( dispatchCmd(QMap<QString, QString>&) ), Qt::DirectConnection);
     connect(mioSocket, SIGNAL(s_disconnected()), this, SLOT(disconnected()), Qt::ConnectionType::DirectConnection);
+    connect(mioSocket, SIGNAL(s_loadFile(QByteArray&)), this, SLOT(loadFileToMap(QByteArray&)), Qt::ConnectionType::DirectConnection);
+
     connect(this, SIGNAL(cancellaSignal(int&,int&,int&,char&,QString&)),this->parent(),SLOT(cancellaAtCursor(int&,int&,int&,char&,QString&)));
     connect(this, SIGNAL(addMe()),this->parent(),SLOT(addMeSlot()));
     connect(this, SIGNAL(nuovoStile(QString&,QString&)), this->parent(),SLOT(nuovoStileSlot(QString&,QString&)));
@@ -64,6 +67,21 @@ void Client::sendRemoveUsers(QStringList &lista)
         cmd.insert(UNAME + QString::number(i), utente);
     }
     this->sendMsg(cmd);
+}
+
+void Client::loadFileToMap(QByteArray& qba)
+{
+    qDebug() <<"mappa: "<< qba;
+    try {
+        this->remoteFile = new Editor(this->docID, this->filename, qba,  username);
+        this->loadFileInEditor();
+        if (this->prog != nullptr){
+            prog->close();
+        }
+    } catch (...) {
+        qDebug() << "Eccezione in caricamento editor";
+        return;
+    }
 }
 
 QString Client::getUsername() const
@@ -251,10 +269,7 @@ void Client::dispatchCmd(QMap<QString, QString> &cmd){
         cancellamentoRemoto(cmd);
     }
     else if (comando.value() == FBODY) {
-        loadFile(cmd);
-        emit s_changeTitle(this->username, this->remoteFile->getNomeFile(), this->remoteFile->getDocId());
-        emit s_setVisbleFileActions(true);
-        emit s_setVisbleEditorActions(true);
+        loadFileFromRemote(cmd);
     }
     else if (comando.value() == ULIST) {
         listUser(cmd);
@@ -431,28 +446,42 @@ void Client::handleBrowse(QMap<QString,QString> cmd){
  * @param cmd
  * gestisce apertura di un file ricevuto dal server
  */
-void Client::loadFile(QMap<QString,QString> cmd)
+void Client::loadFileFromRemote(QMap<QString,QString> cmd)
 {
+    this->prog = new QProgressDialog("Attendere caricamento documento", "Hide", 0, 0);
+    prog->setWindowTitle("Download file");
+    prog->setWindowModality(Qt::NonModal);
+    this->bar = new QProgressBar();
+    bar->setRange(0,0);
+    prog->setBar(bar);
+    prog->show();
+    prog->setFocus();
+
     int dim = cmd.find(BODY).value().toInt();
 
-    QByteArray qba;
+//    this->mioSocket->leggiMap(dim);
+    this->mioSocket->startLoadFromRemote(dim);
 
-    this->mioSocket->leggiMap(qba, dim);
-    qDebug() << qba;
+//    QByteArray qba = future.result();
+//    qDebug() <<"mappa: "<< qba;
+//    QCoreApplication::processEvents();
 
-    //emit clearEditor();
-    try {
-        this->remoteFile = new Editor(this->docID, this->filename, qba,  username);
-    } catch (...) {
+//    try {
+//        this->remoteFile = new Editor(this->docID, this->filename, qba,  username);
+//    } catch (...) {
+//        qDebug() << "Eccezione in caricamento editor";
+//        return;
+//    }
 
-    }
+}
 
+void Client::loadFileInEditor()
+{
     this->editor->cursorEnable(false);
     emit this->s_clearEditor();
-
     int pos = 0;
     for( Symbol s : remoteFile->symVec){
-
+        QCoreApplication::processEvents();
         QTextCharFormat formatoDecode;
         QByteArray esadecimale=QByteArray::fromHex(s.formato);
         formatoDecode=deserialize(esadecimale);
@@ -460,6 +489,9 @@ void Client::loadFile(QMap<QString,QString> cmd)
         emit s_setText(s.car, formatoDecode, pos++);
     }
     this->editor->cursorEnable(true);
+    emit s_changeTitle(this->username, this->remoteFile->getNomeFile(), this->remoteFile->getDocId());
+    emit s_setVisbleFileActions(true);
+    emit s_setVisbleEditorActions(true);
 }
 
 /**
@@ -562,6 +594,7 @@ bool Client::cancellamentoLocale(int posCursor)
 
 void Client::cancellamentoRemoto(QMap<QString, QString> cmd)
 {
+    this->editor->cursorEnable(false);
     QString user = cmd.find(UNAME).value();
     if (user == this->username)
         return;// ignoro
@@ -576,6 +609,7 @@ void Client::cancellamentoRemoto(QMap<QString, QString> cmd)
         remoteFile->symVec.remove(posCursor);
         emit s_removeText(posCursor);
     }
+    this->editor->cursorEnable(true);
 }
 
 void Client::spostaCursori(QMap <QString,QString>cmd)
@@ -591,8 +625,7 @@ void Client::spostaCursori(QMap <QString,QString>cmd)
 
     char c='\0';
 
-    if(user==this->username){ /*qDebug()<<"Questo messaggio non doveva arrivare a me!!!"*/; return; } //non lo considero
-    //user="lalla";
+    if(user==this->username){ return; } //non lo considero, messaggio non deve arrivare a me
     emit spostaCursSignal(pos,anchor,c,user);
 }
 
@@ -736,22 +769,9 @@ void Client::handleMyCursorChange(int& pos,int& anchor)
     comando.insert(DOCID, this->docID);
     QString indici=QString::number(pos)+";"+QString::number(anchor);
     comando.insert(IDX, indici );
-
-    //    qDebug()<<"------------------------------------------";
-    //qDebug()<<comando;
     this->sendMsg(comando);
 }
 
-void Client::pasteSlot(QString& clipboard){
-    //if(socket->state() != QTcpSocket::ConnectedState || !logged || !connectedDB){ return; }
-
-//    QMap<QString, QString> comando;
-
-//    comando.insert(CMD,"PASTE");
-//    comando.insert("clipboard",clipboard);
-//    qDebug()<<comando;
-//    this->sendMsg(comando);
-}
 
 void Client::remoteOpen(QString& name, QString& docID){
 

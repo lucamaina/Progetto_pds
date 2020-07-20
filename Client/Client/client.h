@@ -10,6 +10,7 @@
 #include <QTextCharFormat>
 #include <QProgressDialog>
 #include <QFuture>
+#include <QFutureWatcher>
 #include <QtConcurrent/QtConcurrentRun>
 
 
@@ -51,7 +52,9 @@ public:
     bool cancellamentoLocale(int posCursor);
     void cancellamentoRemoto(QMap<QString,QString> cmd);
 
-    void loadFile(QMap<QString,QString> cmd);
+    void loadFileFromRemote(QMap<QString,QString> cmd);
+    void loadFileInEditor();
+
     QByteArray serialize(const QTextCharFormat &format);
     QTextCharFormat deserialize(QByteArray &s);
 
@@ -107,7 +110,6 @@ public slots:
     void dispatchStile(QMap <QString,QString>cmd);
     void handleRegistration(QString& username, QString& password);
 //    void handleStile(QString& stile,QString& param);
-    void pasteSlot(QString& clipboard);
     void handleMyCursorChange(int& pos, int& anchor);
     void remoteOpen(QString& name, QString &docID);
 
@@ -118,6 +120,8 @@ public slots:
 
     void sendAddUsers(QStringList& lista);
     void sendRemoveUsers(QStringList& lista);
+
+    void loadFileToMap(QByteArray &qba);
 
 
 private:
@@ -134,6 +138,11 @@ private:
     QByteArray buffer_, command;
     UserManager *finestraUsers;
     nuovoFileRemoto *finestraAddFile;
+
+    QFuture<QByteArray> future;
+    QFutureWatcher<QByteArray> futureWatcher;
+    QProgressDialog *prog;
+    QProgressBar *bar;
 
     /****************************************************************************
      ***************** metodi controllo dei comandi ricevuti ********************/

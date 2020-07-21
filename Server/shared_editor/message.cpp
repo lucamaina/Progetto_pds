@@ -41,10 +41,7 @@ bool Message::prepareMsg(QMap<QString, QString> comando, QString username)
         for (QString idx : lista){
             this->indici.push_back(idx.toInt());
         }
-        qDebug() << "sono in " << Q_FUNC_INFO << endl
-                 << lista;
     }
-
     if (comando.contains(CAR) && !comando.value(CAR).isNull()){
         car = comando.value(CAR).at(0);
     } else {

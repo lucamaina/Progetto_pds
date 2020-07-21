@@ -16,9 +16,10 @@ Network& Network::getNetwork(){
  * metodo per mettere in coda il nuovo messaggio ricevuto
  */
 void Network::push(Message &msg)
-{
+{   // lock se arrivano più messaggi
     std::unique_lock<std::mutex> lg(mQueue);
     this->msgQueue.push_back(msg);
+    lg.unlock();
     emit sigSend();
     return;
 }

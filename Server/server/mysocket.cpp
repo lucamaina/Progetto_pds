@@ -9,6 +9,7 @@ MySocket::MySocket(int sockId)
     this->sock.setSocketDescriptor(sockId);
     this->connect(&this->sock, &QTcpSocket::readyRead, this, &MySocket::readyRead, Qt::DirectConnection);
     this->connect(&this->sock, &QTcpSocket::disconnected, this, &MySocket::disconnected, Qt::DirectConnection);
+    this->connect(this, &MySocket::s_write, this, &MySocket::m_write, Qt::DirectConnection);
 }
 
 void MySocket::leggiXML(QByteArray data)
@@ -42,7 +43,7 @@ void MySocket::leggiXML(QByteArray data)
     }
 }
 
-bool MySocket::write(QByteArray data)
+bool MySocket::write(QByteArray& data)
 {
     // TODO modifica per invio grandi file
     qint64 ret;
@@ -56,8 +57,8 @@ bool MySocket::write(QByteArray data)
             sock.waitForBytesWritten(100);
             if ( ret == data.size()){
                 qDebug() << " <- To Client: "<< sockId << endl
-                         << "write byte: " << ret << " - "
-                         << data.left(100);
+                         << "write byte: " << ret << " - ";
+                         /*<< data.left(100);*/
                 return true;
             } else {
                 qDebug() << endl << "!!! Errore scrittura socket: "<< this->sockId << " !!!" << endl << sock.errorString();
@@ -82,8 +83,6 @@ void MySocket::readyRead()
     QByteArray tmp;
     qint64 dim, dataBlk;
     char v[4096] = {};
-    int error = 0;
-
     tmp.reserve(16);
 
     while (sock.bytesAvailable()){
@@ -114,7 +113,7 @@ void MySocket::readyRead()
 
         // LEGGO COMANDO
         command.clear();
-        while (dim > 0 && error == 0){
+        while (dim > 0 && sock.bytesAvailable()){
             if (dim > 4096){
                 dataBlk = 4096;
             } else {
@@ -136,4 +135,9 @@ void MySocket::readyRead()
 void MySocket::disconnected()
 {
     emit s_disconnected();
+}
+
+void MySocket::m_write(QByteArray &ba)
+{
+    this->write(ba);
 }

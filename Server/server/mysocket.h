@@ -20,17 +20,19 @@ private:
 public:
     explicit MySocket(int sockId);
     void leggiXML(QByteArray data);
-    bool write(QByteArray data);
+    bool write(QByteArray &data);
     bool write(QMap<QString, QString> comando);
 
 signals:
     void s_dispatchCmd(Comando &cmd);
     void s_dispatchCmd(QMap<QString, QString> &cmd);
     void s_disconnected();
+    void s_write(QByteArray& qba);
 
 public slots:
     void readyRead();
     void disconnected();
+    void m_write(QByteArray& ba);
 };
 
 #endif // MYSOCKET_H

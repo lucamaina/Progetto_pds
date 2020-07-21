@@ -109,19 +109,17 @@ bool Editor::process(Message &msg)
 }
 
 bool Editor::send(QSharedPointer<MySocket> &sock, QByteArray ba)
-{
-    sock->write(ba);
+{   // forse blocca il socket
+//    sock->write(ba);
+    emit sock->s_write(ba);
     return true;
 }
 
 bool Editor::sendToAll(Comando &cmd)
 {
     if (this->sendList_.isEmpty())
-        return true;
+        return false;
     qDebug() << "--------------------------------------{";
-//    for(QSharedPointer<MySocket> sock : this->sendList_.values()){
-//        this->send(sock, cmd.toByteArray());
-//    }
     QSharedPointer<MySocket> sock;
     for(QString nomeUser : this->sendList_.keys()){
         if (nomeUser != cmd.value(UNAME)){

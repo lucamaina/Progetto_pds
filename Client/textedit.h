@@ -57,7 +57,6 @@
 #include <QMainWindow>
 #include <QMap>
 #include <QPointer>
-//#include <Client/client.h>
 #include <windows/logindialog.h>
 #include <windows/registerdialog.h>
 #include <QListWidgetItem>
@@ -140,6 +139,7 @@ private slots:
     void clipboardDataChanged();
     void about();
     void printPreview(QPrinter *);
+    void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
     void setupUserActions();
@@ -227,7 +227,6 @@ public slots:
     void goCut();
     void goCopy();
     void clear();
-    void refresh();
     void statusBarOutput(QString s);
     void setText(QChar c, QTextCharFormat f, int posCursor);   // inserisce in editor il carattere ricevuto
     void removeText(int posCursor);

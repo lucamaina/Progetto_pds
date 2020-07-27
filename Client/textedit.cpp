@@ -118,7 +118,7 @@ TextEdit::TextEdit(QWidget *parent)
             this, &TextEdit::currentCharFormatChanged);
     connect(textEdit, &QTextEdit::cursorPositionChanged,
             this, &TextEdit::cursorPositionChanged);
-
+    textEdit->setContextMenuPolicy(Qt::NoContextMenu);
     list=new QListWidget();
     QWidget *centrale=new QWidget();
     QHBoxLayout *miolayout=new QHBoxLayout(centrale);
@@ -345,26 +345,7 @@ bool TextEdit::cancellamento(int posCursor, int key)
     }
 
     this->client->cancellamentoLocale(posCursor);
-/*
-    QTextCursor s = this->textEdit->textCursor();
-    s.setPosition(posCursor);
-    s.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveMode::KeepAnchor);
-    QChar car = s.selectedText().front();
 
-    double index = this->client->remoteFile->getLocalIndexDelete(posCursor);
-
-
-    if (index < 0){
-        this->statusBar()->showMessage("impossibile cancellare in locale", 1000);
-    } else if (this->client->remoteDelete(car, index)) {// INSERIMENTO REMOTO, manda comando a server
-        // true se server risp OK
-
-        this->statusBar()->showMessage("At position: " + QString::number(posCursor) + " Text delete: " + car, 1000);
-
-    } else {
-        this->statusBar()->showMessage("impossibile inserire da remoto", 1000);
-    }
-*/
     return true;
 }
 
@@ -489,7 +470,7 @@ void TextEdit::setupEditActions()
 void TextEdit::goPaste(){
     QString s(QApplication::clipboard()->mimeData()->text());
     QTextCursor cur = textEdit->textCursor();
-    int pos = cur.position(), anc = cur.anchor();
+    int pos = cur.position();
     cur.setPosition(pos, QTextCursor::MoveAnchor);
     QTextCharFormat currentFormat = cur.charFormat();
 
@@ -527,15 +508,6 @@ void TextEdit::goCopy()
 void TextEdit::clear()
 {
     this->textEdit->clear();
-}
-
-/**
- * @brief TextEdit::refresh
- * scrive sull'editor dopo cambiamenti in symMap
- */
-void TextEdit::refresh()
-{
-
 }
 
 void TextEdit::statusBarOutput(QString s)
@@ -869,6 +841,21 @@ void TextEdit::printPreview(QPrinter *printer)
 #else
     textEdit->print(printer);
 #endif
+}
+
+void TextEdit::contextMenuEvent(QContextMenuEvent *event)
+{
+//    QMenu *menu = this->textEdit->createStandardContextMenu();
+    QMenu *menu = new QMenu(this);
+    menu->addAction(this->actionCut);
+    menu->addAction(this->actionCopy);
+    menu->addAction(this->actionPaste);
+    menu->addSeparator();
+    menu->addAction(this->actionSave);
+
+    //...
+    menu->exec(event->globalPos());
+    delete menu;
 }
 
 void TextEdit::filePrintPdf()

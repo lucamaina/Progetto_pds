@@ -88,32 +88,33 @@ void MySocket::readyRead()
     while (sock.bytesAvailable()){
         // LEGGO <INIT>
         buffer.clear();
-        if (this->sock.bytesAvailable() >= INIT_DIM){
-            if (this->sock.read(v, INIT_DIM) < INIT_DIM){
-                qDebug() << "errore in socket::read() at INIT";
-                return;
-            }
-            this->buffer.append(v, INIT_DIM);
-        } else {
-            return;
-        }
 
-        // LEGGO DIMENSIONE
-        if (this->sock.bytesAvailable() >= LEN_NUM){
-            if (this->sock.read(v, LEN_NUM) < LEN_NUM){
-                qDebug() << "errore in socket::read() at LEN_NUM";
-                return;
-            }
-            tmp.clear();
-            tmp.append(v, LEN_NUM);
-            dim = static_cast<qint64>( tmp.toInt(nullptr, 16) );
-        } else {
-            return;
-        }
+        if (this->sock.bytesAvailable() >= INIT_DIM + LEN_NUM){
+           if (this->sock.read(v, INIT_DIM) < INIT_DIM){
+               qDebug() << "errore in socket::read() at INIT";
+               return;
+           }
+           this->buffer.append(v, INIT_DIM);
+           if (!buffer.contains(INIT)){
+               return;
+           }
+           if (this->sock.read(v, LEN_NUM) < LEN_NUM){
+               qDebug() << "errore in socket::read() at LEN_NUM";
+               return;
+           }
+           tmp.clear();
+           tmp.append(v, LEN_NUM);
+           dim = static_cast<qint64>( tmp.toInt(nullptr, 16) );
 
+       } else {
+           return;
+       }
         // LEGGO COMANDO
         command.clear();
-        while (dim > 0 && sock.bytesAvailable()){
+        while (dim > 0){
+            if (sock.bytesAvailable() == 0){
+                sock.waitForReadyRead(100);
+            }
             if (dim > 4096){
                 dataBlk = 4096;
             } else {
@@ -127,8 +128,9 @@ void MySocket::readyRead()
             command.append(v, static_cast<int>(byteRead));
             dim = dim - byteRead;
         }
-
-        leggiXML(command);
+        if (dim == 0){
+            leggiXML(command);
+        }
     }
 }
 

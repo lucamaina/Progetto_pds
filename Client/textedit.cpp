@@ -337,12 +337,20 @@ bool TextEdit::inserimento(int posCursor, QChar car, QTextCharFormat format)
 
 bool TextEdit::cancellamento(int posCursor, int key)
 {
+    int size = this->textEdit->toPlainText().size();
+    //qDebug()<<"numero caratteriiiiiiii e possss cursssss:"<<size<<posCursor;
+
     // gestisco limiti dell'editor tra delete e backspace
-    if (key == Qt::Key_Backspace && posCursor > 0){
-        posCursor--;
-    } else if (key == Qt::Key_Delete){
-        // Qt::key_delete
+    if (key == Qt::Key_Backspace && posCursor == 0){
+        return false;
     }
+    else if (key == Qt::Key_Backspace && posCursor > 0){
+        posCursor--;
+    } else if (key == Qt::Key_Delete && size <= posCursor){
+        // Qt::key_delete
+        return false;
+    }
+
 
     this->client->cancellamentoLocale(posCursor);
 
@@ -445,21 +453,25 @@ void TextEdit::setupEditActions()
 {
     QToolBar *tb = addToolBar("Edit");
     QMenu *menu = menuBar()->addMenu(tr("Edit"));
-
+    //PROVA
+    tb->hide();
     //menu->addSeparator();
 
 #ifndef QT_NO_CLIPBOARD
     const QIcon cutIcon = QIcon::fromTheme("edit-cut", QIcon(rsrcPath + "/editcut.png"));
     actionCut = menu->addAction(cutIcon, tr("Cu&t"), this, &TextEdit::goCut, QKeySequence::Cut);
     tb->addAction(actionCut);
+    actionCut->setVisible(false);    //PROVA
 
     const QIcon copyIcon = QIcon::fromTheme("edit-copy", QIcon(rsrcPath + "/editcopy.png"));
     actionCopy = menu->addAction(copyIcon, tr("&Copy"), this, &TextEdit::goCopy, QKeySequence::Copy);
     tb->addAction(actionCopy);
+    actionCopy->setVisible(false);    //PROVA
 
     const QIcon pasteIcon = QIcon::fromTheme("edit-paste", QIcon(rsrcPath + "/editpaste.png"));
     actionPaste = menu->addAction(pasteIcon, tr("&Paste"), this, &TextEdit::goPaste, QKeySequence::Paste);
     tb->addAction(actionPaste);
+    actionPaste->setVisible(false);    //PROVA
 
     if (const QMimeData *md = QApplication::clipboard()->mimeData())
         actionPaste->setEnabled(md->hasText());
@@ -468,21 +480,21 @@ void TextEdit::setupEditActions()
 }
 
 void TextEdit::goPaste(){
-    QString s(QApplication::clipboard()->mimeData()->text());
-    QTextCursor cur = textEdit->textCursor();
-    int pos = cur.position();
-    cur.setPosition(pos, QTextCursor::MoveAnchor);
-    QTextCharFormat currentFormat = cur.charFormat();
+//    QString s(QApplication::clipboard()->mimeData()->text());
+//    QTextCursor cur = textEdit->textCursor();
+//    int pos = cur.position();
+//    cur.setPosition(pos, QTextCursor::MoveAnchor);
+//    QTextCharFormat currentFormat = cur.charFormat();
 
-    this->cursorEnable(false);
-    int i=0;
-    if(client->isLogged()){
-        for(QChar c : s){
-            client->inserimentoLocale(pos+i, c, currentFormat);
-            i++;
-        }
-    }
-    this->cursorEnable(true);
+//    this->cursorEnable(false);
+//    int i=0;
+//    if(client->isLogged()){
+//        for(QChar c : s){
+//            client->inserimentoLocale(pos+i, c, currentFormat);
+//            i++;
+//        }
+//    }
+//    this->cursorEnable(true);
 }
 
 void TextEdit::goCut()
@@ -1078,9 +1090,9 @@ void TextEdit::setVisibleEditorActions(bool set)
     actionTextUnderline->setEnabled(set);
     actionTextColor->setEnabled(set);
     // vale anche per copia incolla
-    actionCut->setEnabled(set);
-    actionCopy->setEnabled(set);
-    actionPaste->setEnabled(set);
+//    actionCut->setEnabled(set);
+//    actionCopy->setEnabled(set);
+//    actionPaste->setEnabled(set);
 }
 
 void TextEdit::acceptLogout()
